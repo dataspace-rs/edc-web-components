@@ -1,0 +1,29 @@
+[package]
+name = "edc-web-components"
+version = "0.0.1"
+edition = "2024"
+license = "Apache-2.0"
+description= "A Rust Web Components with patternfly-yew client for EDC"
+repository = "https://github.com/dataspace-rs/edc-web-components"
+keywords = ["dataspace", "http", "yew", "patternfly"]
+categories = []
+readme = "README.md"
+
+[dependencies]
+base64 = "0.22.1"
+cel = "0.14.0"
+chrono = "0.4"
+edc-connector-client = { version = "0.6.3", package = "edc-connector-client-next" }
+edc-federated-catalog-client = { version = "0.2.0", features = ["management"] }
+edc-identity-hub-client = "0.1.1"
+log = "0.4"
+patternfly-yew = { version = "0.8", features = ["experimental"] }
+reqwest = { version = "0.13",  features= ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+strum = { version = "0.28", features = ["derive"] }
+uuid = { version = "1.24.0", features = ["v4"] }
+web-sys = "0.3"
+yew = "0.23"
+yew_icons = { version = "0.10.0", features = ["font_awesome_regular", "lucide"] }
+yew-oauth2 = { version = "0.14", features = ["yew-nested-router", "openid"] }
