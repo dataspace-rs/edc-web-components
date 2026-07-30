@@ -4,13 +4,13 @@ use crate::models::AssetItem;
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::query::Query;
 use patternfly_yew::prelude::*;
-use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct AssetPageProps {
   pub on_new_asset: Callback<()>,
+  pub onshow: Callback<String>,
 }
 
 #[component]
@@ -32,27 +32,6 @@ pub fn AssetPage(props: &AssetPageProps) -> Html {
     |limit, (refresh, limit_setter)| {
       limit_setter.set(limit);
       refresh.set(**refresh + 1);
-    },
-  );
-
-  let edc_connector_context = use_edc_connector_context();
-
-  let ondelete = use_callback(
-    (refresh.clone(), edc_connector_context),
-    |asset_id: String, (refresh, edc_connector_context)| {
-      let refresh = refresh.clone();
-      let edc_connector_context = edc_connector_context.clone();
-      let asset_id = asset_id.clone();
-
-      spawn_local(async move {
-        if let Some(client) = edc_connector_context.get_client() {
-          let _ = client
-            .assets(EdcConnectorApiVersion::V4)
-            .delete(&asset_id)
-            .await;
-        }
-        refresh.set(*refresh + 1);
-      });
     },
   );
 
@@ -81,7 +60,7 @@ pub fn AssetPage(props: &AssetPageProps) -> Html {
             limit={*limit}
             {onoffset}
             {onlimit}
-            {ondelete}
+            onshow={props.onshow.clone()}
             force_refresh={*refresh}
           />
         </Suspense>
@@ -96,7 +75,7 @@ pub struct AssetPageInnerProps {
   pub limit: usize,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
-  pub ondelete: Callback<String>,
+  pub onshow: Callback<String>,
   pub force_refresh: usize,
 }
 
@@ -117,11 +96,10 @@ pub fn AssetPageInner(props: &AssetPageInnerProps) -> HtmlResult {
       let query = Query::builder()
         .limit(limit as u32)
         .offset(offset as u32)
-        // .filter("https://w3id.org/edc/v0.0.1/ns/master-catalog-company-id", "=", "424F9F7A-BBC8-4BAD-B128-C3D0A693ABBA")
         .build();
 
       if let Some(client) = edc_connector_context.get_client() {
-        client
+        let items = client
           .assets(EdcConnectorApiVersion::V4)
           .query(query)
           .await
@@ -129,10 +107,9 @@ pub fn AssetPageInner(props: &AssetPageInnerProps) -> HtmlResult {
             log::error!("Error: {}", error);
             error
           })
-          .unwrap_or_default()
-          .into_iter()
-          .map(AssetItem::from)
-          .collect::<Vec<_>>()
+          .unwrap_or_default();
+
+        items.into_iter().map(AssetItem::from).collect::<Vec<_>>()
       } else {
         vec![]
       }
@@ -148,7 +125,7 @@ pub fn AssetPageInner(props: &AssetPageInnerProps) -> HtmlResult {
       limit={props.limit}
       onoffset={props.onoffset.clone()}
       onlimit={props.onlimit.clone()}
-      ondelete={props.ondelete.clone()}
+      onshow={props.onshow.clone()}
     />
   ))
 }

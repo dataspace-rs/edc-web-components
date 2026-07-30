@@ -1,9 +1,11 @@
-use crate::components::RequestVerifiableCredential;
+use crate::components::{Issuer, RequestVerifiableCredential};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct RequestVerifiableCredentialPageProps {
+  #[prop_or_default]
+  pub issuers: Vec<Issuer>,
   pub on_create: Callback<()>,
 }
 
@@ -15,7 +17,10 @@ pub fn RequestVerifiableCredentialPage(props: &RequestVerifiableCredentialPagePr
         <Title level={Level::H3} size={Size::XXLarge}>{ "Request a Verifiable Credentials" }</Title>
       </StackItem>
       <StackItem>
-        <RequestVerifiableCredential on_create={props.on_create.clone()} />
+        <RequestVerifiableCredential
+          on_create={props.on_create.clone()}
+          issuers={props.issuers.clone()}
+        />
       </StackItem>
     </Stack>
   )

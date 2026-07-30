@@ -1,4 +1,5 @@
-use crate::models::AssetItem;
+use crate::components::DatasetCard;
+use crate::models::{AssetItem, DataspaceDataset};
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
 use yew::prelude::*;
@@ -10,24 +11,12 @@ pub struct ListAssetsProps {
   pub limit: usize,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
-  pub ondelete: Callback<String>,
+  pub onshow: Callback<String>,
 }
 
 #[component]
 pub fn ListAssets(props: &ListAssetsProps) -> Html {
-  let header = html_nested! {
-    <TableHeader<Columns>>
-      <TableColumn<Columns> label="Name" index={Columns::Name} />
-      <TableColumn<Columns> label="ID" index={Columns::Id} />
-      <TableColumn<Columns> label="Base URL" index={Columns::BaseUrl} />
-      <TableColumn<Columns> label="Proxy Path" index={Columns::ProxyPath} />
-      <TableColumn<Columns> label="Proxy Query Parameters" index={Columns::ProxyQueryParameters} />
-      <TableColumn<Columns> label="Proxy Method" index={Columns::ProxyMethod} />
-      <TableColumn<Columns> label="Proxy Body" index={Columns::ProxyBody} />
-      <TableColumn<Columns> label="" index={Columns::Actions} />
-    </TableHeader<Columns>>
-  };
-
+  let display_cards = use_state(|| true);
   let total_entries: Option<usize> = None;
 
   let nav_callback = use_callback(
@@ -50,21 +39,36 @@ pub fn ListAssets(props: &ListAssetsProps) -> Html {
     },
   );
 
-  let rows = props
-    .asset_items
-    .iter()
-    .map(|asset_item| AssetRenderer {
-      asset_item: asset_item.clone(),
-      ondelete: props.ondelete.clone(),
-    })
-    .collect();
+  let set_display_cards = use_callback(display_cards.setter(), |value, display_cards_setter| {
+    display_cards_setter.set(value);
+  });
 
-  let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
+  let items_render = if *display_cards {
+    html!(
+      <ListAssetsGallery asset_items={props.asset_items.clone()} onshow={props.onshow.clone()} />
+    )
+  } else {
+    html!(<ListAssetsTable asset_items={props.asset_items.clone()} onshow={props.onshow.clone()} />)
+  };
 
   html!(
     <>
       <Toolbar>
         <ToolbarContent>
+          <ToolbarItem>
+            <Button
+              variant={ButtonVariant::Tertiary}
+              icon={Icon::ThLarge}
+              disabled={*display_cards}
+              onclick={set_display_cards.reform(|_| true)}
+            />
+            <Button
+              variant={ButtonVariant::Tertiary}
+              icon={Icon::List}
+              disabled={!*display_cards}
+              onclick={set_display_cards.reform(|_| false)}
+            />
+          </ToolbarItem>
           <ToolbarItem r#type={ToolbarItemType::Pagination}>
             <Pagination
               offset={props.offset}
@@ -76,18 +80,81 @@ pub fn ListAssets(props: &ListAssetsProps) -> Html {
           </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
-      <Table<Columns, UseTableData<Columns, MemoizedTableModel<AssetRenderer>>>
-        mode={TableMode::Compact}
-        {header}
-        {entries}
-      />
+      { items_render }
     </>
+  )
+}
+
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct ListAssetsTableProps {
+  pub asset_items: Vec<AssetItem>,
+  pub onshow: Callback<String>,
+}
+
+#[component]
+pub fn ListAssetsGallery(props: &ListAssetsTableProps) -> Html {
+  let rows = props
+    .asset_items
+    .clone()
+    .into_iter()
+    .map(|asset_item| DataspaceDataset {
+      id: asset_item.id,
+      title: asset_item.name,
+      version: asset_item.version,
+      comment: asset_item.description,
+      thumbnail: asset_item.thumbnail,
+      creator: asset_item.creator,
+      keywords: asset_item.keywords,
+      policies: vec![],
+      dcterm_types: vec![],
+    })
+    .map(|dataset| {
+      let asset_id = dataset.id.clone();
+
+      html!(
+        <DatasetCard {dataset} on_offer_click={props.onshow.reform(move |_| asset_id.clone())} />
+      )
+    });
+
+  html!(<Gallery gutter=true>{ for rows }</Gallery>)
+}
+
+#[component]
+pub fn ListAssetsTable(props: &ListAssetsTableProps) -> Html {
+  let header = html_nested! {
+    <TableHeader<Columns>>
+      <TableColumn<Columns> label="Name" index={Columns::Name} />
+      <TableColumn<Columns> label="Base URL" index={Columns::BaseUrl} />
+      <TableColumn<Columns> label="Proxy Path" index={Columns::ProxyPath} />
+      <TableColumn<Columns> label="Proxy Query Parameters" index={Columns::ProxyQueryParameters} />
+      <TableColumn<Columns> label="Proxy Method" index={Columns::ProxyMethod} />
+      <TableColumn<Columns> label="Proxy Body" index={Columns::ProxyBody} />
+      <TableColumn<Columns> label="" index={Columns::Actions} />
+    </TableHeader<Columns>>
+  };
+
+  let rows = props
+    .asset_items
+    .iter()
+    .map(|asset_item| AssetRenderer {
+      asset_item: asset_item.clone(),
+      onshow: props.onshow.clone(),
+    })
+    .collect();
+
+  let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
+
+  html!(
+    <Table<Columns, UseTableData<Columns, MemoizedTableModel<AssetRenderer>>>
+      mode={TableMode::Compact}
+      {header}
+      {entries}
+    />
   )
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Columns {
-  Id,
   Name,
   BaseUrl,
   ProxyPath,
@@ -100,13 +167,12 @@ enum Columns {
 #[derive(Clone, Debug)]
 struct AssetRenderer {
   asset_item: AssetItem,
-  ondelete: Callback<String>,
+  onshow: Callback<String>,
 }
 
 impl TableEntryRenderer<Columns> for AssetRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Id => html! { self.asset_item.id.to_owned() },
       Columns::Name => html!(self.asset_item.name.to_owned()),
       Columns::BaseUrl => html!(self.asset_item.base_url.to_owned()),
       Columns::ProxyPath => html!(self.asset_item.proxy_path),
@@ -116,7 +182,7 @@ impl TableEntryRenderer<Columns> for AssetRenderer {
       Columns::Actions => {
         let asset_id = self.asset_item.id.to_string();
 
-        html!(<DeleteAsset {asset_id} ondelete={self.ondelete.clone()} />)
+        html!(<ShowAsset {asset_id} onshow={self.onshow.clone()} />)
       }
     }
     .into()
@@ -126,17 +192,17 @@ impl TableEntryRenderer<Columns> for AssetRenderer {
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
   pub asset_id: String,
-  pub ondelete: Callback<String>,
+  pub onshow: Callback<String>,
 }
 
 #[function_component]
-pub fn DeleteAsset(props: &Props) -> Html {
+pub fn ShowAsset(props: &Props) -> Html {
   let onclick = use_callback(
-    (props.asset_id.clone(), props.ondelete.clone()),
-    |_, (asset_id, ondelete)| {
-      ondelete.emit(asset_id.to_string());
+    (props.asset_id.clone(), props.onshow.clone()),
+    |_, (asset_id, onshow)| {
+      onshow.emit(asset_id.to_string());
     },
   );
 
-  html!(<Button variant={ButtonVariant::Danger} icon={Icon::Trash} {onclick}>{ "Delete" }</Button>)
+  html!(<Button variant={ButtonVariant::Primary} icon={Icon::Eye} {onclick}>{ "Show" }</Button>)
 }
