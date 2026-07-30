@@ -12,7 +12,7 @@ pub struct ShowVerifiableCredentialPageProps {
 pub fn ShowVerifiableCredentialPage(props: &ShowVerifiableCredentialPageProps) -> Html {
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Show Verifiable Credential" }</Title>
+      <Title level={Level::H2} size={Size::XXXLarge}>{ "Verifiable Credential" }</Title>
       <Suspense fallback="Loading ...">
         <ShowVerifiableCredentialPageInner
           verifiable_credential_id={props.verifiable_credential_id.clone()}

@@ -10,19 +10,19 @@ pub struct ListContractNegotiationsProps {
   pub limit: usize,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
+  pub on_show_contract_negotiation: Callback<String>,
 }
 
 #[component]
 pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
-      <TableColumn<Columns> label="ID" index={Columns::Id} />
       <TableColumn<Columns> label="State" index={Columns::State} />
       <TableColumn<Columns> label="Contract Agreement ID" index={Columns::ContractAgreementId} />
       <TableColumn<Columns> label="Counter Party ID" index={Columns::CounterPartyId} />
-      <TableColumn<Columns> label="Counter Party Address" index={Columns::CounterPartyAddress} />
       <TableColumn<Columns> label="Protocol" index={Columns::Protocol} />
       <TableColumn<Columns> label="Kind" index={Columns::Kind} />
+      <TableColumn<Columns> label="" index={Columns::Actions} />
     </TableHeader<Columns>>
   };
 
@@ -50,9 +50,12 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
   let rows = props
     .contract_negotiation_items
     .iter()
-    .map(|contract_negotiation_item| {
-      ContractNegotiationItemRenderer(contract_negotiation_item.clone())
-    })
+    .map(
+      |contract_negotiation_item| ContractNegotiationItemRenderer {
+        item: contract_negotiation_item.clone(),
+        on_show_contract_negotiation: props.on_show_contract_negotiation.clone(),
+      },
+    )
     .collect();
 
   let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
@@ -83,28 +86,40 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Columns {
-  Id,
   State,
   ContractAgreementId,
   CounterPartyId,
-  CounterPartyAddress,
   Protocol,
   Kind,
+  Actions,
 }
 
 #[derive(Clone, Debug)]
-struct ContractNegotiationItemRenderer(ContractNegotiationItem);
+struct ContractNegotiationItemRenderer {
+  item: ContractNegotiationItem,
+  on_show_contract_negotiation: Callback<String>,
+}
 
 impl TableEntryRenderer<Columns> for ContractNegotiationItemRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Id => html! { self.0.id.to_string() },
-      Columns::State => html! { self.0.state.to_string() },
-      Columns::ContractAgreementId => html! { self.0.contract_agreement_id.to_string() },
-      Columns::CounterPartyId => html! { self.0.counter_party_id.to_string() },
-      Columns::CounterPartyAddress => html! { self.0.counter_party_address.to_string() },
-      Columns::Protocol => html! { self.0.protocol.to_string() },
-      Columns::Kind => html! { self.0.kind.to_string() },
+      Columns::State => html! { <Label label={self.item.state.to_string()} color={Color::Blue} /> },
+      Columns::ContractAgreementId => html! { self.item.contract_agreement_id.to_string() },
+      Columns::CounterPartyId => html! { self.item.counter_party_id.to_string() },
+      Columns::Protocol => html! { self.item.protocol.to_string() },
+      Columns::Kind => html! { self.item.kind.to_string() },
+      Columns::Actions => {
+        let contract_negotiation_id = self.item.id.clone();
+        html! {
+          <Button
+            variant={ButtonVariant::Primary}
+            onclick={self.on_show_contract_negotiation.clone().reform(move |_| contract_negotiation_id.clone())}
+            icon={Icon::Eye}
+          >
+            { "Show" }
+          </Button>
+        }
+      },
     }
     .into()
   }

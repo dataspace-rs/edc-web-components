@@ -190,13 +190,13 @@ impl TableEntryRenderer<Columns> for AssetRenderer {
 }
 
 #[derive(Clone, PartialEq, Properties)]
-pub struct Props {
+pub struct ShowAssetProps {
   pub asset_id: String,
   pub onshow: Callback<String>,
 }
 
 #[function_component]
-pub fn ShowAsset(props: &Props) -> Html {
+pub fn ShowAsset(props: &ShowAssetProps) -> Html {
   let onclick = use_callback(
     (props.asset_id.clone(), props.onshow.clone()),
     |_, (asset_id, onshow)| {

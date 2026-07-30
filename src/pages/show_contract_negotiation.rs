@@ -1,0 +1,89 @@
+use crate::components::ContractNegotiationStatus;
+use crate::contexts::use_edc_connector_context;
+use patternfly_yew::prelude::*;
+use yew::prelude::*;
+use yew::suspense::use_future_with;
+
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct ShowContractNegotiationPageProps {
+  pub contract_negotiation_id: String,
+}
+
+#[component]
+pub fn ShowContractNegotiationPage(props: &ShowContractNegotiationPageProps) -> Html {
+  html!(
+    <>
+      <Title level={Level::H2} size={Size::XXXLarge}>{ "Contract Negotiation" }</Title>
+      <Suspense fallback="Loading ...">
+        <ShowContractNegotiationPageInner
+          contract_negotiation_id={props.contract_negotiation_id.clone()}
+        />
+      </Suspense>
+    </>
+  )
+}
+
+#[component]
+pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps) -> HtmlResult {
+  let edc_connector_client = use_edc_connector_context();
+
+  let refresh = use_state(|| 0usize);
+
+  let contract_negotiation = use_future_with(
+    (
+      props.contract_negotiation_id.clone(),
+      edc_connector_client.clone(),
+      refresh.clone(),
+    ),
+    |properties| async move {
+      let (contract_negotiation_id, edc_connector_client, _) = (*properties).clone();
+
+      if let Some(client) = edc_connector_client.get_client() {
+        client
+          .contract_negotiations(edc_connector_client::EdcConnectorApiVersion::V4)
+          .get(&contract_negotiation_id)
+          .await
+          .ok()
+      } else {
+        None
+      }
+    },
+  )?;
+
+  let on_finalized = use_callback(refresh.setter(), |_, refresh_setter| {
+    refresh_setter.set(1);
+  });
+
+  let contract_negotiation = (*contract_negotiation).clone();
+
+  if let Some(contract_negotiation) = contract_negotiation {
+    Ok(html!(
+      <Stack gutter=true>
+        <StackItem>
+          <DescriptionList mode={[DescriptionListMode::Horizontal]}>
+            <DescriptionGroup term="Id">{ contract_negotiation.id() }</DescriptionGroup>
+            <DescriptionGroup term="Contract Agreement Id">
+              { contract_negotiation.contract_agreement_id().cloned().unwrap_or_default() }
+            </DescriptionGroup>
+            <DescriptionGroup term="Counter Party ID">
+              { contract_negotiation.counter_party_id().clone().unwrap_or_default() }
+            </DescriptionGroup>
+          </DescriptionList>
+        </StackItem>
+        <StackItem>
+          <ContractNegotiationStatus
+            contract_negotiation_id={props.contract_negotiation_id.clone()}
+            {on_finalized}
+          />
+        </StackItem>
+      </Stack>
+    ))
+  } else {
+    Ok(html!(
+      format!(
+      "Contract Negotiation with id {} not found.",
+      props.contract_negotiation_id
+    )
+    ))
+  }
+}

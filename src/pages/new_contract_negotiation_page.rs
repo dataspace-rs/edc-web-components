@@ -1,16 +1,14 @@
+use crate::components::ConstraintRenderer;
 use crate::contexts::use_edc_connector_context;
 use base64::prelude::*;
 use edc_connector_client::EdcConnectorApiVersion;
-use edc_connector_client::types::catalog::CatalogRequest;
+use edc_connector_client::types::Protocol;
 use edc_connector_client::types::contract_negotiation::ContractRequest;
 use edc_connector_client::types::policy::{
   AtomicConstraint, Constraint, LeftOperand, Operator, Permission, Policy, PolicyKind, Target,
 };
-use edc_connector_client::types::query::Query;
-use edc_connector_client::types::{ExtraTokenFields, Protocol};
 use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
 use patternfly_yew::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use yew::platform::spawn_local;
 use yew::prelude::*;
@@ -22,6 +20,7 @@ pub struct NewContractNegotiationPageProps {
   pub originator: String,
   pub provider_id: String,
   pub dataset_id: String,
+  pub on_contract_negotiation_id: Callback<String>,
 }
 
 #[component]
@@ -31,22 +30,19 @@ pub fn NewContractNegotiationPage(props: &NewContractNegotiationPageProps) -> Ht
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "New Contract Negotiation" }</Title>
+            <Title level={Level::H3} size={Size::XXLarge}>{ "Negotiate a Contract" }</Title>
           </SplitItem>
         </Split>
       </StackItem>
       <StackItem>
-        <Card>
-          <CardBody>
-            <Suspense>
-              <NewContractNegotiationPageInner
-                originator={props.originator.clone()}
-                provider_id={props.provider_id.clone()}
-                dataset_id={props.dataset_id.clone()}
-              />
-            </Suspense>
-          </CardBody>
-        </Card>
+        <Suspense>
+          <NewContractNegotiationPageInner
+            originator={props.originator.clone()}
+            provider_id={props.provider_id.clone()}
+            dataset_id={props.dataset_id.clone()}
+            on_contract_negotiation_id={props.on_contract_negotiation_id.clone()}
+          />
+        </Suspense>
       </StackItem>
     </Stack>
   )
@@ -57,6 +53,7 @@ pub struct NewContractNegotiationPageInnerProps {
   pub originator: String,
   pub provider_id: String,
   pub dataset_id: String,
+  pub on_contract_negotiation_id: Callback<String>,
 }
 
 #[component]
@@ -65,85 +62,9 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
   let latest_access_token_context = use_latest_access_token().unwrap();
 
   let federated_catalog_dataset = use_future_with(
-    (
-      latest_access_token_context,
-      props.originator.clone(),
-      props.provider_id.clone(),
-      props.dataset_id.clone(),
-      edc_connector_context.clone(),
-    ),
+    (latest_access_token_context, props.dataset_id.clone()),
     |parameters| async move {
-      let (latest_access_token_context, originator, provider_id, dataset_id, edc_connector_context) =
-        (*parameters).clone();
-
-      if let Some(edc_client) = edc_connector_context.get_client() {
-        // let originator = originator.clone();
-        // let provider_id = provider_id.clone();
-
-        {
-          let originator =
-            "https://controlplane.participant-li1.demo.luminvent.com/dsp/2025-1".to_string();
-          let provider_id =
-            "did:web:participant-li1.demo.luminvent.com:participant-li1".to_string();
-
-          let edc_client = edc_client.clone();
-          spawn_local(async move {
-            let query = Query::builder()
-              // .limit(*limit as u32)
-              // .offset(*offset as u32)
-              .build();
-
-            let catalogue_request = CatalogRequest::builder()
-              .counter_party_address(originator.clone())
-              .counter_party_id(provider_id.clone())
-              .protocol(Protocol::new("dataspace-protocol-http:2025-1"))
-              .query_spec(query)
-              .build();
-
-            #[derive(Debug, Serialize, Deserialize)]
-            struct ExtraDatasetFields {}
-            impl ExtraTokenFields for ExtraDatasetFields {}
-
-            if let Ok(catalog) = edc_client
-              .catalogue(EdcConnectorApiVersion::V4)
-              .request::<ExtraDatasetFields>(&catalogue_request)
-              .await
-            {
-              log::warn!("Catalog: {:?}", catalog);
-            }
-          });
-        }
-
-        let originator =
-          "https://controlplane.participant-li2.demo.luminvent.com/dsp/2025-1".to_string();
-        let provider_id = "did:web:participant-li2.demo.luminvent.com:participant-li2".to_string();
-
-        spawn_local(async move {
-          let query = Query::builder()
-            // .limit(*limit as u32)
-            // .offset(*offset as u32)
-            .build();
-
-          let catalogue_request = CatalogRequest::builder()
-            .counter_party_address(originator.clone())
-            .counter_party_id(provider_id.clone())
-            .protocol(Protocol::new("dataspace-protocol-http:2025-1"))
-            .query_spec(query)
-            .build();
-
-          #[derive(Debug, Serialize, Deserialize)]
-          struct ExtraDatasetFields {}
-          impl ExtraTokenFields for ExtraDatasetFields {}
-
-          if let Ok(catalog) = edc_client
-            .catalogue(EdcConnectorApiVersion::V4)
-            .request::<ExtraDatasetFields>(&catalogue_request)
-            .await
-          {
-            log::warn!("Catalog: {:?}", catalog);
-          }
-        })
-      }
+      let (latest_access_token_context, dataset_id) = (*parameters).clone();
 
       let server_url = web_sys::window().unwrap().location().origin().unwrap();
       let federated_catalog_client = FederatedCatalogClient::new(
@@ -153,24 +74,15 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
         FederatedCatalogClientVersion::V4,
       );
 
-      let federated_catalog_offers = federated_catalog_client
-        .list_offers()
+      federated_catalog_client
+        .get_offer_by_dataset_id(dataset_id.clone())
         .await
-        .unwrap_or_default();
-
-      federated_catalog_offers
-        .into_iter()
-        .find_map(|federated_catalog_offer| {
-          if federated_catalog_offer.originator != originator
-            && federated_catalog_offer.participant_id.id != provider_id
-          {
-            None
-          } else {
-            federated_catalog_offer
-              .dataset
-              .into_iter()
-              .find(|dataset| dataset.id == dataset_id)
-          }
+        .unwrap_or_default()
+        .and_then(|federated_catalog_offer| {
+          federated_catalog_offer
+            .dataset
+            .into_iter()
+            .find(|dataset| dataset.id == dataset_id)
         })
     },
   )?;
@@ -178,6 +90,7 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
   let federated_catalog_dataset = (*federated_catalog_dataset).clone();
 
   let selected_offer = use_state_eq(|| None);
+  let signing = use_state(|| false);
 
   let onchange = use_callback(selected_offer.clone(), |policy: Policy, selected_offer| {
     selected_offer.set(Some(policy))
@@ -190,6 +103,8 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
       selected_offer.clone(),
       props.originator.clone(),
       props.provider_id.clone(),
+      signing.setter(),
+      props.on_contract_negotiation_id.clone(),
     ),
     |_,
      (
@@ -198,6 +113,8 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
       selected_offer,
       originator,
       provider_id,
+      signing_setter,
+      on_contract_negotiation_id,
     )| {
       let edc_connector_context = edc_connector_context.clone();
       if let Some(policy) = (**selected_offer).clone()
@@ -206,6 +123,10 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
         let originator = originator.clone();
         let provider_id = provider_id.clone();
         let asset_id = federated_catalog_dataset.id.clone();
+
+        signing_setter.set(true);
+        let signing_setter = signing_setter.clone();
+        let on_contract_negotiation_id = on_contract_negotiation_id.clone();
 
         spawn_local(async move {
           if let Some(edc_client) = edc_connector_context.get_client() {
@@ -279,18 +200,27 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
                 .policy(policy)
                 .build();
 
-              if let Ok(contract_negotiation_id) = edc_client
+              match edc_client
                 .contract_negotiations(EdcConnectorApiVersion::V4)
                 .initiate(&new_contract_request)
                 .await
               {
-                log::warn!(
-                  "Contract negotiation initiated: {}",
-                  contract_negotiation_id.id()
-                );
+                Ok(contract_negotiation_id) => {
+                  log::info!(
+                    "Contract negotiation initiated: {}",
+                    contract_negotiation_id.id()
+                  );
+
+                  on_contract_negotiation_id.emit(contract_negotiation_id.id().to_string());
+                }
+                Err(error) => {
+                  log::error!("Error initiating contract negotiation: {}", error);
+                }
               }
             };
           }
+
+          signing_setter.set(false);
         })
       }
     },
@@ -301,11 +231,11 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
     let asset_id = federated_catalog_dataset.id.clone();
     let asset_name = federated_catalog_dataset.name.clone();
     let policies = federated_catalog_dataset.has_policy;
-    let selected_offer = selected_offer.clone();
+    let disabled = *signing;
 
     let offers = policies
       .iter()
-      .filter_map(|policy| {
+      .filter_map(|policy: &Policy| {
         if let Some(offer_id) = policy.id().and_then(|policy| policy.split(':').next()) {
           BASE64_STANDARD
             .decode(offer_id)
@@ -316,22 +246,64 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
           None
         }
       })
-      .map(|(policy, offer_id)| {
+      .map(|(policy, offer_id): (&Policy, String)| {
         let onchange = onchange.clone();
+
+        let permissions = policy.permissions().iter().map(|permission| {
+          html! {
+            <ConstraintRenderer
+              action={permission.action().clone()}
+              constraints={permission.constraints().to_vec()}
+            />
+          }
+        });
+
+        let obligations = policy.obligations().iter().map(|obligation| {
+          html! {
+            <ConstraintRenderer
+              action={obligation.action().clone()}
+              constraints={obligation.constraints().to_vec()}
+            />
+          }
+        });
+
+        let prohibitions = policy.prohibitions().iter().map(|prohibition| {
+          html! {
+            <ConstraintRenderer
+              action={prohibition.action().clone()}
+              constraints={prohibition.constraints().to_vec()}
+            />
+          }
+        });
+
         let policy = policy.clone();
 
         html!(
-          <Radio
-            name="offer-id"
-            checked={(*selected_offer).as_ref() == Some(&policy)}
-            onchange={onchange.reform(move |_| policy.clone())}
-          >
-            <span>{ offer_id.to_string() }</span>
-          </Radio>
+          <Card id="selectable-offer" selectable=true {disabled}>
+            <CardHeader
+              selectable_actions={yew::props!(CardSelectableActionsObjectProperties {
+                      action: CardSelectableActionsVariant::SingleSelect {
+                          onchange: Some(onchange.reform(move |_| policy.clone())),
+                      },
+                      base: yew::props!(CardSelectableActionsObjectBase {
+                          name: "selectable-offer"
+                      })
+                  })}
+            >
+              <CardTitle>{ offer_id.to_string() }</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <DescriptionList>
+                <DescriptionGroup term="Permissions">{ for permissions }</DescriptionGroup>
+                <DescriptionGroup term="Obligations">{ for obligations }</DescriptionGroup>
+                <DescriptionGroup term="Prohibitions">{ for prohibitions }</DescriptionGroup>
+              </DescriptionList>
+            </CardBody>
+          </Card>
         )
       });
 
-    let disabled = selected_offer.is_none();
+    let disabled = selected_offer.is_none() || *signing;
 
     Ok(html!(
       <>
@@ -339,7 +311,9 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
           <DescriptionGroup term="Provider ID">{ provider_id }</DescriptionGroup>
           <DescriptionGroup term="Asset ID">{ asset_id }</DescriptionGroup>
           <DescriptionGroup term="Asset Name">{ asset_name }</DescriptionGroup>
-          <DescriptionGroup term="Offer IDs">{ for offers }</DescriptionGroup>
+          <DescriptionGroup term="Offer IDs">
+            <Gallery>{ for offers }</Gallery>
+          </DescriptionGroup>
         </DescriptionList>
         <Split gutter=true>
           <SplitItem fill=true />

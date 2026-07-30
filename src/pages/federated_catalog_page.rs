@@ -1,4 +1,5 @@
-use crate::components::{ListFederatedCatalogOffers, SelectedFederatedCatalogOffer};
+use crate::components::{ListAssetsGallery, SelectedFederatedCatalogOffer};
+use crate::models::{AssetItem, Creator, Thumbnail};
 use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
@@ -45,7 +46,7 @@ pub struct CatalogPageInnerProps {
 pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
   let latest_access_token_context = use_latest_access_token().unwrap();
 
-  let federated_catalog_offers = use_future_with(
+  let asset_items = use_future_with(
     (latest_access_token_context.clone(), props.force_refresh),
     |parameters| async move {
       let (latest_access_token_context, _) = (*parameters).clone();
@@ -62,15 +63,65 @@ pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
         .list_offers()
         .await
         .unwrap_or_default()
+        .iter()
+        .flat_map(|federated_catalog_offer| {
+          federated_catalog_offer
+            .dataset
+            .clone()
+            .into_iter()
+            .map(|dataset| {
+              let asset_item = AssetItem {
+                id: dataset.id.clone(),
+                name: dataset.name,
+                version: dataset
+                  .version
+                  .and_then(|version| semver::Version::parse(&version).ok()),
+                description: dataset.description,
+                creator: dataset.creator.map(|creator| Creator {
+                  name: Some(creator.name),
+                  thumbnail: Some(Thumbnail {
+                    resource: Some(creator.thumbnail.resource),
+                  }),
+                }),
+                thumbnail: dataset.thumbnail.map(|thumbnail| Thumbnail {
+                  resource: Some(thumbnail.resource),
+                }),
+                keywords: dataset.keywords,
+                base_url: "".to_string(),
+                proxy_path: false,
+                proxy_query_params: false,
+                proxy_method: false,
+                proxy_body: false,
+              };
+
+              let selected_offer = SelectedFederatedCatalogOffer {
+                originator: federated_catalog_offer.originator.clone(),
+                provider_id: federated_catalog_offer.participant_id.id.clone(),
+                dataset_id: dataset.id.clone(),
+              };
+
+              (asset_item, selected_offer)
+            })
+            .collect::<Vec<_>>()
+        })
+        .unzip()
     },
   )?;
 
-  let federated_catalog_offers = (*federated_catalog_offers).clone();
+  let (asset_items, selected_offers): (Vec<AssetItem>, Vec<SelectedFederatedCatalogOffer>) =
+    (*asset_items).clone();
 
-  Ok(html!(
-    <ListFederatedCatalogOffers
-      {federated_catalog_offers}
-      onselectedoffer={props.onselectedoffer.clone()}
-    />
-  ))
+  let onshow = use_callback(
+    (props.onselectedoffer.clone(), selected_offers),
+    |dataset_id, (onselectedoffer, selected_offers)| {
+      if let Some(selected_offer) = selected_offers
+        .iter()
+        .find(|selected_offer| selected_offer.dataset_id == dataset_id)
+      {
+        onselectedoffer.emit(selected_offer.clone());
+      }
+    },
+  );
+
+  Ok(html!(<ListAssetsGallery {asset_items} {onshow} />))
 }
