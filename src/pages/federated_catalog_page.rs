@@ -68,6 +68,7 @@ pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
           federated_catalog_offer
             .dataset
             .clone()
+            .unwrap_or_default()
             .into_iter()
             .map(|dataset| {
               let asset_item = AssetItem {

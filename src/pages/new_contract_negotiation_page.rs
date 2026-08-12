@@ -81,6 +81,8 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
         .and_then(|federated_catalog_offer| {
           federated_catalog_offer
             .dataset
+            .clone()
+            .unwrap_or_default()
             .into_iter()
             .find(|dataset| dataset.id == dataset_id)
         })

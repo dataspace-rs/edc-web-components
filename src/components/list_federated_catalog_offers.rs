@@ -33,6 +33,8 @@ pub fn ListFederatedCatalogOffers(props: &ListFederatedCatalogOffersProps) -> Ht
     .flat_map(|federated_catalog_offer| {
       federated_catalog_offer
         .dataset
+        .clone()
+        .unwrap_or_default()
         .iter()
         .map(|dataset| FederatedCatalogOfferRenderer {
           originator: federated_catalog_offer.originator.clone(),
