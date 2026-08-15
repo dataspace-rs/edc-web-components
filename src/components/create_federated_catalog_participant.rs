@@ -1,5 +1,7 @@
+use crate::services::{ControlPlaneDspService, DidResolver};
 use edc_federated_catalog_client::models::FederatedCatalogParticipantCreateForm;
 use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
+use edc_identity_hub_client::models::DidWeb;
 //use crate::clients::{FederatedCatalogManagementClient, FederatedCatalogParticipantCreateForm};
 use patternfly_yew::prelude::*;
 use yew::platform::spawn_local;
@@ -18,8 +20,32 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
   let name = use_state(|| "".to_string());
   let target_url = use_state(|| "".to_string());
 
-  let onchange_id = use_callback(id.setter(), |value, id_setter| {
-    id_setter.set(value);
+  let onchange_id = use_callback((id.setter(), target_url.setter()), |value, (id_setter, target_url_setter)| {
+    let did = String::from(value);
+    let did_val = did.clone();
+    let target_setter = target_url_setter.clone();
+    spawn_local(async move {
+
+      if let Some(did_web) = DidWeb::new(&did) {
+        match DidResolver::new(reqwest::Client::new())
+            .resolve(did_web)
+            .await
+        {
+          Ok(data) => {
+            if let Some(service) = data.get_identity_services("DataService")
+                .first()
+                .and_then(|url| Some(ControlPlaneDspService::new(url.service_endpoint.clone())))
+                && let Ok(response) = service.get_metadata().await {
+              // log::info!("{:?}", service.service_endpoint);
+              let endpoint = service.get_dsp_endpoint(response.protocol_versions.first().unwrap().path.clone()).await;
+              target_setter.set(endpoint);
+            }
+          }
+          _ => {}
+        }
+      }
+    });
+    id_setter.set(did_val);
   });
 
   let onchange_name = use_callback(name.setter(), |value, name_setter| {
