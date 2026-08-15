@@ -10,6 +10,7 @@ pub enum EdcIdentityHubAction {}
 #[derive(Clone, PartialEq)]
 pub struct EdcIdentityHubState {
   participant_id: String,
+  participant_did: String,
   latest_access_token_context: LatestAccessToken,
 }
 
@@ -30,6 +31,9 @@ impl EdcIdentityHubState {
   pub fn participant_id(&self) -> &str {
     &self.participant_id
   }
+  pub fn participant_did(&self) -> &str {
+    &self.participant_did
+  }
 }
 
 impl Reducible for EdcIdentityHubState {
@@ -47,6 +51,7 @@ pub struct EdcIdentityHubContextProviderProps {
   #[prop_or_default]
   pub children: Html,
   pub participant_id: String,
+  pub participant_did: String,
 }
 
 #[component]
@@ -55,6 +60,7 @@ pub fn EdcIdentityHubContextProvider(props: &EdcIdentityHubContextProviderProps)
 
   let edc_connector_context = use_reducer(move || EdcIdentityHubState {
     participant_id: props.participant_id.clone(),
+    participant_did: props.participant_did.clone(),
     latest_access_token_context,
   });
 

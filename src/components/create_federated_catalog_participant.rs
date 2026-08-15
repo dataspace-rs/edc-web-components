@@ -33,14 +33,9 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
               .get_identity_services(IdentityServiceType::DataService)
               .first()
             && let Some(dataspace_service_client) = identity_service.get_dataspace_service_client()
-            && let Ok(protocol_versions) = dataspace_service_client.get_protocol_versions().await
-            && let Some(protocol_versions) = protocol_versions.first()
+            && let Some(dsp_endpoint) = dataspace_service_client.get_first_service_endpoint().await
           {
-            target_setter.set(
-              identity_service
-                .service_endpoint
-                .replace("/.well-known/dspace-version", &protocol_versions.path),
-            );
+            target_setter.set(dsp_endpoint);
           }
         });
       }
