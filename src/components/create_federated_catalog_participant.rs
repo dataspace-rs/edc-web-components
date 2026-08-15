@@ -1,6 +1,7 @@
+use crate::services::DidResolver;
 use edc_federated_catalog_client::models::FederatedCatalogParticipantCreateForm;
 use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
-//use crate::clients::{FederatedCatalogManagementClient, FederatedCatalogParticipantCreateForm};
+use edc_identity_hub_client::models::{DidWeb, IdentityServiceType};
 use patternfly_yew::prelude::*;
 use yew::platform::spawn_local;
 use yew::prelude::*;
@@ -18,9 +19,35 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
   let name = use_state(|| "".to_string());
   let target_url = use_state(|| "".to_string());
 
-  let onchange_id = use_callback(id.setter(), |value, id_setter| {
-    id_setter.set(value);
-  });
+  let onchange_id = use_callback(
+    (id.setter(), target_url.setter()),
+    |did: String, (id_setter, target_url_setter)| {
+      let target_setter = target_url_setter.clone();
+
+      if let Some(did_web) = DidWeb::new(&did) {
+        spawn_local(async move {
+          if let Ok(identity) = DidResolver::new(reqwest::Client::new())
+            .resolve(did_web)
+            .await
+            && let Some(identity_service) = identity
+              .get_identity_services(IdentityServiceType::DataService)
+              .first()
+            && let Some(dataspace_service_client) = identity_service.get_dataspace_service_client()
+            && let Ok(protocol_versions) = dataspace_service_client.get_protocol_versions().await
+            && let Some(protocol_versions) = protocol_versions.first()
+          {
+            target_setter.set(
+              identity_service
+                .service_endpoint
+                .replace("/.well-known/dspace-version", &protocol_versions.path),
+            );
+          }
+        });
+      }
+
+      id_setter.set(did);
+    },
+  );
 
   let onchange_name = use_callback(name.setter(), |value, name_setter| {
     name_setter.set(value);

@@ -1,8 +1,8 @@
 use crate::contexts::use_edc_identity_hub_context;
 use edc_identity_hub_client::IdentityHubClient;
 use edc_identity_hub_client::models::{
-  CredentialFormat, CredentialQuery, CredentialsSupported, DidWeb, RequestCredentialBody,
-  RequestCredentialState,
+  CredentialFormat, CredentialQuery, CredentialsSupported, DidWeb, IdentityServiceType,
+  RequestCredentialBody, RequestCredentialState,
 };
 use patternfly_yew::prelude::*;
 use uuid::Uuid;
@@ -46,7 +46,7 @@ pub fn RequestVerifiableCredential(props: &RequestVerifiableCredentialProps) -> 
         {
           log::debug!("Identity: {:?}", identity);
           if let Some(issuer_service_client) = identity
-            .get_identity_services("IssuerService")
+            .get_identity_services(IdentityServiceType::IssuerService)
             .first()
             .and_then(|identity_service| identity_service.get_issuer_service_client())
             && let Ok(issuer_service_metadata) = issuer_service_client.get_metadata().await

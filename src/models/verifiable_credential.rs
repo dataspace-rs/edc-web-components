@@ -16,8 +16,8 @@ impl From<Credential> for VerifiableCredential {
   fn from(credential: Credential) -> Self {
     VerifiableCredential {
       id: credential.id,
-      created_at: credential.created_at,
-      timestamp: credential.timestamp,
+      created_at: credential.created_at.timestamp() as u64,
+      timestamp: credential.timestamp.timestamp() as u64,
       issuer_id: credential.issuer_id,
       holder_id: credential.holder_id,
       issuance_date: credential.verifiable_credential.credential.issuance_date,

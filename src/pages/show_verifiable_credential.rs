@@ -81,7 +81,7 @@ pub fn ShowVerifiableCredentialPageInner(props: &ShowVerifiableCredentialPagePro
         <DescriptionGroup term="Issuer ID">{ verifiable_credential.issuer_id }</DescriptionGroup>
         <DescriptionGroup term="Holder ID">{ verifiable_credential.holder_id }</DescriptionGroup>
         <DescriptionGroup term="Created at">
-          { chrono::DateTime::from_timestamp_millis(verifiable_credential.created_at as i64).unwrap().format("%Y-%m-%d %H:%M:%S").to_string() }
+          { chrono::DateTime::from_timestamp_millis(verifiable_credential.created_at.timestamp()).unwrap().format("%Y-%m-%d %H:%M:%S").to_string() }
         </DescriptionGroup>
         <DescriptionGroup term="Insurance Date">
           { verifiable_credential.verifiable_credential.credential.issuance_date.format("%Y-%m-%d %H:%M:%S").to_string() }
