@@ -9,11 +9,17 @@ use yew_oauth2::hook::use_latest_access_token;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct CatalogPageProps {
   pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+  pub on_manage_catalog: Callback<()>
 }
 
 #[component]
 pub fn CatalogPage(props: &CatalogPageProps) -> Html {
   let refresh = use_state(|| 0usize);
+  let fallback = html! {<Bullseye><Spinner size={SpinnerSize::Lg} /></Bullseye>};
+
+  let on_manage_catalog = use_callback(props.on_manage_catalog.clone(), |_, manage_catalog| {
+    manage_catalog.emit(());
+  });
 
   html!(
     <Stack gutter=true>
@@ -25,10 +31,11 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
         </Split>
       </StackItem>
       <StackItem>
-        <Suspense>
+        <Suspense {fallback}>
           <CatalogPageInner
             force_refresh={*refresh}
             onselectedoffer={props.onselectedoffer.clone()}
+            {on_manage_catalog}
           />
         </Suspense>
       </StackItem>
@@ -40,11 +47,16 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
 pub struct CatalogPageInnerProps {
   pub force_refresh: usize,
   pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+  on_manage_catalog: Callback<()>
 }
 
 #[component]
 pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
   let latest_access_token_context = use_latest_access_token().unwrap();
+
+  let onclick_catalog = use_callback(props.on_manage_catalog.clone(), |_, on_manage_catalog| {
+    on_manage_catalog.emit(());
+  });
 
   let asset_items = use_future_with(
     (latest_access_token_context.clone(), props.force_refresh),
@@ -123,5 +135,19 @@ pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
     },
   );
 
-  Ok(html!(<ListAssetsGallery {asset_items} {onshow} />))
+  if asset_items.is_empty() {
+    Ok(html!{
+      <EmptyState
+            title="Empty state"
+            icon={Icon::Cubes}
+            primary={Action::new("Manage my catalog subscriptions", onclick_catalog)}
+            >
+            <div>
+              <p>{"You do not have any registered catalogs yet."}</p>
+            </div>
+      </EmptyState>
+    })
+  } else {
+    Ok(html!(<ListAssetsGallery {asset_items} {onshow} />))
+  }
 }
