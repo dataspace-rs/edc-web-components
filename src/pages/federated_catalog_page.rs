@@ -47,7 +47,7 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
 pub struct CatalogPageInnerProps {
   pub force_refresh: usize,
   pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
-  on_manage_catalog: Callback<()>
+  pub on_manage_catalog: Callback<()>
 }
 
 #[component]
