@@ -27,7 +27,7 @@ pub fn FederatedCatalogManagementPage() -> Html {
     if let Some(backdropper) = backdropper {
       backdropper.open(html!(
         <Bullseye>
-          <Modal variant={ModalVariant::Medium} title="Create a Participant">
+          <Modal variant={ModalVariant::Medium} title="Subscribe to a Participant">
             <CreateFederatedCatalogParticipant {on_create} />
           </Modal>
         </Bullseye>
