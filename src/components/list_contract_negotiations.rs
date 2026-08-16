@@ -8,8 +8,10 @@ pub struct ListContractNegotiationsProps {
   pub contract_negotiation_items: Vec<ContractNegotiationItem>,
   pub offset: usize,
   pub limit: usize,
-  pub onoffset: Callback<usize>,
-  pub onlimit: Callback<usize>,
+  pub switch: bool,
+  pub on_offset: Callback<usize>,
+  pub on_limit: Callback<usize>,
+  pub on_switch_view_consumer: Callback<bool>,
   pub on_show_contract_negotiation: Callback<String>,
 }
 
@@ -33,9 +35,9 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
       props.offset,
       props.limit,
       total_entries,
-      props.onoffset.clone(),
+      props.on_offset.clone(),
     ),
-    |page: Navigation, (offset, limit, total_entries, onoffset)| {
+    |page: Navigation, (offset, limit, total_entries, on_offset)| {
       let offset = match page {
         Navigation::First => 0,
         Navigation::Last => (total_entries.unwrap_or_default().saturating_sub(1) / limit) * limit,
@@ -43,7 +45,7 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
         Navigation::Next => *offset + limit,
         Navigation::Page(n) => n * limit,
       };
-      onoffset.emit(offset);
+      on_offset.emit(offset);
     },
   );
 
@@ -65,11 +67,16 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
       <Toolbar>
         <ToolbarContent>
           <ToolbarItem r#type={ToolbarItemType::Pagination}>
+            <Switch
+              label="as Consumer"
+              label_off="as Provider"
+              onchange={props.on_switch_view_consumer.clone()}
+            />
             <Pagination
               offset={props.offset}
               entries_per_page_choices={vec![5, 10, 25, 50, 100]}
               selected_choice={props.limit}
-              onlimit={&props.onlimit}
+              onlimit={&props.on_limit}
               onnavigation={&nav_callback}
             />
           </ToolbarItem>
