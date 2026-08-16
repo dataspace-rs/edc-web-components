@@ -1,41 +1,15 @@
 use crate::components::{ListAssetsGallery, SelectedFederatedCatalogOffer};
 use crate::contexts::{use_edc_connector_context, use_edc_identity_hub_context};
-use crate::models::AssetItem;
+use crate::models::{AssetItem, DatasetExtraFields};
 use crate::services::DidResolver;
 use edc_connector_client::EdcConnectorApiVersion;
+use edc_connector_client::types::Protocol;
 use edc_connector_client::types::catalog::CatalogRequest;
 use edc_connector_client::types::query::Query;
-use edc_connector_client::types::{ExtraTokenFields, Protocol};
-use edc_federated_catalog_client::models::{Creator, Thumbnail};
 use edc_identity_hub_client::models::{DidWeb, IdentityServiceType};
 use patternfly_yew::prelude::*;
-use serde::Deserialize;
-use serde_with::serde_as;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
-
-#[serde_as]
-#[derive(Deserialize, Debug, Clone)]
-pub struct CatalogExtraFields {
-  #[serde(rename = "name", alias = "edc:name")]
-  pub name: String,
-  #[serde(rename = "contenttype", alias = "edc:contenttype")]
-  pub content_type: String,
-  #[serde(alias = "dct:title", default)]
-  pub title: Option<String>,
-  #[serde(alias = "http://www.w3.org/2000/01/rdf-schema#comment", default)]
-  pub description: Option<String>,
-  #[serde(alias = "dcat:version", default)]
-  pub version: Option<String>,
-  #[serde(alias = "dct:creator", default)]
-  pub creator: Option<Creator>,
-  #[serde(alias = "http://xmlns.com/foaf/0.1/thumbnail", default)]
-  pub thumbnail: Option<Thumbnail>,
-  #[serde(alias = "dcat:keyword", default)]
-  pub keywords: Vec<String>,
-}
-
-impl ExtraTokenFields for CatalogExtraFields {}
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct OfferPageProps {
@@ -156,42 +130,20 @@ pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
 
         if let Ok(response) = client
           .catalogue(EdcConnectorApiVersion::V4)
-          .request::<CatalogExtraFields>(&request)
+          .request::<DatasetExtraFields>(&request)
           .await
         {
           response
             .datasets()
             .iter()
             .map(|dataset| {
-              let extra = dataset.extra.clone();
-              let asset_item = AssetItem {
-                id: dataset.id().parse().unwrap(),
-                name: dataset.extra.name.clone(),
-                version: extra
-                  .version
-                  .and_then(|version| semver::Version::parse(&version).ok()),
-                description: extra.description,
-                creator: extra.creator.map(|creator| crate::models::Creator {
-                  name: Some(creator.name),
-                  thumbnail: Some(crate::models::Thumbnail {
-                    resource: Some(creator.thumbnail.resource),
-                  }),
-                }),
-                thumbnail: extra.thumbnail.map(|thumbnail| crate::models::Thumbnail {
-                  resource: Some(thumbnail.resource),
-                }),
-                keywords: extra.keywords,
-                base_url: "".to_string(),
-                proxy_path: false,
-                proxy_query_params: false,
-                proxy_method: false,
-                proxy_body: false,
-              };
+              let dataset_id = dataset.id().to_string();
+              let asset_item = AssetItem::from(dataset);
 
               let selected_offer = SelectedFederatedCatalogOffer {
                 originator: dsp_endpoint.clone(),
                 provider_id: edc_identity_hub_context.participant_did().to_string(),
-                dataset_id: dataset.id().to_string(),
+                dataset_id,
               };
 
               (asset_item, selected_offer)

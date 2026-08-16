@@ -1,5 +1,5 @@
 use crate::components::{ListAssetsGallery, SelectedFederatedCatalogOffer};
-use crate::models::{AssetItem, Creator, Thumbnail};
+use crate::models::AssetItem;
 use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
@@ -9,11 +9,17 @@ use yew_oauth2::hook::use_latest_access_token;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct CatalogPageProps {
   pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+  pub on_manage_catalog: Callback<()>,
 }
 
 #[component]
 pub fn CatalogPage(props: &CatalogPageProps) -> Html {
   let refresh = use_state(|| 0usize);
+  let fallback = html! {
+    <Bullseye>
+      <Spinner size={SpinnerSize::Lg} />
+    </Bullseye>
+  };
 
   html!(
     <Stack gutter=true>
@@ -25,10 +31,11 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
         </Split>
       </StackItem>
       <StackItem>
-        <Suspense>
+        <Suspense {fallback}>
           <CatalogPageInner
             force_refresh={*refresh}
             onselectedoffer={props.onselectedoffer.clone()}
+            on_manage_catalog={props.on_manage_catalog.clone()}
           />
         </Suspense>
       </StackItem>
@@ -40,6 +47,7 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
 pub struct CatalogPageInnerProps {
   pub force_refresh: usize,
   pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+  pub on_manage_catalog: Callback<()>,
 }
 
 #[component]
@@ -70,34 +78,13 @@ pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
             .clone()
             .into_iter()
             .map(|dataset| {
-              let asset_item = AssetItem {
-                id: dataset.id.clone(),
-                name: dataset.name,
-                version: dataset
-                  .version
-                  .and_then(|version| semver::Version::parse(&version).ok()),
-                description: dataset.description,
-                creator: dataset.creator.map(|creator| Creator {
-                  name: Some(creator.name),
-                  thumbnail: Some(Thumbnail {
-                    resource: Some(creator.thumbnail.resource),
-                  }),
-                }),
-                thumbnail: dataset.thumbnail.map(|thumbnail| Thumbnail {
-                  resource: Some(thumbnail.resource),
-                }),
-                keywords: dataset.keywords,
-                base_url: "".to_string(),
-                proxy_path: false,
-                proxy_query_params: false,
-                proxy_method: false,
-                proxy_body: false,
-              };
+              let dataset_id = dataset.id.clone();
+              let asset_item = AssetItem::from(dataset);
 
               let selected_offer = SelectedFederatedCatalogOffer {
                 originator: federated_catalog_offer.originator.clone(),
                 provider_id: federated_catalog_offer.participant_id.id.clone(),
-                dataset_id: dataset.id.clone(),
+                dataset_id,
               };
 
               (asset_item, selected_offer)
@@ -123,5 +110,19 @@ pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
     },
   );
 
-  Ok(html!(<ListAssetsGallery {asset_items} {onshow} />))
+  if asset_items.is_empty() {
+    Ok(html! {
+      <EmptyState
+        title="Empty state"
+        icon={Icon::Cubes}
+        primary={Action::new("Manage my catalog subscriptions", props.on_manage_catalog.reform(|_| ()))}
+      >
+        <div>
+          <p>{ "You do not have any registered catalogs yet." }</p>
+        </div>
+      </EmptyState>
+    })
+  } else {
+    Ok(html!(<ListAssetsGallery {asset_items} {onshow} />))
+  }
 }

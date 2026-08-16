@@ -1,5 +1,7 @@
+use crate::models::dataset_extra_fields::DatasetExtraFields;
 use crate::models::{Creator, Thumbnail};
 use edc_connector_client::types::asset::Asset;
+use edc_connector_client::types::catalog::Dataset;
 use edc_connector_client::types::data_address::DataAddress;
 use edc_connector_client::types::properties::Properties;
 
@@ -78,6 +80,66 @@ impl From<Asset> for AssetItem {
       proxy_query_params,
       proxy_method,
       proxy_body,
+    }
+  }
+}
+
+impl From<edc_federated_catalog_client::models::Dataset> for AssetItem {
+  fn from(dataset: edc_federated_catalog_client::models::Dataset) -> Self {
+    Self {
+      id: dataset.id.clone(),
+      name: dataset.name,
+      version: dataset
+        .version
+        .and_then(|version| semver::Version::parse(&version).ok()),
+      description: dataset.description,
+      creator: dataset.creator.map(|creator| Creator {
+        name: Some(creator.name),
+        thumbnail: Some(Thumbnail {
+          resource: Some(creator.thumbnail.resource),
+        }),
+      }),
+      thumbnail: dataset.thumbnail.map(|thumbnail| Thumbnail {
+        resource: Some(thumbnail.resource),
+      }),
+      keywords: dataset.keywords,
+      base_url: "".to_string(),
+      proxy_path: false,
+      proxy_query_params: false,
+      proxy_method: false,
+      proxy_body: false,
+    }
+  }
+}
+
+impl From<&Dataset<DatasetExtraFields>> for AssetItem {
+  fn from(dataset: &Dataset<DatasetExtraFields>) -> Self {
+    let id = dataset.id().to_string();
+    let extra = &dataset.extra;
+
+    Self {
+      id,
+      name: extra.name.clone(),
+      version: extra
+        .version
+        .as_ref()
+        .and_then(|version| semver::Version::parse(version).ok()),
+      description: extra.description.to_owned(),
+      creator: extra.creator.as_ref().map(|creator| Creator {
+        name: Some(creator.name.to_owned()),
+        thumbnail: Some(Thumbnail {
+          resource: Some(creator.thumbnail.resource.to_owned()),
+        }),
+      }),
+      thumbnail: extra.thumbnail.as_ref().map(|thumbnail| Thumbnail {
+        resource: Some(thumbnail.resource.to_owned()),
+      }),
+      keywords: extra.keywords.clone(),
+      base_url: "".to_string(),
+      proxy_path: false,
+      proxy_query_params: false,
+      proxy_method: false,
+      proxy_body: false,
     }
   }
 }
