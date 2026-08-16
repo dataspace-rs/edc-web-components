@@ -17,6 +17,7 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
   let refresh = use_state(|| 0usize);
   let offset = use_state(|| 0usize);
   let limit = use_state(|| 10usize);
+  let switch = use_state(|| false);
 
   let onoffset = use_callback(
     (refresh.clone(), offset.setter()),
@@ -34,6 +35,16 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
     },
   );
 
+  let onswitch = use_callback(
+    (refresh.clone(), switch.setter()),
+    |switch, (refresh, switch_setter)| {
+      switch_setter.set(switch);
+      refresh.set(**refresh + 1);
+    },
+  );
+
+  let fallback = html! {<Bullseye><Spinner size={SpinnerSize::Lg} /></Bullseye>};
+
   html!(
     <Stack gutter=true>
       <StackItem>
@@ -44,12 +55,14 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
         </Split>
       </StackItem>
       <StackItem>
-        <Suspense>
+        <Suspense {fallback}>
           <ContractNegotiationPageInner
             offset={*offset}
             limit={*limit}
+            switch={*switch}
             {onoffset}
             {onlimit}
+            {onswitch}
             force_refresh={*refresh}
             on_show_contract_negotiation={props.on_show_contract_negotiation.clone()}
           />
@@ -63,8 +76,10 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
 pub struct ContractNegotiationPageInnerProps {
   pub offset: usize,
   pub limit: usize,
+  pub switch: bool,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
+  pub onswitch: Callback<bool>,
   pub force_refresh: usize,
   pub on_show_contract_negotiation: Callback<String>,
 }
@@ -78,14 +93,16 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
       edc_connector_context,
       props.limit,
       props.offset,
+      props.switch,
       props.force_refresh,
     ),
     |parameters| async move {
-      let (edc_connector_context, limit, offset, _) = (*parameters).clone();
+      let (edc_connector_context, limit, offset, switch, _) = (*parameters).clone();
 
       let query = Query::builder()
         .limit(limit as u32)
         .offset(offset as u32)
+        .filter("type", "=", if switch == false {"PROVIDER"} else {"CONSUMER"} )
         .build();
 
       if let Some(client) = edc_connector_context.get_client() {
@@ -110,8 +127,10 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
       contract_negotiation_items={contract_negotiation_items}
       offset={props.offset}
       limit={props.limit}
+      switch={props.switch}
       onoffset={props.onoffset.clone()}
       onlimit={props.onlimit.clone()}
+      onswitch={props.onswitch.clone()}
       on_show_contract_negotiation={props.on_show_contract_negotiation.clone()}
     />
   ))

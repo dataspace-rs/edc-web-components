@@ -8,8 +8,10 @@ pub struct ListContractNegotiationsProps {
   pub contract_negotiation_items: Vec<ContractNegotiationItem>,
   pub offset: usize,
   pub limit: usize,
+  pub switch: bool,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
+  pub onswitch: Callback<bool>,
   pub on_show_contract_negotiation: Callback<String>,
 }
 
@@ -47,6 +49,13 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
     },
   );
 
+  let switch_callback = use_callback(
+    props.onswitch.clone(),
+    |switch, onswitch| {
+      onswitch.emit(switch);
+    },
+  );
+
   let rows = props
     .contract_negotiation_items
     .iter()
@@ -65,6 +74,7 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
       <Toolbar>
         <ToolbarContent>
           <ToolbarItem r#type={ToolbarItemType::Pagination}>
+            <Switch label="as Consumer" label_off="as Provider" onchange={&switch_callback}/>
             <Pagination
               offset={props.offset}
               entries_per_page_choices={vec![5, 10, 25, 50, 100]}
