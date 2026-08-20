@@ -10,21 +10,14 @@ pub use self::rule::Rule;
 use crate::components::create_policy::atomic_constraint_edit::ConstraintMode;
 use crate::components::simple_or_id_field::SimpleOrIdField;
 use crate::contexts::use_edc_connector_context;
-use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::policy::{
   Action, Constraint, NewPolicyDefinition, Obligation, Permission, Policy, PolicyKind, Prohibition,
   Target,
 };
+use edc_connector_client::{EdcConnectorApiVersion, Error, ManagementApiErrorDetailKind};
 use patternfly_yew::prelude::*;
 use yew::platform::spawn_local;
 use yew::prelude::*;
-
-#[derive(Copy, Clone, PartialEq, Eq, strum::Display)]
-enum Options {
-  Agreement,
-  Offer,
-  Set,
-}
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct CreatePolicyProps {
@@ -37,7 +30,6 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
   let identifier = use_state(String::new);
-  let kind = use_state(|| Options::Set);
   let assignee = use_state(String::default);
   let assigner = use_state(String::default);
   let target = use_state(|| (true, String::default()));
@@ -45,11 +37,12 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   let prohibitions = use_state(Vec::new);
   let obligations = use_state(Vec::new);
 
+  let creation_errors = use_state(|| None);
+
   let onsubmit = use_callback(
     (
       edc_connector_context,
       identifier.clone(),
-      kind.clone(),
       assignee.clone(),
       assigner.clone(),
       target.clone(),
@@ -57,12 +50,12 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
       prohibitions.clone(),
       obligations.clone(),
       props.on_create.clone(),
+      creation_errors.setter(),
     ),
     |event: SubmitEvent,
      (
       edc_connector_context,
       identifier,
-      kind,
       assignee,
       assigner,
       target,
@@ -70,12 +63,12 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
       prohibitions,
       obligations,
       on_create,
+      creation_errors_setter,
     )| {
       event.prevent_default();
 
       let edc_connector_context = edc_connector_context.clone();
       let identifier = (**identifier).clone();
-      let kind = **kind;
       let assignee = (**assignee).clone();
       let assigner = (**assigner).clone();
       let (is_simple_target, target) = (**target).clone();
@@ -131,14 +124,13 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
         )
         .collect();
 
+      creation_errors_setter.set(None);
+
       let on_create = on_create.clone();
+      let creation_errors_setter = creation_errors_setter.clone();
 
       spawn_local(async move {
-        let kind = match kind {
-          Options::Agreement => PolicyKind::Agreement,
-          Options::Offer => PolicyKind::Offer,
-          Options::Set => PolicyKind::Set,
-        };
+        let kind = PolicyKind::Set;
 
         let policy_builder = Policy::builder()
           .kind(kind)
@@ -176,11 +168,31 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
           .build();
 
         if let Some(client) = edc_connector_context.get_client() {
-          let _ = client
+          if let Err(error) = client
             .policies(EdcConnectorApiVersion::V4)
             .create(&new_policy)
-            .await;
-          on_create.emit(());
+            .await
+          {
+            match error {
+              Error::ManagementApi(management_api_error) => {
+                let error_message = match management_api_error.error_detail {
+                  ManagementApiErrorDetailKind::Raw(error) => html!(<div>{ error }</div>),
+                  ManagementApiErrorDetailKind::Parsed(error_list) => error_list
+                    .into_iter()
+                    .map(|error| html!(<div>{ error.message }</div>))
+                    .collect::<Html>(),
+                };
+
+                creation_errors_setter.set(Some(error_message));
+              }
+              _ => {
+                let error_message = format!("{error:?}");
+                creation_errors_setter.set(Some(html!(<div>{ error_message }</div>)));
+              }
+            }
+          } else {
+            on_create.emit(());
+          }
         }
       })
     },
@@ -190,10 +202,6 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
     use_callback(identifier.setter(), move |identifier, identifier_setter| {
       identifier_setter.set(identifier);
     });
-
-  let onselect_kind = use_callback(kind.setter(), move |kind, kind_setter| {
-    kind_setter.set(kind);
-  });
 
   let onchange_assignee = use_callback(
     assignee.setter(),
@@ -241,17 +249,19 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
 
   let disabled = false;
 
+  let errors = if let Some(error_mesage) = (*creation_errors).clone() {
+    html!(
+      <Alert title="Unable to create the policy" r#type={AlertType::Danger}>{ error_mesage }</Alert>
+    )
+  } else {
+    html!()
+  };
+
   html!(
     <Form {onsubmit}>
+      { errors }
       <FormGroup label="Identifier" required=true>
         <TextInput required=true value={(*identifier).to_string()} onchange={onchange_identifier} />
-      </FormGroup>
-      <FormGroup label="Kind" required=true>
-        <SimpleSelect<Options>
-          selected={*kind}
-          onselect={onselect_kind}
-          entries={vec![Options::Agreement, Options::Offer, Options::Set]}
-        />
       </FormGroup>
       <FormGroup label="Permissions">
         <ListOfRules list={(*permissions).clone()} onchange={onchange_permissions} />
