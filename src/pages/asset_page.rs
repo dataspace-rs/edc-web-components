@@ -126,6 +126,7 @@ pub fn AssetPageInner(props: &AssetPageInnerProps) -> HtmlResult {
       onoffset={props.onoffset.clone()}
       onlimit={props.onlimit.clone()}
       onshow={props.onshow.clone()}
+      button_label="Show"
     />
   ))
 }

@@ -12,6 +12,8 @@ pub struct ListAssetsProps {
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
   pub onshow: Callback<String>,
+  #[prop_or(AttrValue::Static("Select"))]
+  pub button_label: AttrValue,
 }
 
 #[component]
@@ -45,10 +47,20 @@ pub fn ListAssets(props: &ListAssetsProps) -> Html {
 
   let items_render = if *display_cards {
     html!(
-      <ListAssetsGallery asset_items={props.asset_items.clone()} onshow={props.onshow.clone()} />
+      <ListAssetsGallery
+        asset_items={props.asset_items.clone()}
+        onshow={props.onshow.clone()}
+        button_label={props.button_label.clone()}
+      />
     )
   } else {
-    html!(<ListAssetsTable asset_items={props.asset_items.clone()} onshow={props.onshow.clone()} />)
+    html!(
+      <ListAssetsTable
+        asset_items={props.asset_items.clone()}
+        onshow={props.onshow.clone()}
+        button_label={props.button_label.clone()}
+      />
+    )
   };
 
   html!(
@@ -89,6 +101,8 @@ pub fn ListAssets(props: &ListAssetsProps) -> Html {
 pub struct ListAssetsTableProps {
   pub asset_items: Vec<AssetItem>,
   pub onshow: Callback<String>,
+  #[prop_or(AttrValue::Static("Select"))]
+  pub button_label: AttrValue,
 }
 
 #[component]
@@ -112,7 +126,11 @@ pub fn ListAssetsGallery(props: &ListAssetsTableProps) -> Html {
       let asset_id = dataset.id.clone();
 
       html!(
-        <DatasetCard {dataset} on_offer_click={props.onshow.reform(move |_| asset_id.clone())} />
+        <DatasetCard
+          {dataset}
+          on_offer_click={props.onshow.reform(move |_| asset_id.clone())}
+          button_label={props.button_label.clone()}
+        />
       )
     });
 

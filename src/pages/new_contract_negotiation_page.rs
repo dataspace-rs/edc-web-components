@@ -1,19 +1,19 @@
 use crate::components::ConstraintRenderer;
 use crate::contexts::use_edc_connector_context;
+use crate::models::DatasetExtraFields;
 use base64::prelude::*;
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::Protocol;
+use edc_connector_client::types::catalog::{Dataset, DatasetRequest};
 use edc_connector_client::types::contract_negotiation::ContractRequest;
 use edc_connector_client::types::policy::{
   AtomicConstraint, Constraint, LeftOperand, Operator, Permission, Policy, PolicyKind, Target,
 };
-use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
 use patternfly_yew::prelude::*;
 use std::fmt::Debug;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
-use yew_oauth2::hook::use_latest_access_token;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct NewContractNegotiationPageProps {
@@ -59,35 +59,44 @@ pub struct NewContractNegotiationPageInnerProps {
 #[component]
 pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerProps) -> HtmlResult {
   let edc_connector_context = use_edc_connector_context();
-  let latest_access_token_context = use_latest_access_token().unwrap();
 
-  let federated_catalog_dataset = use_future_with(
-    (latest_access_token_context, props.dataset_id.clone()),
+  let catalog_dataset = use_future_with(
+    (
+      edc_connector_context.clone(),
+      props.originator.clone(),
+      props.provider_id.clone(),
+      props.dataset_id.clone(),
+    ),
     |parameters| async move {
-      let (latest_access_token_context, dataset_id) = (*parameters).clone();
+      let (edc_connector_context, originator, provider_id, dataset_id) = (*parameters).clone();
 
-      let server_url = web_sys::window().unwrap().location().origin().unwrap();
-      let federated_catalog_client = FederatedCatalogClient::new(
-        reqwest::Client::new(),
-        format!("{server_url}/federated-catalog"),
-        latest_access_token_context.access_token(),
-        FederatedCatalogClientVersion::V4,
-      );
+      if let Some(edc_connector_client) = edc_connector_context.get_client() {
+        let dataset_request = DatasetRequest::builder()
+          .id(dataset_id.clone())
+          .counter_party_address(originator)
+          .counter_party_id(provider_id)
+          .protocol(Protocol::default())
+          .build();
 
-      federated_catalog_client
-        .get_offer_by_dataset_id(dataset_id.clone())
-        .await
-        .unwrap_or_default()
-        .and_then(|federated_catalog_offer| {
-          federated_catalog_offer
-            .dataset
-            .into_iter()
-            .find(|dataset| dataset.id == dataset_id)
-        })
+        edc_connector_client
+          .catalogue(EdcConnectorApiVersion::V4)
+          .dataset(&dataset_request)
+          .await
+          .ok()
+          .map(|catalog_dataset: Dataset<DatasetExtraFields>| {
+            (
+              catalog_dataset.id().to_string(),
+              catalog_dataset.extra.name.clone(),
+              catalog_dataset.offers().to_vec(),
+            )
+          })
+      } else {
+        None
+      }
     },
   )?;
 
-  let federated_catalog_dataset = (*federated_catalog_dataset).clone();
+  let catalog_dataset = (*catalog_dataset).clone();
 
   let selected_offer = use_state_eq(|| None);
   let signing = use_state(|| false);
@@ -99,7 +108,7 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
   let onclick = use_callback(
     (
       edc_connector_context.clone(),
-      federated_catalog_dataset.clone(),
+      catalog_dataset.clone(),
       selected_offer.clone(),
       props.originator.clone(),
       props.provider_id.clone(),
@@ -109,7 +118,7 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
     |_,
      (
       edc_connector_context,
-      federated_catalog_dataset,
+      catalog_dataset,
       selected_offer,
       originator,
       provider_id,
@@ -118,11 +127,11 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
     )| {
       let edc_connector_context = edc_connector_context.clone();
       if let Some(policy) = (**selected_offer).clone()
-        && let Some(federated_catalog_dataset) = federated_catalog_dataset
+        && let Some(catalog_dataset) = catalog_dataset
       {
         let originator = originator.clone();
         let provider_id = provider_id.clone();
-        let asset_id = federated_catalog_dataset.id.clone();
+        let asset_id = catalog_dataset.0.to_string();
 
         signing_setter.set(true);
         let signing_setter = signing_setter.clone();
@@ -226,11 +235,11 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
     },
   );
 
-  if let Some(federated_catalog_dataset) = federated_catalog_dataset {
+  if let Some(catalog_dataset) = catalog_dataset {
     let provider_id = props.provider_id.clone();
-    let asset_id = federated_catalog_dataset.id.clone();
-    let asset_name = federated_catalog_dataset.name.clone();
-    let policies = federated_catalog_dataset.has_policy;
+    let asset_id = catalog_dataset.0.clone();
+    let asset_name = catalog_dataset.1.clone();
+    let policies = catalog_dataset.2;
     let disabled = *signing;
 
     let offers = policies

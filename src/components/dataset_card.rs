@@ -8,6 +8,8 @@ pub struct DatasetCardProps {
   pub dataset: DataspaceDataset,
   #[prop_or_default]
   pub on_offer_click: Option<Callback<()>>,
+  #[prop_or(AttrValue::Static("Select"))]
+  pub button_label: AttrValue,
 }
 
 #[styled_component]
@@ -59,7 +61,7 @@ pub fn DatasetCard(props: &DatasetCardProps) -> Html {
         icon={Icon::AngleRight}
         onclick={offer.reform(|_| ())}
       >
-        { "Select" }
+        { props.button_label.clone() }
       </Button>
     )
   } else {
