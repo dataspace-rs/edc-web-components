@@ -1,5 +1,5 @@
 use crate::components::{ListAssetsGallery, SelectedFederatedCatalogOffer};
-use crate::contexts::{use_edc_connector_context, use_edc_identity_hub_context};
+use crate::contexts::use_edc_connector_context;
 use crate::models::{AssetItem, DatasetExtraFields};
 use crate::services::DidResolver;
 use edc_connector_client::EdcConnectorApiVersion;
@@ -17,6 +17,7 @@ pub struct OfferPageProps {
   pub on_new_asset: Callback<()>,
   pub on_new_policy: Callback<()>,
   pub on_new_contract: Callback<()>,
+  pub participant_did: String,
 }
 
 #[component]
@@ -68,6 +69,7 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
             on_new_asset={props.on_new_asset.clone()}
             on_new_policy={props.on_new_policy.clone()}
             on_new_contract={props.on_new_contract.clone()}
+            participant_did={props.participant_did.clone()}
           />
         </Suspense>
       </StackItem>
@@ -86,26 +88,25 @@ pub struct OfferPageInnerProps {
   pub on_new_asset: Callback<()>,
   pub on_new_policy: Callback<()>,
   pub on_new_contract: Callback<()>,
+  pub participant_did: String,
 }
 
 #[component]
 pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
   let edc_connector_context = use_edc_connector_context();
-  let edc_identity_hub_context = use_edc_identity_hub_context();
 
   let asset_items = use_future_with(
     (
-      edc_identity_hub_context,
+      props.participant_did.clone(),
       edc_connector_context,
       props.limit,
       props.offset,
       props.force_refresh,
     ),
     |parameters| async move {
-      let (edc_identity_hub_context, edc_connector_context, limit, offset, _) =
-        (*parameters).clone();
+      let (participant_did, edc_connector_context, limit, offset, _) = (*parameters).clone();
 
-      if let Some(did_web) = DidWeb::new(edc_identity_hub_context.participant_did())
+      if let Some(did_web) = DidWeb::new(&participant_did)
         && let Ok(did_data) = DidResolver::new(reqwest::Client::new())
           .resolve(did_web)
           .await
@@ -118,7 +119,7 @@ pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
       {
         let request = CatalogRequest::builder()
           .counter_party_address(dsp_endpoint.clone())
-          .counter_party_id(edc_identity_hub_context.participant_did())
+          .counter_party_id(&participant_did)
           .protocol(Protocol::default())
           .query_spec(
             Query::builder()
@@ -142,7 +143,7 @@ pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
 
               let selected_offer = SelectedFederatedCatalogOffer {
                 originator: dsp_endpoint.clone(),
-                provider_id: edc_identity_hub_context.participant_did().to_string(),
+                provider_id: participant_did.clone(),
                 dataset_id,
               };
 

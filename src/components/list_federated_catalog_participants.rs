@@ -7,6 +7,8 @@ use yew::prelude::*;
 pub struct ListFederatedCatalogParticipantsProps {
   pub federated_catalog_participants: Vec<FederatedCatalogParticipant>,
   pub ondelete: Callback<FederatedCatalogParticipant>,
+  #[prop_or_default]
+  pub on_show_offer: Option<Callback<FederatedCatalogParticipant>>,
 }
 
 #[component]
@@ -25,9 +27,13 @@ pub fn ListFederatedCatalogParticipants(props: &ListFederatedCatalogParticipants
       .federated_catalog_participants
       .clone()
       .into_iter()
-      .map(|federated_catalog_participant| {
-        FederatedCatalogParticipantRenderer((federated_catalog_participant, props.ondelete.clone()))
-      })
+      .map(
+        |federated_catalog_participant| FederatedCatalogParticipantRenderer {
+          federated_catalog_participant,
+          ondelete: props.ondelete.clone(),
+          on_show_offer: props.on_show_offer.clone(),
+        },
+      )
       .collect(),
   )));
 
@@ -49,43 +55,55 @@ enum Columns {
 }
 
 #[derive(Clone, Debug)]
-struct FederatedCatalogParticipantRenderer(
-  (
-    FederatedCatalogParticipant,
-    Callback<FederatedCatalogParticipant>,
-  ),
-);
+struct FederatedCatalogParticipantRenderer {
+  federated_catalog_participant: FederatedCatalogParticipant,
+  ondelete: Callback<FederatedCatalogParticipant>,
+  on_show_offer: Option<Callback<FederatedCatalogParticipant>>,
+}
 
 impl TableEntryRenderer<Columns> for FederatedCatalogParticipantRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Name => html! { self.0.0.name.to_string() },
-      Columns::CounterPartyDid => html! { self.0.0.id.to_string() },
-      Columns::CounterPartyAddress => html! { self.0.0.target_url.to_string() },
+      Columns::Name => html! { self.federated_catalog_participant.name.to_string() },
+      Columns::CounterPartyDid => html! { self.federated_catalog_participant.id.to_string() },
+      Columns::CounterPartyAddress => html! {
+        self.federated_catalog_participant.target_url.to_string()
+      },
       Columns::Actions => {
-        let participant = self.0.0.clone();
+        let federated_catalog_participant = self.federated_catalog_participant.clone();
+
+        let show_offer_button = if let Some(on_show_offer) = self.on_show_offer.clone() {
+          let federated_catalog_participant = federated_catalog_participant.clone();
+
+          html!(
+            <Button
+              variant={ButtonVariant::Primary}
+              icon={Icon::Eye}
+              onclick={on_show_offer.reform(move |_| federated_catalog_participant.clone())}
+            >
+              { "Show Offers" }
+            </Button>
+          )
+        } else {
+          html!()
+        };
 
         html!(
-          <DeleteFederatedCatalogParticipant
-            ondelete={self.0.1.reform(move |_| participant.clone())}
-          />
+          <Flex>
+            <FlexItem>{ show_offer_button }</FlexItem>
+            <FlexItem>
+              <Button
+                variant={ButtonVariant::Danger}
+                icon={Icon::Trash}
+                onclick={self.ondelete.reform(move |_| federated_catalog_participant.clone())}
+              >
+                { "Trash" }
+              </Button>
+            </FlexItem>
+          </Flex>
         )
       }
     }
     .into()
   }
-}
-
-#[derive(Clone, PartialEq, Properties)]
-pub struct DeleteFederatedCatalogParticipantProps {
-  pub ondelete: Callback<()>,
-}
-
-#[function_component]
-pub fn DeleteFederatedCatalogParticipant(props: &DeleteFederatedCatalogParticipantProps) -> Html {
-  let onclick = use_callback(props.ondelete.clone(), |_, ondelete| {
-    ondelete.emit(());
-  });
-
-  html!(<Button variant={ButtonVariant::Danger} icon={Icon::Trash} {onclick}>{ "Delete" }</Button>)
 }

@@ -7,8 +7,14 @@ use yew::prelude::*;
 use yew::suspense::use_future_with;
 use yew_oauth2::hook::use_latest_access_token;
 
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct ListFederatedCatalogParticipantsProps {
+  #[prop_or_default]
+  pub on_show_offer: Option<Callback<FederatedCatalogParticipant>>,
+}
+
 #[component]
-pub fn FederatedCatalogManagementPage() -> Html {
+pub fn FederatedCatalogManagementPage(props: &ListFederatedCatalogParticipantsProps) -> Html {
   let refresh = use_state(|| 0usize);
   let backdropper = use_backdrop();
 
@@ -55,7 +61,11 @@ pub fn FederatedCatalogManagementPage() -> Html {
       </StackItem>
       <StackItem>
         <Suspense>
-          <ListFederatedCatalogParticipantsInner force_refresh={*refresh} {refresh_asked} />
+          <ListFederatedCatalogParticipantsInner
+            force_refresh={*refresh}
+            {refresh_asked}
+            on_show_offer={props.on_show_offer.clone()}
+          />
         </Suspense>
       </StackItem>
     </Stack>
@@ -66,6 +76,8 @@ pub fn FederatedCatalogManagementPage() -> Html {
 pub struct ListFederatedCatalogParticipantsInnerProps {
   force_refresh: usize,
   refresh_asked: Callback<()>,
+  #[prop_or_default]
+  on_show_offer: Option<Callback<FederatedCatalogParticipant>>,
 }
 
 #[component]
@@ -124,5 +136,11 @@ pub fn ListFederatedCatalogParticipantsInner(
     },
   );
 
-  Ok(html!(<ListFederatedCatalogParticipants {federated_catalog_participants} {ondelete} />))
+  Ok(html!(
+    <ListFederatedCatalogParticipants
+      {federated_catalog_participants}
+      {ondelete}
+      on_show_offer={props.on_show_offer.clone()}
+    />
+  ))
 }
