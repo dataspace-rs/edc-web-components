@@ -14,7 +14,7 @@ const HAPPY_PATH_STATES: [(&str, ContractNegotiationState); 7] = [
   ("Offered", ContractNegotiationState::Offered),
   ("Accepted", ContractNegotiationState::Accepted),
   ("Agreed", ContractNegotiationState::Agreed),
-  ("Verifier", ContractNegotiationState::Verified),
+  ("Verified", ContractNegotiationState::Verified),
   ("Finalized", ContractNegotiationState::Finalized),
 ];
 
@@ -29,23 +29,27 @@ pub fn ContractNegotiationStatus(props: &ContractNegotiationStatusProps) -> Html
   let edc_connector_client = use_edc_connector_context();
 
   let contract_negotiation_state = use_state(|| None);
+  let contract_negotiation_error = use_state(|| None);
 
   use_effect_with(
     (
       props.contract_negotiation_id.clone(),
       edc_connector_client.clone(),
       contract_negotiation_state.setter(),
+      contract_negotiation_error.setter(),
       props.on_finalized.clone(),
     ),
     |(
       contract_negotiation_id,
       edc_connector_client,
       contract_negotiation_state_setter,
+      contract_negotiation_error_setter,
       on_finalized,
     )| {
       let contract_negotiation_id = contract_negotiation_id.clone();
       let edc_connector_client = edc_connector_client.clone();
       let contract_negotiation_state_setter = contract_negotiation_state_setter.clone();
+      let contract_negotiation_error_setter = contract_negotiation_error_setter.clone();
       let on_finalized = on_finalized.clone();
 
       spawn_local(async move {
@@ -64,9 +68,21 @@ pub fn ContractNegotiationStatus(props: &ContractNegotiationStatusProps) -> Html
             .as_ref()
             .map(|contract_negotiation| contract_negotiation.state().clone());
 
+          let error_message = contract_negotiation
+            .as_ref()
+            .and_then(|contract_negotiation| {
+              contract_negotiation
+                .error_detail()
+                .map(|error_detail| error_detail.to_string())
+            });
+
+          contract_negotiation_error_setter.set(error_message);
+
           contract_negotiation_state_setter.set(contract_negotiation);
 
-          if state == Some(ContractNegotiationState::Finalized) {
+          if state == Some(ContractNegotiationState::Finalized)
+            || state == Some(ContractNegotiationState::Terminated)
+          {
             on_finalized.emit(());
             break;
           }
@@ -77,39 +93,48 @@ pub fn ContractNegotiationStatus(props: &ContractNegotiationStatusProps) -> Html
     },
   );
 
-  if let Some(contract_negotiation) = (*contract_negotiation_state).clone() {
-    let contract_negotiation: ContractNegotiation = contract_negotiation;
+  match (
+    (*contract_negotiation_error).clone(),
+    (*contract_negotiation_state).clone(),
+  ) {
+    (Some(error_message), _) => html!(
+      <Alert title="Negotiation failed" r#type={AlertType::Danger}>
+        <div>{ error_message }</div>
+      </Alert>
+    ),
+    (None, Some(contract_negotiation)) => {
+      let contract_negotiation: ContractNegotiation = contract_negotiation;
 
-    let current_state_index = HAPPY_PATH_STATES
-      .iter()
-      .position(|(_, state)| state == contract_negotiation.state())
-      .unwrap_or_default();
+      let current_state_index = HAPPY_PATH_STATES
+        .iter()
+        .position(|(_, state)| state == contract_negotiation.state())
+        .unwrap_or_default();
 
-    let steps = HAPPY_PATH_STATES
-      .iter()
-      .enumerate()
-      .map(|(index, (state_label, _))| {
-        let status = if index < current_state_index {
-          ProgressStepperStepStatus::Success
-        } else if index == current_state_index {
-          if index == HAPPY_PATH_STATES.len() - 1 {
+      let steps = HAPPY_PATH_STATES
+        .iter()
+        .enumerate()
+        .map(|(index, (state_label, _))| {
+          let status = if index < current_state_index {
             ProgressStepperStepStatus::Success
+          } else if index == current_state_index {
+            if index == HAPPY_PATH_STATES.len() - 1 {
+              ProgressStepperStepStatus::Success
+            } else {
+              ProgressStepperStepStatus::Default
+            }
           } else {
-            ProgressStepperStepStatus::Default
-          }
-        } else {
-          ProgressStepperStepStatus::Pending
-        };
+            ProgressStepperStepStatus::Pending
+          };
 
-        html_nested!(
-          <ProgressStepperStep {status}>
-            <div>{ state_label.to_string() }</div>
-          </ProgressStepperStep>
-        )
-      });
+          html_nested!(
+            <ProgressStepperStep {status}>
+              <div>{ state_label.to_string() }</div>
+            </ProgressStepperStep>
+          )
+        });
 
-    html!(<ProgressStepper>{ for steps }</ProgressStepper>)
-  } else {
-    html!()
+      html!(<ProgressStepper>{ for steps }</ProgressStepper>)
+    }
+    _ => html!(),
   }
 }
