@@ -86,33 +86,67 @@ pub fn ShowAssetPageInner(props: &ShowAssetPageProps) -> HtmlResult {
 
     Ok(html!(
       <>
-        <DescriptionList>
-          <DescriptionGroup term="ID">{ asset_item.id }</DescriptionGroup>
-          <DescriptionGroup term="Title">{ asset_item.name }</DescriptionGroup>
-          <DescriptionGroup term="Version">
-            { asset_item.version.map(|version| version.to_string()).unwrap_or_default() }
-          </DescriptionGroup>
-          <DescriptionGroup term="Description">
-            { asset_item.description.unwrap_or_default() }
-          </DescriptionGroup>
-          <DescriptionGroup term="Creator">
-            { asset_item.creator.and_then(|creator| creator.name).unwrap_or_default() }
-          </DescriptionGroup>
-          <DescriptionGroup term="Keywords">{ for keywords }</DescriptionGroup>
-          <DescriptionGroup term="Base URL">{ asset_item.base_url }</DescriptionGroup>
-          <DescriptionGroup term="Proxy Path">
-            <Switch disabled=true checked={asset_item.proxy_path} />
-          </DescriptionGroup>
-          <DescriptionGroup term="Proxy Query Parameters">
-            <Switch disabled=true checked={asset_item.proxy_query_params} />
-          </DescriptionGroup>
-          <DescriptionGroup term="Proxy Method">
-            <Switch disabled=true checked={asset_item.proxy_method} />
-          </DescriptionGroup>
-          <DescriptionGroup term="Proxy Body">
-            <Switch disabled=true checked={asset_item.proxy_body} />
-          </DescriptionGroup>
-        </DescriptionList>
+        <Card>
+          <CardBody>
+            <DescriptionList>
+              <DescriptionGroup term="ID">{ asset_item.id }</DescriptionGroup>
+            </DescriptionList>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Title level={Level::H2} size={Size::XXXLarge}>{ "Provider Information" }</Title>
+          </CardHeader>
+          <CardBody>
+            <DescriptionList>
+              <DescriptionGroup term="Company Name">
+                { asset_item.creator.clone().and_then(|creator| creator.name).unwrap_or_default() }
+              </DescriptionGroup>
+              <DescriptionGroup term="Company Logo URL">
+                { asset_item.creator.and_then(|creator| creator.thumbnail).and_then(|thumbnail| thumbnail.resource).unwrap_or_default() }
+              </DescriptionGroup>
+            </DescriptionList>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Description" }</Title>
+          </CardHeader>
+          <CardBody>
+            <DescriptionList>
+              <DescriptionGroup term="Title">{ asset_item.name }</DescriptionGroup>
+              <DescriptionGroup term="Version">
+                { asset_item.version.map(|version| version.to_string()).unwrap_or_default() }
+              </DescriptionGroup>
+              <DescriptionGroup term="Description">
+                { asset_item.description.unwrap_or_default() }
+              </DescriptionGroup>
+              <DescriptionGroup term="Keywords">{ for keywords }</DescriptionGroup>
+            </DescriptionList>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Source" }</Title>
+          </CardHeader>
+          <CardBody>
+            <DescriptionList>
+              <DescriptionGroup term="Base URL">{ asset_item.base_url }</DescriptionGroup>
+              <DescriptionGroup term="Proxy Path">
+                <Switch disabled=true checked={asset_item.proxy_path} />
+              </DescriptionGroup>
+              <DescriptionGroup term="Proxy Query Parameters">
+                <Switch disabled=true checked={asset_item.proxy_query_params} />
+              </DescriptionGroup>
+              <DescriptionGroup term="Proxy Method">
+                <Switch disabled=true checked={asset_item.proxy_method} />
+              </DescriptionGroup>
+              <DescriptionGroup term="Proxy Body">
+                <Switch disabled=true checked={asset_item.proxy_body} />
+              </DescriptionGroup>
+            </DescriptionList>
+          </CardBody>
+        </Card>
         <Flex>
           <FlexItem modifiers={[FlexModifier::Grow.all()]} />
           <FlexItem>

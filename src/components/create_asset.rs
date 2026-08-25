@@ -36,6 +36,10 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
   let proxy_query_params = use_state(|| false);
   let proxy_method = use_state(|| false);
   let proxy_body = use_state(|| false);
+  let client_id = use_state(String::new);
+  let client_secret_key = use_state(String::new);
+  let token_url = use_state(String::new);
+  let scopes = use_state(|| "openid".to_string());
   let headers = use_state(HashMap::<String, String>::new);
 
   let onsubmit = use_callback(
@@ -51,11 +55,19 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       base_url.clone(),
       (company_name.clone(), company_logo_url.clone()),
       content_type.clone(),
-      proxy_path.clone(),
-      proxy_query_params.clone(),
-      proxy_method.clone(),
-      proxy_body.clone(),
+      (
+        proxy_path.clone(),
+        proxy_query_params.clone(),
+        proxy_method.clone(),
+        proxy_body.clone(),
+      ),
       headers.clone(),
+      (
+        client_id.clone(),
+        client_secret_key.clone(),
+        token_url.clone(),
+        scopes.clone(),
+      ),
       props.on_create.clone(),
     ),
     |event: SubmitEvent,
@@ -65,11 +77,9 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       base_url,
       (company_name, company_logo_url),
       content_type,
-      proxy_path,
-      proxy_query_params,
-      proxy_method,
-      proxy_body,
+      (proxy_path, proxy_query_params, proxy_method, proxy_body),
       headers,
+      (client_id, client_secret_key, token_url, scopes),
       on_create,
     )| {
       event.prevent_default();
@@ -88,6 +98,11 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       let proxy_method = **proxy_method;
       let proxy_body = **proxy_body;
       let headers = (**headers).clone();
+      let client_id = (**client_id).clone();
+      let client_secret_key = (**client_secret_key).clone();
+      let token_url = (**token_url).clone();
+      let scopes = (**scopes).clone();
+
       let edc_connector_context = edc_connector_context.clone();
       let on_create = on_create.clone();
 
@@ -102,6 +117,23 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
           )
           .property("proxyMethod", if proxy_method { "true" } else { "false" })
           .property("proxyBody", if proxy_body { "true" } else { "false" });
+
+        if !client_id.is_empty() {
+          data_address_builder = data_address_builder.property("oauth2:clientId", client_id)
+        };
+
+        if !client_secret_key.is_empty() {
+          data_address_builder =
+            data_address_builder.property("oauth2:clientSecretKey", &client_secret_key)
+        };
+
+        if !token_url.is_empty() {
+          data_address_builder = data_address_builder.property("oauth2:tokenUrl", &token_url)
+        };
+
+        if !scopes.is_empty() {
+          data_address_builder = data_address_builder.property("oauth2:scope", &scopes)
+        };
 
         struct Creator {
           name: String,
@@ -201,63 +233,72 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
     },
   );
 
-  let onchange_name = use_callback(name.setter(), |value, name_setter| {
-    name_setter.set(value);
+  let onchange_name = use_callback(name.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_version = use_callback(version.setter(), |value, version_setter| {
-    version_setter.set(value);
+  let onchange_version = use_callback(version.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_description = use_callback(description.setter(), |value, description_setter| {
-    description_setter.set(value);
+  let onchange_description = use_callback(description.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_thumbnail_url =
-    use_callback(thumbnail_url.setter(), |value, thumbnail_url_setter| {
-      thumbnail_url_setter.set(value);
-    });
-
-  let onchange_keywords = use_callback(keywords.setter(), |keywords, keywords_setter| {
-    keywords_setter.set(keywords);
+  let onchange_thumbnail_url = use_callback(thumbnail_url.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_company_name = use_callback(company_name.setter(), |value, company_name_setter| {
-    company_name_setter.set(value);
+  let onchange_keywords = use_callback(keywords.setter(), |keywords, setter| {
+    setter.set(keywords);
   });
 
-  let onchange_company_logo_url = use_callback(
-    company_logo_url.setter(),
-    |value, company_logo_url_setter| {
-      company_logo_url_setter.set(value);
-    },
-  );
-
-  let onchange_base_url = use_callback(base_url.setter(), |value, base_url_setter| {
-    base_url_setter.set(value);
+  let onchange_company_name = use_callback(company_name.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_content_type = use_callback(content_type.setter(), |value, content_type_setter| {
-    content_type_setter.set(value);
+  let onchange_company_logo_url = use_callback(company_logo_url.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_proxy_path = use_callback(proxy_path.setter(), |value, proxy_path_setter| {
-    proxy_path_setter.set(value);
+  let onchange_base_url = use_callback(base_url.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_proxy_query_params = use_callback(
-    proxy_query_params.setter(),
-    |value, proxy_query_params_setter| {
-      proxy_query_params_setter.set(value);
-    },
-  );
-
-  let onchange_proxy_method = use_callback(proxy_method.setter(), |value, proxy_method_setter| {
-    proxy_method_setter.set(value);
+  let onchange_content_type = use_callback(content_type.setter(), |value, setter| {
+    setter.set(value);
   });
 
-  let onchange_proxy_body = use_callback(proxy_body.setter(), |value, proxy_body_setter| {
-    proxy_body_setter.set(value);
+  let onchange_proxy_path = use_callback(proxy_path.setter(), |value, setter| {
+    setter.set(value);
+  });
+
+  let onchange_proxy_query_params = use_callback(proxy_query_params.setter(), |value, setter| {
+    setter.set(value);
+  });
+
+  let onchange_proxy_method = use_callback(proxy_method.setter(), |value, setter| {
+    setter.set(value);
+  });
+
+  let onchange_proxy_body = use_callback(proxy_body.setter(), |value, setter| {
+    setter.set(value);
+  });
+
+  let onchange_client_id = use_callback(client_id.setter(), |value, setter| {
+    setter.set(value);
+  });
+
+  let onchange_client_secret_key = use_callback(client_secret_key.setter(), |value, setter| {
+    setter.set(value);
+  });
+
+  let onchange_token_url = use_callback(token_url.setter(), |value, setter| {
+    setter.set(value);
+  });
+
+  let onchange_scopes = use_callback(scopes.setter(), |value, setter| {
+    setter.set(value);
   });
 
   let disabled = (*name).is_empty() || (*base_url).is_empty();
@@ -404,6 +445,18 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
           </FormGroup>
           <FormGroup label="Proxy Body">
             <Switch checked={*proxy_body} onchange={onchange_proxy_body} />
+          </FormGroup>
+          <FormGroup label="OpenID Client ID">
+            <TextInput value={(*client_id).clone()} onchange={onchange_client_id} />
+          </FormGroup>
+          <FormGroup label="OpenID Client Secret Key">
+            <TextInput value={(*client_secret_key).clone()} onchange={onchange_client_secret_key} />
+          </FormGroup>
+          <FormGroup label="OpenID Token URL">
+            <TextInput value={(*token_url).clone()} onchange={onchange_token_url} />
+          </FormGroup>
+          <FormGroup label="OpenID Scopes">
+            <TextInput value={(*scopes).clone()} onchange={onchange_scopes} />
           </FormGroup>
         </CardBody>
       </Card>
