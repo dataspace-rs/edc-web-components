@@ -79,6 +79,33 @@ pub fn ShowPolicyPageInner(props: &ShowPolicyPageProps) -> HtmlResult {
       }
     });
 
+    let profiles = policy.policy().profiles().iter().map(|profile| {
+      html_nested! {
+        <FlexItem>
+          <Label color={Color::Blue} label={profile.to_string()} />
+        </FlexItem>
+      }
+    });
+
+    let extensible_properties =
+      policy
+        .policy()
+        .extensible_properties()
+        .iter()
+        .map(|(key, value)| {
+          html_nested! {
+            <StackItem>
+              <DescriptionGroup term={key.to_string()}>
+                <CodeBlock>
+                  <CodeBlockCode>
+                    { serde_json::to_string_pretty(value).unwrap_or_default() }
+                  </CodeBlockCode>
+                </CodeBlock>
+              </DescriptionGroup>
+            </StackItem>
+          }
+        });
+
     Ok(html!(
       <DescriptionList mode={[DescriptionListMode::Horizontal]}>
         <DescriptionGroup term="Id">{ policy.id() }</DescriptionGroup>
@@ -92,6 +119,14 @@ pub fn ShowPolicyPageInner(props: &ShowPolicyPageProps) -> HtmlResult {
         <DescriptionGroup term="Permissions">{ for permissions }</DescriptionGroup>
         <DescriptionGroup term="Obligations">{ for obligations }</DescriptionGroup>
         <DescriptionGroup term="Prohibitions">{ for prohibitions }</DescriptionGroup>
+        <DescriptionGroup term="Profiles">
+          <Flex>{ for profiles }</Flex>
+        </DescriptionGroup>
+        <DescriptionGroup term="Extensible Properties">
+          <DescriptionList mode={[DescriptionListMode::Horizontal]}>
+            { for extensible_properties }
+          </DescriptionList>
+        </DescriptionGroup>
       </DescriptionList>
     ))
   } else {

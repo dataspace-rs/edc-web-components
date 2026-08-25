@@ -9,6 +9,7 @@ pub use self::operator_selector::OperatorSelector;
 pub use self::rule::Rule;
 use crate::components::create_policy::atomic_constraint_edit::ConstraintMode;
 use crate::components::simple_or_id_field::SimpleOrIdField;
+use crate::components::{ExtensiblePropertiesEdit, StringListEdit};
 use crate::contexts::use_edc_connector_context;
 use edc_connector_client::types::policy::{
   Action, Constraint, NewPolicyDefinition, Obligation, Permission, Policy, PolicyKind, Prohibition,
@@ -16,6 +17,7 @@ use edc_connector_client::types::policy::{
 };
 use edc_connector_client::{EdcConnectorApiVersion, Error, ManagementApiErrorDetailKind};
 use patternfly_yew::prelude::*;
+use std::collections::HashMap;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
@@ -36,6 +38,8 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   let permissions = use_state(Vec::new);
   let prohibitions = use_state(Vec::new);
   let obligations = use_state(Vec::new);
+  let profiles = use_state(Vec::new);
+  let extensible_properties = use_state(HashMap::new);
 
   let creation_errors = use_state(|| None);
 
@@ -49,6 +53,8 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
       permissions.clone(),
       prohibitions.clone(),
       obligations.clone(),
+      profiles.clone(),
+      extensible_properties.clone(),
       props.on_create.clone(),
       creation_errors.setter(),
     ),
@@ -62,6 +68,8 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
       permissions,
       prohibitions,
       obligations,
+      profiles,
+      extensible_properties,
       on_create,
       creation_errors_setter,
     )| {
@@ -69,6 +77,8 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
 
       let edc_connector_context = edc_connector_context.clone();
       let identifier = (**identifier).clone();
+      let profiles = (**profiles).clone();
+      let extensible_properties = (**extensible_properties).clone();
       let assignee = (**assignee).clone();
       let assigner = (**assigner).clone();
       let (is_simple_target, target) = (**target).clone();
@@ -136,7 +146,9 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
           .kind(kind)
           .permissions(permissions)
           .prohibitions(prohibitions)
-          .obligations(obligations);
+          .obligations(obligations)
+          .profiles(profiles)
+          .extensible_properties(extensible_properties);
 
         let policy_builder = if !assignee.is_empty() {
           policy_builder.maybe_assignee(Some(assignee))
@@ -245,6 +257,17 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
     },
   );
 
+  let onchange_profiles = use_callback(profiles.setter(), move |profiles, profiles_setter| {
+    profiles_setter.set(profiles);
+  });
+
+  let onchange_extensible_properties = use_callback(
+    extensible_properties.setter(),
+    move |extensible_properties, extensible_properties_setter| {
+      extensible_properties_setter.set(extensible_properties);
+    },
+  );
+
   let (target_is_simple, target_value) = (*target).clone();
 
   let disabled = false;
@@ -271,6 +294,16 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
       </FormGroup>
       <FormGroup label="Obligations">
         <ListOfRules list={(*obligations).clone()} onchange={onchange_obligations} />
+      </FormGroup>
+      <FormGroup label="Profiles">
+        <StringListEdit values={(*profiles).clone()} onchange={onchange_profiles} />
+      </FormGroup>
+      <FormGroup label="Extensible Properties">
+        <ExtensiblePropertiesEdit
+          values={(*extensible_properties).clone()}
+          onchange={onchange_extensible_properties}
+        />
+        { format!("{:#?}", (*extensible_properties).clone()) }
       </FormGroup>
       <FormGroup label="Assignee">
         <TextInput value={(*assignee).clone()} onchange={onchange_assignee} />

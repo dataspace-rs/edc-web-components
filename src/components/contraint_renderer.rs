@@ -55,9 +55,17 @@ pub fn ConstraintRenderer(props: &ConstraintRendererProps) -> Html {
 
       html_nested!(
         <DescriptionGroup term="Constraint">
-          <Label label={left_operand} color={Color::Blue} />
-          <Label label={operator} color={Color::Blue} />
-          <Label label={right_operand} color={Color::Blue} />
+          <Flex>
+            <FlexItem>
+              <Label label={left_operand} color={Color::Blue} />
+            </FlexItem>
+            <FlexItem>
+              <Label label={operator} color={Color::Blue} />
+            </FlexItem>
+            <FlexItem>
+              <Label label={right_operand} color={Color::Blue} />
+            </FlexItem>
+          </Flex>
         </DescriptionGroup>
       )
     }
