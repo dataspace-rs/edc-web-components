@@ -10,18 +10,19 @@ pub struct ListTransferProcessesProps {
   pub limit: usize,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
+  pub onshow: Callback<String>,
 }
 
 #[component]
 pub fn ListTransferProcesses(props: &ListTransferProcessesProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
-      <TableColumn<Columns> label="ID" index={Columns::Id} />
       <TableColumn<Columns> label="State" index={Columns::State} />
       <TableColumn<Columns> label="Asset ID" index={Columns::AssetId} />
       <TableColumn<Columns> label="Contract ID" index={Columns::ContractId} />
       <TableColumn<Columns> label="Transfer Type" index={Columns::TransferType} />
       <TableColumn<Columns> label="Kind" index={Columns::Kind} />
+      <TableColumn<Columns> label="" index={Columns::Actions} />
     </TableHeader<Columns>>
   };
 
@@ -49,7 +50,9 @@ pub fn ListTransferProcesses(props: &ListTransferProcessesProps) -> Html {
   let rows = props
     .transfer_processe_items
     .iter()
-    .map(|transfer_process_item| ListTransferProcessRenderer(transfer_process_item.clone()))
+    .map(|transfer_process_item| {
+      ListTransferProcessRenderer(transfer_process_item.clone(), props.onshow.clone())
+    })
     .collect();
 
   let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
@@ -80,26 +83,47 @@ pub fn ListTransferProcesses(props: &ListTransferProcessesProps) -> Html {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Columns {
-  Id,
   State,
   AssetId,
   ContractId,
   TransferType,
   Kind,
+  Actions,
 }
 
 #[derive(Clone, Debug)]
-struct ListTransferProcessRenderer(TransferProcessItem);
+struct ListTransferProcessRenderer(TransferProcessItem, Callback<String>);
 
 impl TableEntryRenderer<Columns> for ListTransferProcessRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Id => html! { self.0.id.to_string() },
-      Columns::State => html!(self.0.state.to_string()),
+      Columns::State => {
+        let color = match self.0.state.as_str() {
+          "Started" => Color::Purple,
+          "Completed" => Color::Green,
+          "Terminated" => Color::Red,
+          _ => Color::Blue,
+        };
+
+        html!(<Label {color} label={self.0.state.to_string()} />)
+      }
       Columns::AssetId => html!(self.0.asset_id.to_string()),
       Columns::ContractId => html! { self.0.contract_id.to_string() },
       Columns::TransferType => html!(self.0.transfer_type.to_string()),
       Columns::Kind => html!(self.0.kind.to_string()),
+      Columns::Actions => {
+        let id = self.0.id.clone();
+
+        html! {
+          <Button
+            variant={ButtonVariant::Primary}
+            icon={Icon::Eye}
+            onclick={self.1.reform(move |_| id.clone())}
+          >
+            { "Show" }
+          </Button>
+        }
+      }
     }
     .into()
   }

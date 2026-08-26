@@ -44,7 +44,7 @@ pub fn ExtensiblePropertiesEdit(props: &ExtensiblePropertiesEditProps) -> Html {
     },
   );
 
-  let items = props.values.iter().map(|( key, value)| {
+  let items = props.values.iter().map(|(key, value)| {
     let old_key = key.to_string();
     let key = key.to_string();
 

@@ -6,8 +6,16 @@ use patternfly_yew::prelude::*;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
 
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct TransferProcessPageProps {
+  #[prop_or_default]
+  pub contract_agreement_id: Option<String>,
+  #[prop_or_default]
+  pub onshow: Callback<String>,
+}
+
 #[component]
-pub fn TransferProcessPage() -> Html {
+pub fn TransferProcessPage(props: &TransferProcessPageProps) -> Html {
   let refresh = use_state(|| 0usize);
   let offset = use_state(|| 0usize);
   let limit = use_state(|| 10usize);
@@ -40,7 +48,9 @@ pub fn TransferProcessPage() -> Html {
             limit={*limit}
             {onoffset}
             {onlimit}
+            contract_agreement_id={props.contract_agreement_id.clone()}
             force_refresh={*refresh}
+            onshow={props.onshow.clone()}
           />
         </Suspense>
       </StackItem>
@@ -54,7 +64,9 @@ pub struct TransferProcessPageInnerProps {
   pub limit: usize,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
+  pub contract_agreement_id: Option<String>,
   pub force_refresh: usize,
+  pub onshow: Callback<String>,
 }
 
 #[component]
@@ -66,15 +78,21 @@ pub fn TransferProcessPageInner(props: &TransferProcessPageInnerProps) -> HtmlRe
       edc_connector_context,
       props.limit,
       props.offset,
+      props.contract_agreement_id.clone(),
       props.force_refresh,
     ),
     |parameters| async move {
-      let (edc_connector_context, limit, offset, _) = (*parameters).clone();
+      let (edc_connector_context, limit, offset, contract_agreement_id, _) = (*parameters).clone();
 
-      let query = Query::builder()
-        .limit(limit as u32)
-        .offset(offset as u32)
-        .build();
+      let query_builder = Query::builder().limit(limit as u32).offset(offset as u32);
+
+      let query_builder = if let Some(contract_agreement_id) = contract_agreement_id {
+        query_builder.filter("contractId", "=", contract_agreement_id)
+      } else {
+        query_builder
+      };
+
+      let query = query_builder.build();
 
       if let Some(client) = edc_connector_context.get_client() {
         client
@@ -100,6 +118,7 @@ pub fn TransferProcessPageInner(props: &TransferProcessPageInnerProps) -> HtmlRe
       limit={props.limit}
       onoffset={props.onoffset.clone()}
       onlimit={props.onlimit.clone()}
+      onshow={props.onshow.clone()}
     />
   ))
 }

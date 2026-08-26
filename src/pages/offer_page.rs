@@ -1,12 +1,12 @@
 use crate::components::{ListAssetsGallery, SelectedFederatedCatalogOffer};
 use crate::contexts::use_edc_connector_context;
 use crate::models::{AssetItem, DatasetExtraFields};
-use crate::services::DidResolver;
+use crate::services::get_dsp_endpoint;
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::Protocol;
 use edc_connector_client::types::catalog::CatalogRequest;
 use edc_connector_client::types::query::Query;
-use edc_identity_hub_client::models::{DidWeb, IdentityServiceType};
+use edc_identity_hub_client::models::DidWeb;
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
@@ -107,14 +107,7 @@ pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
       let (participant_did, edc_connector_context, limit, offset, _) = (*parameters).clone();
 
       if let Some(did_web) = DidWeb::new(&participant_did)
-        && let Ok(did_data) = DidResolver::new(reqwest::Client::new())
-          .resolve(did_web)
-          .await
-        && let Some(identity_service) = did_data
-          .get_identity_services(IdentityServiceType::DataService)
-          .first()
-        && let Some(dataspace_service_client) = identity_service.get_dataspace_service_client()
-        && let Some(dsp_endpoint) = dataspace_service_client.get_first_service_endpoint().await
+        && let Some(dsp_endpoint) = get_dsp_endpoint(&did_web).await
         && let Some(client) = edc_connector_context.get_client()
       {
         let request = CatalogRequest::builder()

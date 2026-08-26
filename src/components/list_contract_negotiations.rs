@@ -110,7 +110,15 @@ struct ContractNegotiationItemRenderer {
 impl TableEntryRenderer<Columns> for ContractNegotiationItemRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::State => html! { <Label label={self.item.state.to_string()} color={Color::Blue} /> },
+      Columns::State => {
+        let color = match self.item.state.as_str() {
+          "Finalized" => Color::Green,
+          "Terminated" => Color::Red,
+          _ => Color::Blue,
+        };
+
+        html! { <Label label={self.item.state.to_string()} {color} /> }
+      },
       Columns::ContractAgreementId => html! { self.item.contract_agreement_id.to_string() },
       Columns::CounterPartyId => html! { self.item.counter_party_id.to_string() },
       Columns::Protocol => html! { self.item.protocol.to_string() },

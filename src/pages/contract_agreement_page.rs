@@ -7,8 +7,14 @@ use patternfly_yew::prelude::*;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
 
+#[derive(Clone, Debug, PartialEq, Properties)]
+pub struct ContractAgreementPageProps {
+  #[prop_or_default]
+  pub onshow: Callback<String>,
+}
+
 #[component]
-pub fn ContractAgreementPage() -> Html {
+pub fn ContractAgreementPage(props: &ContractAgreementPageProps) -> Html {
   let refresh = use_state(|| 0usize);
   let offset = use_state(|| 0usize);
   let limit = use_state(|| 10usize);
@@ -42,6 +48,7 @@ pub fn ContractAgreementPage() -> Html {
             {onoffset}
             {onlimit}
             force_refresh={*refresh}
+            onshow={props.onshow.clone()}
           />
         </Suspense>
       </StackItem>
@@ -56,6 +63,7 @@ pub struct ContractAgreementPageInnerProps {
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
   pub force_refresh: usize,
+  pub onshow: Callback<String>,
 }
 
 #[component]
@@ -101,6 +109,7 @@ pub fn ContractAgreementPageInner(props: &ContractAgreementPageInnerProps) -> Ht
       limit={props.limit}
       onoffset={props.onoffset.clone()}
       onlimit={props.onlimit.clone()}
+      onshow={props.onshow.clone()}
     />
   ))
 }

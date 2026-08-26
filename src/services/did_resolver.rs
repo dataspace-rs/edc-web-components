@@ -9,7 +9,7 @@ impl DidResolver {
     Self { client }
   }
 
-  pub async fn resolve(&self, did: DidWeb) -> edc_identity_hub_client::Result<Identity> {
+  pub async fn resolve(&self, did: &DidWeb) -> edc_identity_hub_client::Result<Identity> {
     let request_builder = self.client.get(did.url());
     let response = request_builder.send().await?;
 

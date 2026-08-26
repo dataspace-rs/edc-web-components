@@ -7,6 +7,8 @@ use yew::suspense::use_future_with;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowContractNegotiationPageProps {
   pub contract_negotiation_id: String,
+  #[prop_or_default]
+  pub on_contract_agreement_click: Callback<String>,
 }
 
 #[component]
@@ -17,6 +19,7 @@ pub fn ShowContractNegotiationPage(props: &ShowContractNegotiationPageProps) -> 
       <Suspense fallback="Loading ...">
         <ShowContractNegotiationPageInner
           contract_negotiation_id={props.contract_negotiation_id.clone()}
+          on_contract_agreement_click={props.on_contract_agreement_click.clone()}
         />
       </Suspense>
     </>
@@ -57,14 +60,29 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
   let contract_negotiation = (*contract_negotiation).clone();
 
   if let Some(contract_negotiation) = contract_negotiation {
+    let contract_agreement =
+      if let Some(contract_agreement_id) = contract_negotiation.contract_agreement_id() {
+        let onclick = {
+          let contract_agreement_id = contract_agreement_id.clone();
+
+          props
+            .on_contract_agreement_click
+            .reform(move |_| contract_agreement_id.clone())
+        };
+
+        html!(
+          <Button variant={ButtonVariant::InlineLink} {onclick}>{ contract_agreement_id }</Button>
+        )
+      } else {
+        html!()
+      };
+
     Ok(html!(
       <Stack gutter=true>
         <StackItem>
           <DescriptionList mode={[DescriptionListMode::Horizontal]}>
             <DescriptionGroup term="Id">{ contract_negotiation.id() }</DescriptionGroup>
-            <DescriptionGroup term="Contract Agreement Id">
-              { contract_negotiation.contract_agreement_id().cloned().unwrap_or_default() }
-            </DescriptionGroup>
+            <DescriptionGroup term="Contract Agreement Id">{ contract_agreement }</DescriptionGroup>
             <DescriptionGroup term="Counter Party ID">
               { contract_negotiation.counter_party_id().clone().unwrap_or_default() }
             </DescriptionGroup>

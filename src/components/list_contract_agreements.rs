@@ -10,18 +10,19 @@ pub struct ListContractAgreementsProps {
   pub limit: usize,
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
+  pub onshow: Callback<String>,
 }
 
 #[component]
 pub fn ListContractAgreements(props: &ListContractAgreementsProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
-      <TableColumn<Columns> label="ID" index={Columns::Id} />
       <TableColumn<Columns> label="Contract Signing Date" index={Columns::ContractSigningDate} />
       <TableColumn<Columns> label="Consumer ID" index={Columns::ConsumerId} />
       <TableColumn<Columns> label="Provider ID" index={Columns::ProviderId} />
       <TableColumn<Columns> label="Asset ID" index={Columns::AssetId} />
       <TableColumn<Columns> label="Policy ID" index={Columns::PolicyID} />
+      <TableColumn<Columns> label="" index={Columns::Action} />
     </TableHeader<Columns>>
   };
 
@@ -49,7 +50,9 @@ pub fn ListContractAgreements(props: &ListContractAgreementsProps) -> Html {
   let rows = props
     .contract_agreement_items
     .iter()
-    .map(|contract_agreement_item| ContractAgreementItemRenderer(contract_agreement_item.clone()))
+    .map(|contract_agreement_item| {
+      ContractAgreementItemRenderer(contract_agreement_item.clone(), props.onshow.clone())
+    })
     .collect();
 
   let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
@@ -80,28 +83,39 @@ pub fn ListContractAgreements(props: &ListContractAgreementsProps) -> Html {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Columns {
-  Id,
   ContractSigningDate,
   ConsumerId,
   ProviderId,
   AssetId,
   PolicyID,
+  Action,
 }
 
 #[derive(Clone, Debug)]
-struct ContractAgreementItemRenderer(ContractAgreementItem);
+struct ContractAgreementItemRenderer(ContractAgreementItem, Callback<String>);
 
 impl ContractAgreementItemRenderer {}
 
 impl TableEntryRenderer<Columns> for ContractAgreementItemRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Id => html! { self.0.id.to_string() },
       Columns::ContractSigningDate => html!(self.0.signing_date.to_string()),
       Columns::ConsumerId => html!(self.0.consumer_id.to_string()),
       Columns::ProviderId => html! { self.0.provider_id.to_string() },
       Columns::AssetId => html!(self.0.asset_id.to_string()),
       Columns::PolicyID => html!(self.0.policy_id.to_string()),
+      Columns::Action => {
+        let id = self.0.id.clone();
+        html!(
+          <Button
+            variant={ButtonVariant::Primary}
+            onclick={self.1.reform(move |_| id.clone())}
+            icon={Icon::Eye}
+          >
+            { "Show" }
+          </Button>
+        )
+      }
     }
     .into()
   }

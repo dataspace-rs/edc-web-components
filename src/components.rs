@@ -24,6 +24,7 @@ mod policy_selector;
 mod request_verifiable_credential;
 mod simple_or_id_field;
 mod string_list_edit;
+mod transfer_process_status;
 
 pub use asset_selector::*;
 pub use contract_negotiation_status::*;
@@ -51,3 +52,4 @@ pub use policy_selector::*;
 pub use request_verifiable_credential::*;
 pub use simple_or_id_field::*;
 pub use string_list_edit::*;
+pub use transfer_process_status::*;

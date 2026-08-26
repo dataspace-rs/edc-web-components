@@ -13,7 +13,7 @@ readme = "README.md"
 base64 = "0.23.0"
 cel = "0.14.0"
 chrono = "0.4"
-edc-connector-client = { version = "0.6.7", package = "edc-connector-client-next" }
+edc-connector-client = { version = "0.6.8", package = "edc-connector-client-next" }
 edc-federated-catalog-client = { version = "0.2.5", features = ["management"] }
 edc-identity-hub-client = "0.2.2"
 log = "0.4"

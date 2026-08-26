@@ -1,7 +1,7 @@
-use crate::services::DidResolver;
+use crate::services::get_dsp_endpoint;
 use edc_federated_catalog_client::models::FederatedCatalogParticipantCreateForm;
 use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
-use edc_identity_hub_client::models::{DidWeb, IdentityServiceType};
+use edc_identity_hub_client::models::DidWeb;
 use patternfly_yew::prelude::*;
 use yew::platform::spawn_local;
 use yew::prelude::*;
@@ -26,15 +26,7 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
 
       if let Some(did_web) = DidWeb::new(&did) {
         spawn_local(async move {
-          if let Ok(identity) = DidResolver::new(reqwest::Client::new())
-            .resolve(did_web)
-            .await
-            && let Some(identity_service) = identity
-              .get_identity_services(IdentityServiceType::DataService)
-              .first()
-            && let Some(dataspace_service_client) = identity_service.get_dataspace_service_client()
-            && let Some(dsp_endpoint) = dataspace_service_client.get_first_service_endpoint().await
-          {
+          if let Some(dsp_endpoint) = get_dsp_endpoint(&did_web).await {
             target_setter.set(dsp_endpoint);
           }
         });

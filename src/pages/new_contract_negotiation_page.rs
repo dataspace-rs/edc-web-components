@@ -200,6 +200,15 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
                 .obligations(policy.obligations().to_vec())
                 .target(Target::Simple(asset_id));
 
+              let policy_builder =
+                policy_builder.extensible_properties(std::collections::HashMap::<
+                  String,
+                  serde_json::Value,
+                >::from([(
+                  "policy:isan".to_string(),
+                  serde_json::Value::String("123456".to_string()),
+                )]));
+
               let policy = policy_builder.build();
 
               let new_contract_request = ContractRequest::builder()

@@ -16,14 +16,17 @@ impl From<ContractNegotiation> for ContractNegotiationItem {
   fn from(contract_negotiation: ContractNegotiation) -> Self {
     let id = contract_negotiation.id().to_string();
     let state = ContractNegotiationState::from(contract_negotiation.state()).to_string();
+
     let contract_agreement_id = contract_negotiation
       .contract_agreement_id()
       .map(|contract_agreement_id| contract_agreement_id.to_string())
       .unwrap_or_default();
+
     let counter_party_id = contract_negotiation
       .counter_party_id()
       .clone()
       .unwrap_or_default();
+
     let counter_party_address = contract_negotiation.counter_party_address().to_string();
     let protocol = contract_negotiation.protocol().to_string();
     let kind = ContractNegotiationKind::from(contract_negotiation.kind()).to_string();
