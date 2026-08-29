@@ -16,9 +16,11 @@ chrono = "0.4"
 edc-connector-client = { version = "0.6.8", package = "edc-connector-client-next" }
 edc-federated-catalog-client = { version = "0.2.5", features = ["management"] }
 edc-identity-hub-client = "0.2.2"
+js-sys = "0.3.104"
 log = "0.4"
+mime2ext = "0.1.54"
 patternfly-yew = { version = "0.8", features = ["experimental"] }
-reqwest = { version = "0.13",  features= ["json"] }
+reqwest = { version = "0.13", features = ["json", "stream"] }
 semver = "1.0.28"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
@@ -26,7 +28,8 @@ serde_with = "3.21.0"
 strum = { version = "0.28", features = ["derive"] }
 stylist = { version = "0.15.1", features = ["yew_integration"] }
 uuid = { version = "1.24.0", features = ["v4"] }
-web-sys = "0.3"
+web-sys = { version = "0.3", features = ["HtmlAnchorElement"] }
 yew = "0.23"
 yew_icons = { version = "0.10.0", features = ["font_awesome_regular", "lucide"] }
 yew-oauth2 = { version = "0.14", features = ["yew-nested-router", "openid"] }
+

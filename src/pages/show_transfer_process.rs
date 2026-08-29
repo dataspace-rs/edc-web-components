@@ -2,6 +2,8 @@ use crate::components::TransferProcessStatus;
 use crate::contexts::use_edc_connector_context;
 use edc_connector_client::types::transfer_process::TransferProcessState;
 use patternfly_yew::prelude::*;
+use web_sys::{BlobPropertyBag, HtmlAnchorElement};
+use web_sys::wasm_bindgen::{JsCast, JsValue};
 use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
@@ -94,9 +96,16 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
               })
               .unwrap_or("application/octet-stream".to_string());
 
-            log::warn!("Response: {:?}", content_type);
-            log::warn!("Response: {:?}", response.status());
-            log::warn!("Response: {:?}", response.text().await);
+            let extension = mime2ext::mime2ext(&content_type).unwrap_or("bin");
+
+            log::info!("Response: {:?}", content_type);
+            log::info!("Response: {:?}", response.status());
+
+            if let Ok(data) = response.bytes().await {
+              if let Err(error) = save_byte_array(&format!("data.{extension}"), &content_type, &data) {
+                log::error!("Error saving byte array: {:?}", error);
+              }
+            }
           }
         }
       });
@@ -154,4 +163,34 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
     )
     ))
   }
+}
+
+fn save_byte_array(name: &str, mime_type: &str, data: &[u8]) -> Result<(), JsValue> {
+  use web_sys::{Blob, Url, js_sys::Uint8Array};
+
+  // Build file data & metadata
+  let props = BlobPropertyBag::new();
+  props.set_type(mime_type);
+
+  let blob = Blob::new_with_u8_array_sequence_and_options(
+    &JsValue::from(vec![Uint8Array::new_from_slice(&data)]),
+    &props,
+  )?;
+
+  // Add the link element
+  let document = web_sys::window()
+    .and_then(|window| window.document())
+    .ok_or(JsValue::null())?;
+
+  let link = document.create_element("a")?;
+
+  // Set link attributes
+  let url = Url::create_object_url_with_blob(&blob)?;
+  link.set_attribute("href", &url)?;
+  link.set_attribute("download", name)?;
+
+  link.dyn_into::<HtmlAnchorElement>()?.click();
+  Url::revoke_object_url(&url)?;
+
+  Ok(())
 }
