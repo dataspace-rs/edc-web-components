@@ -150,13 +150,20 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
           },
         );
 
-      let query_builder = if statuses.iter().all(|(_, selected)| *selected) || statuses.iter()
-        .all(|(_, selected)| !*selected)  {
+      let query_builder = if statuses.iter().all(|(_, selected)| *selected)
+        || statuses.iter().all(|(_, selected)| !*selected)
+      {
         query_builder
       } else {
         let list = statuses
           .iter()
-          .filter_map(|(label, selected)| if *selected { Some(label.clone().to_uppercase()) } else { None })
+          .filter_map(|(label, selected)| {
+            if *selected {
+              Some(label.clone().to_uppercase())
+            } else {
+              None
+            }
+          })
           .collect::<Vec<_>>();
 
         query_builder.filter("state", "IN", list)

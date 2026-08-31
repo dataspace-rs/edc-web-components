@@ -23,6 +23,9 @@ mod list_verifiable_credentials;
 mod multi_state_selector;
 mod policy_selector;
 mod request_verifiable_credential;
+#[cfg(feature = "contract-negotiation-review")]
+mod review_contract_negotiation;
+mod show_policy;
 mod simple_or_id_field;
 mod string_list_edit;
 mod transfer_process_status;
@@ -52,6 +55,9 @@ pub use list_verifiable_credentials::ListVerifiableCredentials;
 pub use multi_state_selector::*;
 pub use policy_selector::*;
 pub use request_verifiable_credential::*;
+#[cfg(feature = "contract-negotiation-review")]
+pub use review_contract_negotiation::*;
+pub use show_policy::*;
 pub use simple_or_id_field::*;
 pub use string_list_edit::*;
 pub use transfer_process_status::*;

@@ -16,7 +16,7 @@ contract-negotiation-review = ["edc-connector-client/contract-negotiation-review
 base64 = "0.23.0"
 cel = "0.14.0"
 chrono = "0.4"
-edc-connector-client = { version = "0.6.9", package = "edc-connector-client-next" }
+edc-connector-client = { version = "0.6.11", package = "edc-connector-client-next" }
 edc-federated-catalog-client = { version = "0.2.5", features = ["management"] }
 edc-identity-hub-client = "0.2.2"
 js-sys = "0.3.104"

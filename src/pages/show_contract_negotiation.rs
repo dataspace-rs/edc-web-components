@@ -1,5 +1,9 @@
 use crate::components::ContractNegotiationStatus;
 use crate::contexts::use_edc_connector_context;
+#[cfg(feature = "contract-negotiation-review")]
+use edc_connector_client::types::contract_negotiation::{
+  ContractNegotiationKind, ContractNegotiationState,
+};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
@@ -57,6 +61,11 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
     refresh_setter.set(1);
   });
 
+  #[cfg(feature = "contract-negotiation-review")]
+  let on_reviewed = use_callback(refresh.setter(), |_, refresh_setter| {
+    refresh_setter.set(1);
+  });
+
   let contract_negotiation = (*contract_negotiation).clone();
 
   if let Some(contract_negotiation) = contract_negotiation {
@@ -77,6 +86,26 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
         html!()
       };
 
+    #[cfg(feature = "contract-negotiation-review")]
+    let review = if contract_negotiation.state() == &ContractNegotiationState::Requested
+      && contract_negotiation.kind() == &ContractNegotiationKind::Provider
+    {
+      let contract_negotiation_id = contract_negotiation.id().to_string();
+
+      html!(
+        <Alert title="Review the Contract Negotiation">
+          <Suspense fallback={html!(<Bullseye><Spinner /></Bullseye>)}>
+            <crate::components::ReviewContractNegotiation {contract_negotiation_id} {on_reviewed} />
+          </Suspense>
+        </Alert>
+      )
+    } else {
+      html!()
+    };
+
+    #[cfg(not(feature = "contract-negotiation-review"))]
+    let review = html!();
+
     Ok(html!(
       <Stack gutter=true>
         <StackItem>
@@ -94,6 +123,7 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
             {on_finalized}
           />
         </StackItem>
+        <StackItem>{ review }</StackItem>
       </Stack>
     ))
   } else {

@@ -31,12 +31,11 @@ pub fn MultiStateSelector(props: &MultiStateSelectorProps) -> Html {
       )
     });
 
-  let text = if props.selectable_items.iter().all(|(_, selected)| *selected) {
-    "All".to_string()
-  } else if props
-    .selectable_items
-    .iter()
-    .all(|(_, selected)| !*selected)
+  let text = if props.selectable_items.iter().all(|(_, selected)| *selected)
+    || props
+      .selectable_items
+      .iter()
+      .all(|(_, selected)| !*selected)
   {
     "All".to_string()
   } else {
