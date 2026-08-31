@@ -361,7 +361,10 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       </Card>
       <Card>
         <CardHeader>
-          <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Description" }</Title>
+          <CardHeaderMain>
+            <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Description" }</Title>
+            <p>{ "This section defines the elements visible to the other participants." }</p>
+          </CardHeaderMain>
         </CardHeader>
         <CardBody>
           <Flex>
@@ -420,44 +423,55 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       </Card>
       <Card>
         <CardHeader>
-          <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Source" }</Title>
+          <CardHeaderMain>
+            <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Source" }</Title>
+            <p>{ "This section defines the private settings for communication and data exchange with other participants within the dataspace." }</p>
+            <p>{ "None of the fields here are ever exposed externally." }</p>
+          </CardHeaderMain>
         </CardHeader>
         <CardBody>
-          <FormGroup label="Base URL" required=true>
-            <TextInput
-              required=true
-              value={(*base_url).to_string()}
-              onchange={onchange_base_url}
-              r#type={TextInputType::Url}
-            />
-          </FormGroup>
-          <FormGroup label="Content Type">
-            <TextInput value={(*content_type).to_string()} onchange={onchange_content_type} />
-          </FormGroup>
-          <FormGroup label="Proxy Path">
-            <Switch checked={*proxy_path} onchange={onchange_proxy_path} />
-          </FormGroup>
-          <FormGroup label="Proxy Query Parameters">
-            <Switch checked={*proxy_query_params} onchange={onchange_proxy_query_params} />
-          </FormGroup>
-          <FormGroup label="Proxy Method">
-            <Switch checked={*proxy_method} onchange={onchange_proxy_method} />
-          </FormGroup>
-          <FormGroup label="Proxy Body">
-            <Switch checked={*proxy_body} onchange={onchange_proxy_body} />
-          </FormGroup>
-          <FormGroup label="OpenID Client ID">
-            <TextInput value={(*client_id).clone()} onchange={onchange_client_id} />
-          </FormGroup>
-          <FormGroup label="OpenID Client Secret Key">
-            <TextInput value={(*client_secret_key).clone()} onchange={onchange_client_secret_key} />
-          </FormGroup>
-          <FormGroup label="OpenID Token URL">
-            <TextInput value={(*token_url).clone()} onchange={onchange_token_url} />
-          </FormGroup>
-          <FormGroup label="OpenID Scopes">
-            <TextInput value={(*scopes).clone()} onchange={onchange_scopes} />
-          </FormGroup>
+          <Split gutter=true>
+            <SplitItem fill=true>
+              <FormGroup label="Base URL" required=true>
+                <TextInput
+                  required=true
+                  value={(*base_url).to_string()}
+                  onchange={onchange_base_url}
+                  r#type={TextInputType::Url}
+                />
+              </FormGroup>
+              <FormGroup label="Content Type">
+                <TextInput value={(*content_type).to_string()} onchange={onchange_content_type} />
+              </FormGroup>
+              <FormGroup label="Proxy Path">
+                <Switch checked={*proxy_path} onchange={onchange_proxy_path} />
+              </FormGroup>
+              <FormGroup label="Proxy Query Parameters">
+                <Switch checked={*proxy_query_params} onchange={onchange_proxy_query_params} />
+              </FormGroup>
+              <FormGroup label="Proxy Method">
+                <Switch checked={*proxy_method} onchange={onchange_proxy_method} />
+              </FormGroup>
+              <FormGroup label="Proxy Body">
+                <Switch checked={*proxy_body} onchange={onchange_proxy_body} />
+              </FormGroup>
+            </SplitItem>
+
+            <SplitItem fill=true>
+              <FormGroup label="OpenID Client ID">
+                <TextInput value={(*client_id).clone()} onchange={onchange_client_id} />
+              </FormGroup>
+              <FormGroup label="OpenID Client Secret Key">
+                <TextInput value={(*client_secret_key).clone()} onchange={onchange_client_secret_key} />
+              </FormGroup>
+              <FormGroup label="OpenID Token URL">
+                <TextInput value={(*token_url).clone()} onchange={onchange_token_url} />
+              </FormGroup>
+              <FormGroup label="OpenID Scopes">
+                <TextInput value={(*scopes).clone()} onchange={onchange_scopes} />
+              </FormGroup>
+            </SplitItem>
+          </Split>
         </CardBody>
       </Card>
       <ActionGroup>

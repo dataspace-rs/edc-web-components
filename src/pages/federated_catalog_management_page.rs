@@ -53,6 +53,7 @@ pub fn FederatedCatalogManagementPage(props: &ListFederatedCatalogParticipantsPr
             <Title level={Level::H3} size={Size::XXLarge}>
               { "Federated Catalog Participants" }
             </Title>
+            <p>{ "Manage your followed participants, discover their latest data catalogs, and control your active catalog subscriptions." }</p>
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>{ "Add" }</Button>

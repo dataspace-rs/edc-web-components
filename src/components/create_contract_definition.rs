@@ -119,6 +119,11 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
         <TextInput required=true value={(*identifier).to_string()} onchange={onchange_identifier} />
       </FormGroup>
       <FormGroup label="Access Policy" required=true>
+        <HelperText>
+          <HelperTextItem>
+            {"Who is eligible to view this offer ?"}
+          </HelperTextItem>
+        </HelperText>
         <PolicySelector
           onselect={onselect_access_policy}
           selected_policy={(*access_policy_definition_item).clone()}
@@ -126,6 +131,11 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
         />
       </FormGroup>
       <FormGroup label="Contract Policy" required=true>
+        <HelperText>
+          <HelperTextItem>
+            {"Who is eligible to negotiate this offer ?"}
+          </HelperTextItem>
+        </HelperText>
         <PolicySelector
           onselect={onselect_contract_policy}
           selected_policy={(*contract_policy_definition_item).clone()}
@@ -133,6 +143,11 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
         />
       </FormGroup>
       <FormGroup label="Asset Selector">
+        <HelperText>
+          <HelperTextItem>
+            {"Which asset is covered by this offer ?"}
+          </HelperTextItem>
+        </HelperText>
         <AssetSelector onselect={onselect_assets} selected_assets={(*asset_items).clone()} />
       </FormGroup>
       <ActionGroup>

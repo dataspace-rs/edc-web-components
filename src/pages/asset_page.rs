@@ -45,6 +45,7 @@ pub fn AssetPage(props: &AssetPageProps) -> Html {
         <Split gutter=true>
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "List Assets" }</Title>
+            <p>{ "The data you hold, before any of it is offered." }</p>
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>

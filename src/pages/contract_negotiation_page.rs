@@ -2,7 +2,7 @@ use crate::components::ListContractNegotiations;
 use crate::contexts::use_edc_connector_context;
 use crate::models::ContractNegotiationItem;
 use edc_connector_client::EdcConnectorApiVersion;
-use edc_connector_client::types::query::Query;
+use edc_connector_client::types::query::{Query, SortOrder};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
@@ -82,6 +82,7 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
         <Split gutter=true>
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Negotiations" }</Title>
+            <p>{ "A contract negotiation represents the active, multi-step process between two parties to agree on data sharing terms." }</p>
           </SplitItem>
         </Split>
       </StackItem>
@@ -169,7 +170,9 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
         query_builder.filter("state", "IN", list)
       };
 
-      let query = query_builder.build();
+      let query = query_builder
+        .sort("createdAt", SortOrder::Desc)
+        .build();
 
       if let Some(client) = edc_connector_context.get_client() {
         client

@@ -69,6 +69,7 @@ pub fn ContractDefinitionPage(props: &ContractDefinitionPageProps) -> Html {
         <Split gutter=true>
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Definitions" }</Title>
+            <p>{ "A contract definition links an asset to an access policy and a contract policy. The contract definition constitutes an offer to the other participants." }</p>
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>

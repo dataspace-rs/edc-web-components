@@ -2,7 +2,7 @@ use crate::components::ListContractAgreements;
 use crate::contexts::use_edc_connector_context;
 use crate::models::ContractAgreementItem;
 use edc_connector_client::EdcConnectorApiVersion;
-use edc_connector_client::types::query::Query;
+use edc_connector_client::types::query::{Query, SortOrder};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
@@ -39,6 +39,7 @@ pub fn ContractAgreementPage(props: &ContractAgreementPageProps) -> Html {
     <Stack gutter=true>
       <StackItem>
         <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Agreements" }</Title>
+        <p>{ "A contract agreement is the finalized, legally binding contract signed between parties after successful negotiation." }</p>
       </StackItem>
       <StackItem>
         <Suspense>
@@ -83,6 +84,7 @@ pub fn ContractAgreementPageInner(props: &ContractAgreementPageInnerProps) -> Ht
       let query = Query::builder()
         .limit(limit as u32)
         .offset(offset as u32)
+        .sort("contractSigningDate", SortOrder::Desc)
         .build();
 
       if let Some(client) = edc_connector_context.get_client() {
