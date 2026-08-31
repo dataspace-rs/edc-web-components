@@ -334,6 +334,8 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
     dcterm_types: vec![],
   };
 
+  let card_style = "background-color: var(--pf-v6-c-page--BackgroundColor);";
+
   html!(
     <Form {onsubmit}>
       <Card>
@@ -421,7 +423,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
           </Flex>
         </CardBody>
       </Card>
-      <Card>
+      <Card style={card_style}>
         <CardHeader>
           <CardHeaderMain>
             <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Source" }</Title>
