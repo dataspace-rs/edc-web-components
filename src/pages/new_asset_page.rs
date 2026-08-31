@@ -16,6 +16,7 @@ pub fn NewAssetPage(props: &NewAssetPageProps) -> Html {
   html!(
     <>
       <Title level={Level::H2} size={Size::XXXLarge}>{ "New Asset" }</Title>
+      <p>{ "The data you hold, before any of it is offered." }</p>
       <CreateAsset
         on_create={props.on_create.clone()}
         company_name={props.company_name.clone()}

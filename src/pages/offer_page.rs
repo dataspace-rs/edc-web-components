@@ -25,6 +25,7 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
   let refresh = use_state(|| 0usize);
   let offset = use_state(|| 0usize);
   let limit = use_state(|| 10usize);
+  let path = web_sys::window().unwrap().location().pathname().unwrap();
 
   let on_offset = use_callback(
     (refresh.clone(), offset.setter()),
@@ -48,12 +49,22 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
     </Bullseye>
   };
 
+  let sub_title = if path.contains("participant") {
+    String::from("Data offerings available from the selected participant: ")
+      + &*props.participant_did.clone()
+  } else {
+    String::from(
+      "Review and verify your active data offerings exactly as they are displayed to external participants searching the network.",
+    )
+  };
+
   html!(
     <Stack gutter=true>
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "List Offers" }</Title>
+            <p>{ sub_title }</p>
           </SplitItem>
         </Split>
       </StackItem>

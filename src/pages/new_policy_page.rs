@@ -12,6 +12,9 @@ pub fn NewPolicyPage(props: &NewPolicyPageProps) -> Html {
   html!(
     <>
       <Title level={Level::H2} size={Size::XXXLarge}>{ "New Policy" }</Title>
+      <p>
+        { "Policies define the rules and conditions that govern the use of your data. You can add as many rules as required." }
+      </p>
       <CreatePolicy on_create={props.on_create.clone()} />
     </>
   )

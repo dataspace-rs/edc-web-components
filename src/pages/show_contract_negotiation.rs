@@ -80,11 +80,32 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
         };
 
         html!(
-          <Button variant={ButtonVariant::InlineLink} {onclick}>{ contract_agreement_id }</Button>
+          <DescriptionGroup term="Contract Agreement Id">
+            <Button variant={ButtonVariant::InlineLink} {onclick}>{ contract_agreement_id }</Button>
+          </DescriptionGroup>
         )
       } else {
         html!()
       };
+
+    let state =
+      Some(crate::models::ContractNegotiationState::from(contract_negotiation.state()).to_string())
+        .map(|value| {
+          let color = match value.as_str() {
+            "Finalized" => Color::Green,
+            "Terminated" => Color::Red,
+            _ => Color::Blue,
+          };
+
+          html!(
+            <DescriptionGroup term="State">
+              <Label label={value} {color} />
+            </DescriptionGroup>
+          )
+        });
+
+    let kind =
+      crate::models::ContractNegotiationKind::from(contract_negotiation.kind()).to_string();
 
     #[cfg(feature = "contract-negotiation-review")]
     let review = if contract_negotiation.state() == &ContractNegotiationState::Requested
@@ -111,7 +132,9 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
         <StackItem>
           <DescriptionList mode={[DescriptionListMode::Horizontal]}>
             <DescriptionGroup term="Id">{ contract_negotiation.id() }</DescriptionGroup>
-            <DescriptionGroup term="Contract Agreement Id">{ contract_agreement }</DescriptionGroup>
+            { state }
+            <DescriptionGroup term="Kind">{ kind }</DescriptionGroup>
+            { contract_agreement }
             <DescriptionGroup term="Counter Party ID">
               { contract_negotiation.counter_party_id().clone().unwrap_or_default() }
             </DescriptionGroup>

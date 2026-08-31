@@ -31,6 +31,9 @@ pub fn NewContractNegotiationPage(props: &NewContractNegotiationPageProps) -> Ht
         <Split gutter=true>
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "Negotiate a Contract" }</Title>
+            <p>
+              { "Start a new negotiation on the selected data offer and proposing terms to establish a binding sharing contract." }
+            </p>
           </SplitItem>
         </Split>
       </StackItem>
