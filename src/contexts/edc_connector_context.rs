@@ -11,7 +11,7 @@ pub enum EdcConnectorAction {}
 pub struct EdcConnectorState {
   management_url: String,
   api_key: Option<String>,
-  latest_access_token_context: LatestAccessToken,
+  latest_access_token_context: Option<LatestAccessToken>,
 }
 
 impl EdcConnectorState {
@@ -24,7 +24,11 @@ impl EdcConnectorState {
       builder
     };
 
-    let builder = if let Some(access_token) = self.latest_access_token_context.access_token() {
+    let builder = if let Some(access_token) = self
+      .latest_access_token_context
+      .as_ref()
+      .and_then(|latest_access_token_context| latest_access_token_context.access_token())
+    {
       builder.with_auth(Auth::BearerToken(access_token))
     } else {
       builder
@@ -54,7 +58,7 @@ pub struct EdcConnectorContextProviderProps {
 
 #[component]
 pub fn EdcConnectorContextProvider(props: &EdcConnectorContextProviderProps) -> Html {
-  let latest_access_token_context = use_latest_access_token().unwrap();
+  let latest_access_token_context = use_latest_access_token();
 
   let edc_connector_context = use_reducer(move || EdcConnectorState {
     management_url: props.management_url.clone(),
