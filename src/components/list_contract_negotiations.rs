@@ -1,3 +1,4 @@
+use crate::components::MultiStateSelector;
 use crate::models::ContractNegotiationItem;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
@@ -9,10 +10,12 @@ pub struct ListContractNegotiationsProps {
   pub offset: usize,
   pub limit: usize,
   pub switch: bool,
+  pub statuses: Vec<(String, bool)>,
   pub on_offset: Callback<usize>,
   pub on_limit: Callback<usize>,
   pub on_switch_view_consumer: Callback<bool>,
   pub on_show_contract_negotiation: Callback<String>,
+  pub on_statuses: Callback<Vec<(String, bool)>>,
 }
 
 #[component]
@@ -62,16 +65,28 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
 
   let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
 
+  let statuses_selector = {
+    html!(
+      <MultiStateSelector
+        selectable_items={props.statuses.clone()}
+        on_selected={props.on_statuses.clone()}
+      />
+    )
+  };
+
   html!(
     <>
       <Toolbar>
         <ToolbarContent>
-          <ToolbarItem r#type={ToolbarItemType::Pagination}>
+          <ToolbarItem r#type={ToolbarItemType::BulkSelect}>
+            { statuses_selector }
             <Switch
               label="as Consumer"
               label_off="as Provider"
               onchange={props.on_switch_view_consumer.clone()}
             />
+          </ToolbarItem>
+          <ToolbarItem r#type={ToolbarItemType::Pagination}>
             <Pagination
               offset={props.offset}
               entries_per_page_choices={vec![5, 10, 25, 50, 100]}

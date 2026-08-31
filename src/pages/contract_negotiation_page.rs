@@ -18,6 +18,25 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
   let offset = use_state(|| 0usize);
   let limit = use_state(|| 10usize);
   let switch_view_consumer = use_state(|| false);
+  let statuses = use_state(|| {
+    vec![
+      ("Initial".to_string(), false),
+      ("Requesting".to_string(), false),
+      ("Requested".to_string(), false),
+      ("Offering".to_string(), false),
+      ("Offered".to_string(), false),
+      ("Accepting".to_string(), false),
+      ("Accepted".to_string(), false),
+      ("Agreeing".to_string(), false),
+      ("Agreed".to_string(), false),
+      ("Verifying".to_string(), false),
+      ("Verified".to_string(), false),
+      ("Finalizing".to_string(), false),
+      ("Finalized".to_string(), false),
+      ("Terminating".to_string(), false),
+      ("Terminated".to_string(), false),
+    ]
+  });
 
   let on_offset = use_callback(
     (refresh.clone(), offset.setter()),
@@ -43,6 +62,14 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
     },
   );
 
+  let on_statuses = use_callback(
+    (refresh.clone(), statuses.setter()),
+    |statuses, (refresh, statuses_setter)| {
+      statuses_setter.set(statuses);
+      refresh.set(**refresh + 1);
+    },
+  );
+
   let fallback = html! {
     <Bullseye>
       <Spinner size={SpinnerSize::Lg} />
@@ -64,9 +91,11 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
             offset={*offset}
             limit={*limit}
             switch_view_consumer={*switch_view_consumer}
+            statuses={(*statuses).clone()}
             {on_offset}
             {on_limit}
             {on_switch_view_consumer}
+            {on_statuses}
             force_refresh={*refresh}
             on_show_contract_negotiation={props.on_show_contract_negotiation.clone()}
           />
@@ -81,9 +110,12 @@ pub struct ContractNegotiationPageInnerProps {
   pub offset: usize,
   pub limit: usize,
   pub switch_view_consumer: bool,
+  #[prop_or_default]
+  pub statuses: Vec<(String, bool)>,
   pub on_offset: Callback<usize>,
   pub on_limit: Callback<usize>,
   pub on_switch_view_consumer: Callback<bool>,
+  pub on_statuses: Callback<Vec<(String, bool)>>,
   pub force_refresh: usize,
   pub on_show_contract_negotiation: Callback<String>,
 }
@@ -98,12 +130,14 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
       props.limit,
       props.offset,
       props.switch_view_consumer,
+      props.statuses.clone(),
       props.force_refresh,
     ),
     |parameters| async move {
-      let (edc_connector_context, limit, offset, switch_view_consumer, _) = (*parameters).clone();
+      let (edc_connector_context, limit, offset, switch_view_consumer, statuses, _) =
+        (*parameters).clone();
 
-      let query = Query::builder()
+      let query_builder = Query::builder()
         .limit(limit as u32)
         .offset(offset as u32)
         .filter(
@@ -114,8 +148,21 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
           } else {
             "PROVIDER"
           },
-        )
-        .build();
+        );
+
+      let query_builder = if statuses.iter().all(|(_, selected)| *selected) || statuses.iter()
+        .all(|(_, selected)| !*selected)  {
+        query_builder
+      } else {
+        let list = statuses
+          .iter()
+          .filter_map(|(label, selected)| if *selected { Some(label.clone().to_uppercase()) } else { None })
+          .collect::<Vec<_>>();
+
+        query_builder.filter("state", "IN", list)
+      };
+
+      let query = query_builder.build();
 
       if let Some(client) = edc_connector_context.get_client() {
         client
@@ -140,10 +187,12 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
       offset={props.offset}
       limit={props.limit}
       switch={props.switch_view_consumer}
+      statuses={props.statuses.clone()}
       on_offset={props.on_offset.clone()}
       on_limit={props.on_limit.clone()}
       on_switch_view_consumer={props.on_switch_view_consumer.clone()}
       on_show_contract_negotiation={props.on_show_contract_negotiation.clone()}
+      on_statuses={props.on_statuses.clone()}
     />
   ))
 }

@@ -204,10 +204,16 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
                 policy_builder.extensible_properties(std::collections::HashMap::<
                   String,
                   serde_json::Value,
-                >::from([(
-                  "policy:isan".to_string(),
-                  serde_json::Value::String("123456".to_string()),
-                )]));
+                >::from([
+                  (
+                    "policy:isan".to_string(),
+                    serde_json::Value::String("123456".to_string()),
+                  ),
+                  (
+                    "policy:fpd".to_string(),
+                    serde_json::Value::String("25".to_string()),
+                  ),
+                ]));
 
               let policy = policy_builder.build();
 
@@ -330,7 +336,7 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
           <DescriptionGroup term="Asset ID">{ asset_id }</DescriptionGroup>
           <DescriptionGroup term="Asset Name">{ asset_name }</DescriptionGroup>
           <DescriptionGroup term="Offer IDs">
-            <Gallery>{ for offers }</Gallery>
+            <Gallery gutter=true>{ for offers }</Gallery>
           </DescriptionGroup>
         </DescriptionList>
         <Split gutter=true>

@@ -2,8 +2,8 @@ use crate::components::TransferProcessStatus;
 use crate::contexts::use_edc_connector_context;
 use edc_connector_client::types::transfer_process::TransferProcessState;
 use patternfly_yew::prelude::*;
-use web_sys::{BlobPropertyBag, HtmlAnchorElement};
 use web_sys::wasm_bindgen::{JsCast, JsValue};
+use web_sys::{BlobPropertyBag, HtmlAnchorElement};
 use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
@@ -101,10 +101,11 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
             log::info!("Response: {:?}", content_type);
             log::info!("Response: {:?}", response.status());
 
-            if let Ok(data) = response.bytes().await {
-              if let Err(error) = save_byte_array(&format!("data.{extension}"), &content_type, &data) {
-                log::error!("Error saving byte array: {:?}", error);
-              }
+            if let Ok(data) = response.bytes().await
+              && let Err(error) =
+                save_byte_array(&format!("data.{extension}"), &content_type, &data)
+            {
+              log::error!("Error saving byte array: {:?}", error);
             }
           }
         }
@@ -173,7 +174,7 @@ fn save_byte_array(name: &str, mime_type: &str, data: &[u8]) -> Result<(), JsVal
   props.set_type(mime_type);
 
   let blob = Blob::new_with_u8_array_sequence_and_options(
-    &JsValue::from(vec![Uint8Array::new_from_slice(&data)]),
+    &JsValue::from(vec![Uint8Array::new_from_slice(data)]),
     &props,
   )?;
 
