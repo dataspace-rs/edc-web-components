@@ -82,7 +82,9 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
         <Split gutter=true>
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Negotiations" }</Title>
-            <p>{ "A contract negotiation represents the active, multi-step process between two parties to agree on data sharing terms." }</p>
+            <p>
+              { "A contract negotiation represents the active, multi-step process between two parties to agree on data sharing terms." }
+            </p>
           </SplitItem>
         </Split>
       </StackItem>

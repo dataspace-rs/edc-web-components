@@ -427,7 +427,9 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
         <CardHeader>
           <CardHeaderMain>
             <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Source" }</Title>
-            <p>{ "This section defines the private settings for communication and data exchange with other participants within the dataspace." }</p>
+            <p>
+              { "This section defines the private settings for communication and data exchange with other participants within the dataspace." }
+            </p>
             <p>{ "None of the fields here are ever exposed externally." }</p>
           </CardHeaderMain>
         </CardHeader>
@@ -458,13 +460,15 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
                 <Switch checked={*proxy_body} onchange={onchange_proxy_body} />
               </FormGroup>
             </SplitItem>
-
             <SplitItem fill=true>
               <FormGroup label="OpenID Client ID">
                 <TextInput value={(*client_id).clone()} onchange={onchange_client_id} />
               </FormGroup>
               <FormGroup label="OpenID Client Secret Key">
-                <TextInput value={(*client_secret_key).clone()} onchange={onchange_client_secret_key} />
+                <TextInput
+                  value={(*client_secret_key).clone()}
+                  onchange={onchange_client_secret_key}
+                />
               </FormGroup>
               <FormGroup label="OpenID Token URL">
                 <TextInput value={(*token_url).clone()} onchange={onchange_token_url} />

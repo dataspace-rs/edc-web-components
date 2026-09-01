@@ -102,9 +102,11 @@ pub fn ShowVerifiableCredentialPageInner(props: &ShowVerifiableCredentialPagePro
       </DescriptionList>
     ))
   } else {
-    Ok(html!(format!(
-      "Verifiable Credential with id {} not found.",
-      props.verifiable_credential_id
-    )))
+    Ok(html!(
+      format!(
+        "Verifiable Credential with id {} not found.",
+        props.verifiable_credential_id
+      )
+    ))
   }
 }

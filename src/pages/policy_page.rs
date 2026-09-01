@@ -68,7 +68,9 @@ pub fn PolicyPage(props: &PolicyPageProps) -> Html {
         <Split gutter=true>
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "List Policies" }</Title>
-            <p>{ "A policy consists of one or more rules. The policy is then bound to an asset during the creation of the contract definition." }</p>
+            <p>
+              { "A policy consists of one or more rules. The policy is then bound to an asset during the creation of the contract definition." }
+            </p>
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>

@@ -158,9 +158,11 @@ pub fn ShowAssetPageInner(props: &ShowAssetPageProps) -> HtmlResult {
       </>
     ))
   } else {
-    Ok(html!(format!(
-      "Asset with id {} not found.",
-      props.asset_id
-    )))
+    Ok(html!(
+      format!(
+        "Asset with id {} not found.",
+        props.asset_id
+      )
+    ))
   }
 }

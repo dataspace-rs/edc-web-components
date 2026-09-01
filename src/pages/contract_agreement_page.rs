@@ -39,7 +39,9 @@ pub fn ContractAgreementPage(props: &ContractAgreementPageProps) -> Html {
     <Stack gutter=true>
       <StackItem>
         <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Agreements" }</Title>
-        <p>{ "A contract agreement is the finalized, legally binding contract signed between parties after successful negotiation." }</p>
+        <p>
+          { "A contract agreement is the finalized, legally binding contract signed between parties after successful negotiation." }
+        </p>
       </StackItem>
       <StackItem>
         <Suspense>
