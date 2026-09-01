@@ -49,9 +49,9 @@ pub fn ShowPolicyPageInner(props: &ShowPolicyPageProps) -> HtmlResult {
   } else {
     Ok(html!(
       format!(
-        "Policy with id {} not found.",
-        props.policy_id
-      )
+      "Policy with id {} not found.",
+      props.policy_id
+    )
     ))
   }
 }

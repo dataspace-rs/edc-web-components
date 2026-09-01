@@ -152,9 +152,9 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
   } else {
     Ok(html!(
       format!(
-        "Contract Negotiation with id {} not found.",
-        props.contract_negotiation_id
-      )
+      "Contract Negotiation with id {} not found.",
+      props.contract_negotiation_id
+    )
     ))
   }
 }

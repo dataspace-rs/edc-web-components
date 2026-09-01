@@ -28,7 +28,7 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
           <SplitItem fill=true>
             <Title level={Level::H3} size={Size::XXLarge}>{ "Catalog" }</Title>
             <p>
-              {"Explore and access available data offers from your list of trusted and followed participants."}
+              { "Explore and access available data offers from your list of trusted and followed participants." }
             </p>
           </SplitItem>
         </Split>
