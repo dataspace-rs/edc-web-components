@@ -47,11 +47,9 @@ pub fn ShowPolicyPageInner(props: &ShowPolicyPageProps) -> HtmlResult {
   if let Some(policy) = policy {
     Ok(html!(<ShowPolicy policy={policy.policy().clone()} />))
   } else {
-    Ok(html!(
-      format!(
+    Ok(html!(format!(
       "Policy with id {} not found.",
       props.policy_id
-    )
-    ))
+    )))
   }
 }

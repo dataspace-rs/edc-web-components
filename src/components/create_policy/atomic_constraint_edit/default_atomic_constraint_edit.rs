@@ -1,5 +1,5 @@
-use crate::components::simple_or_id_field::SimpleOrIdField;
 use crate::components::OperatorSelector;
+use crate::components::simple_or_id_field::SimpleOrIdField;
 use edc_connector_client::types::policy::{LeftOperand, Operator};
 use patternfly_yew::prelude::InputState;
 use patternfly_yew::prelude::*;

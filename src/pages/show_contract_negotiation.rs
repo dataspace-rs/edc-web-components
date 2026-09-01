@@ -88,21 +88,24 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
         html!()
       };
 
-    let state = Some(crate::models::ContractNegotiationState::from(contract_negotiation.state()).to_string()).map(|value| {
-      let color = match value.as_str() {
-        "Finalized" => Color::Green,
-        "Terminated" => Color::Red,
-        _ => Color::Blue,
-      };
+    let state =
+      Some(crate::models::ContractNegotiationState::from(contract_negotiation.state()).to_string())
+        .map(|value| {
+          let color = match value.as_str() {
+            "Finalized" => Color::Green,
+            "Terminated" => Color::Red,
+            _ => Color::Blue,
+          };
 
-      html!(
-        <DescriptionGroup term="State">
-          <Label label={value} {color} />
-        </DescriptionGroup>
-      )
-    });
+          html!(
+            <DescriptionGroup term="State">
+              <Label label={value} {color} />
+            </DescriptionGroup>
+          )
+        });
 
-    let kind = crate::models::ContractNegotiationKind::from(contract_negotiation.kind()).to_string();
+    let kind =
+      crate::models::ContractNegotiationKind::from(contract_negotiation.kind()).to_string();
 
     #[cfg(feature = "contract-negotiation-review")]
     let review = if contract_negotiation.state() == &ContractNegotiationState::Requested
@@ -147,11 +150,9 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
       </Stack>
     ))
   } else {
-    Ok(html!(
-      format!(
+    Ok(html!(format!(
       "Contract Negotiation with id {} not found.",
       props.contract_negotiation_id
-    )
-    ))
+    )))
   }
 }

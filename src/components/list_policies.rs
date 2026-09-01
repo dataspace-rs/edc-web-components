@@ -106,17 +106,17 @@ impl TableEntryRenderer<Columns> for PolicyDefinitionItemRenderer {
       Columns::Kind => html! { self.policy_definition_item.kind.to_string() },
       Columns::Assignee => html!(
         self
-        .policy_definition_item
-        .assignee
-        .clone()
-        .unwrap_or_default()
+          .policy_definition_item
+          .assignee
+          .clone()
+          .unwrap_or_default()
       ),
       Columns::Assigner => html!(
         self
-        .policy_definition_item
-        .assigner
-        .clone()
-        .unwrap_or_default()
+          .policy_definition_item
+          .assigner
+          .clone()
+          .unwrap_or_default()
       ),
       Columns::Actions => {
         let policy_id = self.policy_definition_item.id.to_string();

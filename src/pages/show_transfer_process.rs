@@ -157,12 +157,10 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
       </Stack>
     ))
   } else {
-    Ok(html!(
-      format!(
+    Ok(html!(format!(
       "Transfer Process with id {} not found.",
       props.transfer_process_id
-    )
-    ))
+    )))
   }
 }
 

@@ -104,10 +104,10 @@ impl TableEntryRenderer<Columns> for ListCommonExpressionLanguageRenderer {
       Columns::LeftOperand => html!(self.common_expression_language.left_operand.to_owned()),
       Columns::Description => html!(
         self
-        .common_expression_language
-        .description
-        .clone()
-        .unwrap_or_default()
+          .common_expression_language
+          .description
+          .clone()
+          .unwrap_or_default()
       ),
       Columns::Scopes => html!(self.common_expression_language.scopes.to_owned().join(", ")),
       Columns::Expression => html!(

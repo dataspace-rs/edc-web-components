@@ -170,9 +170,7 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
         query_builder.filter("state", "IN", list)
       };
 
-      let query = query_builder
-        .sort("createdAt", SortOrder::Desc)
-        .build();
+      let query = query_builder.sort("createdAt", SortOrder::Desc).build();
 
       if let Some(client) = edc_connector_context.get_client() {
         client

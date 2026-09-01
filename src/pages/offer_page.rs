@@ -50,11 +50,13 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
   };
 
   let sub_title = if path.contains("participant") {
-    String::from("Data offerings available from the selected participant: ") + &*props.participant_did.clone()
+    String::from("Data offerings available from the selected participant: ")
+      + &*props.participant_did.clone()
   } else {
-    String::from("Review and verify your active data offerings exactly as they are displayed to external participants searching the network.")
+    String::from(
+      "Review and verify your active data offerings exactly as they are displayed to external participants searching the network.",
+    )
   };
-
 
   html!(
     <Stack gutter=true>

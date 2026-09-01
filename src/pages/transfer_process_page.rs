@@ -1,8 +1,8 @@
 use crate::components::ListTransferProcesses;
 use crate::contexts::use_edc_connector_context;
 use crate::models::TransferProcessItem;
-use edc_connector_client::{EdcConnectorApiVersion, types::query::Query};
 use edc_connector_client::types::query::SortOrder;
+use edc_connector_client::{EdcConnectorApiVersion, types::query::Query};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
