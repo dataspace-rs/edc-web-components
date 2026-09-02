@@ -1,4 +1,4 @@
-use crate::components::{DatasetCard, StringListEdit};
+use crate::components::{DatasetCard, MultiStateSelector, StringListEdit};
 use crate::contexts::use_edc_connector_context;
 use crate::models::{Creator, DataspaceDataset, Thumbnail};
 use edc_connector_client::EdcConnectorApiVersion;
@@ -17,6 +17,8 @@ pub struct CreateAssetProps {
   pub company_logo_url: Option<String>,
   #[prop_or_default]
   pub on_create: Callback<()>,
+  #[prop_or_default]
+  pub dcterm_types: Option<Vec<(String, String)>>,
 }
 
 #[component]
@@ -41,6 +43,18 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
   let token_url = use_state(String::new);
   let scopes = use_state(|| "openid".to_string());
   let headers = use_state(HashMap::<String, String>::new);
+  let selected_dcterm_types = use_state(|| {
+    props
+      .dcterm_types
+      .as_ref()
+      .map(|dcterm_types| {
+        dcterm_types
+          .iter()
+          .map(|(_, label)| (label.clone(), false))
+          .collect::<Vec<(String, bool)>>()
+      })
+      .unwrap_or_default()
+  });
 
   let onsubmit = use_callback(
     (
@@ -51,6 +65,8 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
         description.clone(),
         thumbnail_url.clone(),
         keywords.clone(),
+        selected_dcterm_types.clone(),
+        props.dcterm_types.clone(),
       ),
       base_url.clone(),
       (company_name.clone(), company_logo_url.clone()),
@@ -73,7 +89,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
     |event: SubmitEvent,
      (
       edc_connector_context,
-      (name, version, description, thumbnail_url, keywords),
+      (name, version, description, thumbnail_url, keywords, selected_dcterm_types, dcterm_types),
       base_url,
       (company_name, company_logo_url),
       content_type,
@@ -102,6 +118,22 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       let client_secret_key = (**client_secret_key).clone();
       let token_url = (**token_url).clone();
       let scopes = (**scopes).clone();
+
+      let dcterm_types = {
+        let selected_dcterm_types = (**selected_dcterm_types).clone();
+        let dcterm_types = (*dcterm_types).clone();
+
+        if let Some(dcterm_types) = dcterm_types {
+          selected_dcterm_types
+            .iter()
+            .zip(dcterm_types.iter())
+            .filter(|((_, selected), (_, _))| *selected)
+            .map(|((_, _), (id, _))| id.clone())
+            .collect::<Vec<String>>()
+        } else {
+          vec![]
+        }
+      };
 
       let edc_connector_context = edc_connector_context.clone();
       let on_create = on_create.clone();
@@ -186,6 +218,12 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
               logo_url: company_logo_url,
             },
           );
+
+        let new_asset_builder = if !dcterm_types.is_empty() {
+          new_asset_builder.property("http://purl.org/dc/terms/type", dcterm_types)
+        } else {
+          new_asset_builder
+        };
 
         let new_asset_builder = if !name.is_empty() {
           new_asset_builder.property("http://purl.org/dc/terms/title", name)
@@ -336,6 +374,31 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
 
   let card_style = "background-color: var(--pf-v6-c-page--BackgroundColor);";
 
+  let on_selected = use_callback(
+    selected_dcterm_types.setter(),
+    |selected_dcterm_types: Vec<(String, bool)>, selected_dcterm_types_setter| {
+      selected_dcterm_types_setter.set(selected_dcterm_types);
+    },
+  );
+
+  let offer_types = if let Some(dc_term_types) = &props.dcterm_types {
+    let selected_dcterm_types = (*selected_dcterm_types).clone();
+
+    let selectable_items = dc_term_types
+      .iter()
+      .zip(selected_dcterm_types.iter())
+      .map(|((_, label), (_, selected))| (label.clone(), *selected))
+      .collect::<Vec<(String, bool)>>();
+
+    html!(
+      <FormGroup label="Dataset Type(s)">
+        <MultiStateSelector {selectable_items} {on_selected} />
+      </FormGroup>
+    )
+  } else {
+    html!()
+  };
+
   html!(
     <Form {onsubmit}>
       <Card>
@@ -416,6 +479,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
               <FormGroup label="Keywords">
                 <StringListEdit values={(*keywords).clone()} onchange={onchange_keywords} />
               </FormGroup>
+              { offer_types }
             </FlexItem>
             <FlexItem modifiers={[FlexModifier::Align(Alignment::Start).all()]}>
               <DatasetCard {dataset} />

@@ -3,7 +3,7 @@ use crate::models::{Creator, Thumbnail};
 use edc_connector_client::types::asset::Asset;
 use edc_connector_client::types::catalog::Dataset;
 use edc_connector_client::types::data_address::DataAddress;
-use edc_connector_client::types::properties::Properties;
+use edc_connector_client::types::properties::{Properties, PropertyValue};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AssetItem {
@@ -14,6 +14,7 @@ pub struct AssetItem {
   pub creator: Option<Creator>,
   pub thumbnail: Option<Thumbnail>,
   pub keywords: Vec<String>,
+  pub dcterm_types: Vec<String>,
   pub base_url: String,
   pub proxy_path: bool,
   pub proxy_query_params: bool,
@@ -56,6 +57,18 @@ impl From<Asset> for AssetItem {
       })
       .unwrap_or_default();
 
+    let dcterm_types = asset
+      .properties()
+      .get_raw("http://purl.org/dc/terms/type")
+      .and_then(|property_value| {
+        if let Ok(value) = PropertyValue::try_from(property_value) {
+          Some(vec![value])
+        } else {
+          serde_json::from_value::<Vec<String>>(property_value.0.clone()).ok()
+        }
+      })
+      .unwrap_or_default();
+
     let base_url = asset
       .data_address()
       .property("baseUrl")
@@ -75,6 +88,7 @@ impl From<Asset> for AssetItem {
       creator,
       thumbnail,
       keywords,
+      dcterm_types,
       base_url,
       proxy_path,
       proxy_query_params,
@@ -103,6 +117,7 @@ impl From<edc_federated_catalog_client::models::Dataset> for AssetItem {
         resource: Some(thumbnail.resource),
       }),
       keywords: dataset.keywords,
+      dcterm_types: vec!["ABC".to_string()],
       base_url: "".to_string(),
       proxy_path: false,
       proxy_query_params: false,
@@ -135,6 +150,7 @@ impl From<&Dataset<DatasetExtraFields>> for AssetItem {
         resource: Some(thumbnail.resource.to_owned()),
       }),
       keywords: extra.keywords.clone(),
+      dcterm_types: extra.dcterm_types.clone(),
       base_url: "".to_string(),
       proxy_path: false,
       proxy_query_params: false,

@@ -10,6 +10,7 @@ use yew::suspense::use_future_with;
 pub struct ShowAssetPageProps {
   pub asset_id: String,
   pub on_deleted: Callback<()>,
+  pub dcterm_types: Vec<(String, String)>,
 }
 
 #[component]
@@ -21,6 +22,7 @@ pub fn ShowAssetPage(props: &ShowAssetPageProps) -> Html {
         <ShowAssetPageInner
           asset_id={props.asset_id.clone()}
           on_deleted={props.on_deleted.clone()}
+          dcterm_types={props.dcterm_types.clone()}
         />
       </Suspense>
     </>
@@ -84,6 +86,35 @@ pub fn ShowAssetPageInner(props: &ShowAssetPageProps) -> HtmlResult {
       .iter()
       .map(|keyword| html! { <Label label={keyword.to_string()} color={Color::Blue} /> });
 
+    let dcterm_types = if !asset_item.dcterm_types.is_empty() {
+      let labels = asset_item
+        .dcterm_types
+        .iter()
+        .map(|dcterm_type| {
+          props
+            .dcterm_types
+            .iter()
+            .find(|(dcterm_type_name, _)| dcterm_type_name == dcterm_type)
+            .map(|(_, dcterm_type_label)| dcterm_type_label.to_string())
+            .unwrap_or(dcterm_type.to_string())
+        })
+        .map(|dcterm_type| {
+          html_nested!(
+            <FlexItem>
+              <Label label={dcterm_type} />
+            </FlexItem>
+          )
+        });
+
+      html!(
+        <DescriptionGroup term="Dataset Type(s)">
+          <Flex>{ for labels }</Flex>
+        </DescriptionGroup>
+      )
+    } else {
+      html!()
+    };
+
     Ok(html!(
       <>
         <Card>
@@ -122,6 +153,7 @@ pub fn ShowAssetPageInner(props: &ShowAssetPageProps) -> HtmlResult {
                 { asset_item.description.unwrap_or_default() }
               </DescriptionGroup>
               <DescriptionGroup term="Keywords">{ for keywords }</DescriptionGroup>
+              { dcterm_types }
             </DescriptionList>
           </CardBody>
         </Card>

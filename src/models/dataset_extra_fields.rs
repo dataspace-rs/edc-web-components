@@ -22,6 +22,8 @@ pub struct DatasetExtraFields {
   pub thumbnail: Option<Thumbnail>,
   #[serde(alias = "dcat:keyword", default)]
   pub keywords: Vec<String>,
+  #[serde(alias = "dct:type", alias = "http://purl.org/dc/terms/type", default)]
+  pub dcterm_types: Vec<String>,
 }
 
 impl ExtraTokenFields for DatasetExtraFields {}
