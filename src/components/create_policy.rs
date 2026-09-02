@@ -18,6 +18,7 @@ use edc_connector_client::types::policy::{
 use edc_connector_client::{EdcConnectorApiVersion, Error, ManagementApiErrorDetailKind};
 use patternfly_yew::prelude::*;
 use std::collections::HashMap;
+use uuid::Uuid;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
@@ -31,7 +32,7 @@ pub struct CreatePolicyProps {
 pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
-  let identifier = use_state(String::new);
+  let name = use_state(String::new);
   let assignee = use_state(String::default);
   let assigner = use_state(String::default);
   let target = use_state(|| (true, String::default()));
@@ -46,7 +47,7 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   let onsubmit = use_callback(
     (
       edc_connector_context,
-      identifier.clone(),
+      name.clone(),
       assignee.clone(),
       assigner.clone(),
       target.clone(),
@@ -61,7 +62,7 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
     |event: SubmitEvent,
      (
       edc_connector_context,
-      identifier,
+      name,
       assignee,
       assigner,
       target,
@@ -76,7 +77,7 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
       event.prevent_default();
 
       let edc_connector_context = edc_connector_context.clone();
-      let identifier = (**identifier).clone();
+      let name = (**name).clone();
       let profiles = (**profiles).clone();
       let extensible_properties = (**extensible_properties).clone();
       let assignee = (**assignee).clone();
@@ -175,8 +176,9 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
         let policy = policy_builder.build();
 
         let new_policy = NewPolicyDefinition::builder()
-          .id(&identifier)
+          .id(Uuid::new_v4().to_string())
           .policy(policy)
+          .private_property("name", name)
           .build();
 
         if let Some(client) = edc_connector_context.get_client() {
@@ -210,10 +212,9 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
     },
   );
 
-  let onchange_identifier =
-    use_callback(identifier.setter(), move |identifier, identifier_setter| {
-      identifier_setter.set(identifier);
-    });
+  let onchange_name = use_callback(name.setter(), move |name, name_setter| {
+    name_setter.set(name);
+  });
 
   let onchange_assignee = use_callback(
     assignee.setter(),
@@ -283,8 +284,8 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   html!(
     <Form {onsubmit}>
       { errors }
-      <FormGroup label="Identifier" required=true>
-        <TextInput required=true value={(*identifier).to_string()} onchange={onchange_identifier} />
+      <FormGroup label="Name" required=true>
+        <TextInput required=true value={(*name).to_string()} onchange={onchange_name} />
       </FormGroup>
       <FormGroup label="Permissions">
         <ListOfRules list={(*permissions).clone()} onchange={onchange_permissions} />

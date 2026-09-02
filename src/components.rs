@@ -1,3 +1,4 @@
+mod asset_reference;
 mod asset_selector;
 mod contract_negotiation_status;
 mod contraint_renderer;
@@ -21,15 +22,18 @@ mod list_policies;
 mod list_transfer_processes;
 mod list_verifiable_credentials;
 mod multi_state_selector;
+mod policy_reference;
 mod policy_selector;
 mod request_verifiable_credential;
 #[cfg(feature = "contract-negotiation-review")]
 mod review_contract_negotiation;
+mod show_data_plane;
 mod show_policy;
 mod simple_or_id_field;
 mod string_list_edit;
 mod transfer_process_status;
 
+pub use asset_reference::*;
 pub use asset_selector::*;
 pub use contract_negotiation_status::*;
 pub use contraint_renderer::*;
@@ -53,10 +57,12 @@ pub use list_policies::ListPolicies;
 pub use list_transfer_processes::ListTransferProcesses;
 pub use list_verifiable_credentials::ListVerifiableCredentials;
 pub use multi_state_selector::*;
+pub use policy_reference::*;
 pub use policy_selector::*;
 pub use request_verifiable_credential::*;
 #[cfg(feature = "contract-negotiation-review")]
 pub use review_contract_negotiation::*;
+pub use show_data_plane::*;
 pub use show_policy::*;
 pub use simple_or_id_field::*;
 pub use string_list_edit::*;

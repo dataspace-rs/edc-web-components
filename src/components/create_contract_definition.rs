@@ -5,6 +5,7 @@ use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::contract_definition::NewContractDefinition;
 use edc_connector_client::types::query::Criterion;
 use patternfly_yew::prelude::*;
+use uuid::Uuid;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
@@ -18,7 +19,7 @@ pub struct CreateContractDefinitionProps {
 pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
-  let identifier = use_state(String::new);
+  let name = use_state(String::new);
   let access_policy_definition_item = use_state(|| Option::<PolicyDefinitionItem>::None);
   let contract_policy_definition_item = use_state(|| Option::<PolicyDefinitionItem>::None);
   let asset_items = use_state(Vec::<AssetItem>::new);
@@ -26,7 +27,7 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
   let onsubmit = use_callback(
     (
       edc_connector_context.clone(),
-      identifier.clone(),
+      name.clone(),
       access_policy_definition_item.clone(),
       contract_policy_definition_item.clone(),
       asset_items.clone(),
@@ -35,7 +36,7 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
     |event: SubmitEvent,
      (
       edc_connector_context,
-      identifier,
+      name,
       access_policy_definition_item,
       contract_policy_definition_item,
       asset_items,
@@ -44,7 +45,7 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
       event.prevent_default();
 
       let edc_connector_context = edc_connector_context.clone();
-      let identifier = (**identifier).clone();
+      let name = (**name).clone();
       let access_policy_definition_item = (**access_policy_definition_item).clone();
       let contract_policy_definition_item = (**contract_policy_definition_item).clone();
       let asset_items = (**asset_items).clone();
@@ -52,7 +53,8 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
 
       spawn_local(async move {
         let mut new_contract_definition = NewContractDefinition::builder()
-          .id(&identifier)
+          .id(Uuid::new_v4().to_string())
+          .private_property("name", name.clone())
           .access_policy_id(
             access_policy_definition_item
               .map(|policy_definition_item| policy_definition_item.id)
@@ -86,10 +88,9 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
     },
   );
 
-  let onchange_identifier =
-    use_callback(identifier.setter(), move |identifier, identifier_setter| {
-      identifier_setter.set(identifier);
-    });
+  let onchange_name = use_callback(name.setter(), move |name, name_setter| {
+    name_setter.set(name);
+  });
 
   let onselect_access_policy = use_callback(
     access_policy_definition_item.setter(),
@@ -105,7 +106,7 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
     },
   );
 
-  let disabled = (*identifier).is_empty()
+  let disabled = (*name).is_empty()
     || (*access_policy_definition_item).is_none()
     || (*contract_policy_definition_item).is_none();
 
@@ -115,8 +116,8 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
 
   html!(
     <Form {onsubmit}>
-      <FormGroup label="Identifier" required=true>
-        <TextInput required=true value={(*identifier).to_string()} onchange={onchange_identifier} />
+      <FormGroup label="Name" required=true>
+        <TextInput required=true value={(*name).to_string()} onchange={onchange_name} />
       </FormGroup>
       <FormGroup label="Access Policy" required=true>
         <HelperText>

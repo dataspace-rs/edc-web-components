@@ -3,6 +3,7 @@ use edc_connector_client::types::contract_definition::ContractDefinition;
 #[derive(Clone, Debug, PartialEq)]
 pub struct ContractDefinitionItem {
   pub id: String,
+  pub name: String,
   pub access_policy_id: String,
   pub contract_policy_id: String,
   pub asset_ids: Vec<String>,
@@ -11,6 +12,10 @@ pub struct ContractDefinitionItem {
 impl From<ContractDefinition> for ContractDefinitionItem {
   fn from(contract_definition: ContractDefinition) -> Self {
     let id = contract_definition.id().to_string();
+    let name = contract_definition
+      .private_property("name")
+      .map(|name| name.unwrap_or_default())
+      .unwrap_or_default();
     let access_policy_id = contract_definition.access_policy_id().to_string();
     let contract_policy_id = contract_definition.contract_policy_id().to_string();
     let asset_ids = contract_definition
@@ -24,6 +29,7 @@ impl From<ContractDefinition> for ContractDefinitionItem {
 
     Self {
       id,
+      name,
       access_policy_id,
       contract_policy_id,
       asset_ids,

@@ -6,6 +6,8 @@ use yew::prelude::*;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowPolicyProps {
   pub policy: Policy,
+  #[prop_or_default]
+  pub name: Option<String>,
 }
 
 #[component]
@@ -72,6 +74,7 @@ pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
   html!(
     <DescriptionList mode={[DescriptionListMode::Horizontal]}>
       <DescriptionGroup term="Id">{ props.policy.id() }</DescriptionGroup>
+      <DescriptionGroup term="Name">{ props.name.clone() }</DescriptionGroup>
       <DescriptionGroup term="Kind">{ kind }</DescriptionGroup>
       <DescriptionGroup term="Assigner">
         { props.policy.assigner().cloned().unwrap_or_default() }

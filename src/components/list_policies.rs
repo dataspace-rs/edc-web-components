@@ -18,7 +18,7 @@ pub struct ListPoliciesProps {
 pub fn ListPolicies(props: &ListPoliciesProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
-      <TableColumn<Columns> label="ID" index={Columns::Id} />
+      <TableColumn<Columns> label="Name" index={Columns::Name} />
       <TableColumn<Columns> label="Kind" index={Columns::Kind} />
       <TableColumn<Columns> label="Assignee" index={Columns::Assignee} />
       <TableColumn<Columns> label="Assigner" index={Columns::Assigner} />
@@ -85,7 +85,7 @@ pub fn ListPolicies(props: &ListPoliciesProps) -> Html {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Columns {
-  Id,
+  Name,
   Kind,
   Assignee,
   Assigner,
@@ -102,7 +102,7 @@ struct PolicyDefinitionItemRenderer {
 impl TableEntryRenderer<Columns> for PolicyDefinitionItemRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Id => html! { self.policy_definition_item.id.to_string() },
+      Columns::Name => html! { self.policy_definition_item.name.to_string() },
       Columns::Kind => html! { self.policy_definition_item.kind.to_string() },
       Columns::Assignee => html!(
         self

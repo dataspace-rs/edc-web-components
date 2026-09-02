@@ -45,7 +45,12 @@ pub fn ShowPolicyPageInner(props: &ShowPolicyPageProps) -> HtmlResult {
   let policy = (*policy).clone();
 
   if let Some(policy) = policy {
-    Ok(html!(<ShowPolicy policy={policy.policy().clone()} />))
+    Ok(html!(
+      <ShowPolicy
+        policy={policy.policy().clone()}
+        name={policy.private_property::<String>("name").ok().flatten()}
+      />
+    ))
   } else {
     Ok(html!(
       format!(

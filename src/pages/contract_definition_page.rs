@@ -11,6 +11,10 @@ use yew::suspense::use_future_with;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ContractDefinitionPageProps {
   pub on_new_contract_definition: Callback<()>,
+  #[prop_or_default]
+  pub on_policy_click: Callback<String>,
+  #[prop_or_default]
+  pub on_asset_click: Callback<String>,
 }
 
 #[component]
@@ -88,6 +92,8 @@ pub fn ContractDefinitionPage(props: &ContractDefinitionPageProps) -> Html {
             {onoffset}
             {onlimit}
             {ondelete}
+            on_policy_click={props.on_policy_click.clone()}
+            on_asset_click={props.on_asset_click.clone()}
             force_refresh={*refresh}
           />
         </Suspense>
@@ -103,6 +109,10 @@ pub struct ContractDefinitionPageInnerProps {
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
   pub ondelete: Callback<String>,
+  #[prop_or_default]
+  pub on_policy_click: Callback<String>,
+  #[prop_or_default]
+  pub on_asset_click: Callback<String>,
   pub force_refresh: usize,
 }
 
@@ -150,6 +160,8 @@ pub fn ContractDefinitionPageInner(props: &ContractDefinitionPageInnerProps) -> 
       onoffset={props.onoffset.clone()}
       onlimit={props.onlimit.clone()}
       ondelete={props.ondelete.clone()}
+      on_policy_click={props.on_policy_click.clone()}
+      on_asset_click={props.on_asset_click.clone()}
     />
   ))
 }
