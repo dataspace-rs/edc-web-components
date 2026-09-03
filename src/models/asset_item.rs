@@ -1,5 +1,5 @@
 use crate::models::dataset_extra_fields::DatasetExtraFields;
-use crate::models::{Creator, Thumbnail};
+use crate::models::{Creator, DataspaceDataset, Thumbnail};
 use edc_connector_client::types::asset::Asset;
 use edc_connector_client::types::catalog::Dataset;
 use edc_connector_client::types::data_address::DataAddress;
@@ -156,6 +156,22 @@ impl From<&Dataset<DatasetExtraFields>> for AssetItem {
       proxy_query_params: false,
       proxy_method: false,
       proxy_body: false,
+    }
+  }
+}
+
+impl From<AssetItem> for DataspaceDataset {
+  fn from(asset_item: AssetItem) -> Self {
+    Self {
+      id: asset_item.id,
+      title: asset_item.name,
+      version: asset_item.version,
+      comment: asset_item.description,
+      thumbnail: asset_item.thumbnail,
+      creator: asset_item.creator,
+      keywords: asset_item.keywords,
+      dcterm_types: asset_item.dcterm_types,
+      policies: vec![],
     }
   }
 }

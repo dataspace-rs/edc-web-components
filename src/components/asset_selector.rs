@@ -1,5 +1,6 @@
+use crate::components::DatasetCard;
 use crate::contexts::use_edc_connector_context;
-use crate::models::AssetItem;
+use crate::models::{AssetItem, DataspaceDataset};
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::query::Query;
 use patternfly_yew::prelude::*;
@@ -68,45 +69,32 @@ fn AssetSelectorInner(props: &AssetSelectorInnerProps) -> HtmlResult {
 
   let assets = (*assets).clone();
 
-  let items = assets.iter().map(|asset_item| {
-    let asset_item_name = asset_item.name.to_string();
-    let onselect = props.onselect.clone();
+  let on_selected = use_callback(
+    (props.selected_assets.clone(), props.onselect.clone()),
+    |(asset_id, selected), (selected_assets, onselect)| {
+      let mut selected_assets = selected_assets.clone();
 
-    let selectable_actions = {
-      let asset_item = asset_item.clone();
-      let selected_assets = props.selected_assets.clone();
-      let checked = if props.selected_assets.contains(&asset_item) {
-        CheckboxState::Checked
+      if selected {
+        selected_assets.push(asset_id);
       } else {
-        CheckboxState::Unchecked
-      };
+        selected_assets.retain(|id| id != &asset_id);
+      }
 
-      yew::props!(CardSelectableActionsObjectProperties {
-        action: CardSelectableActionsVariant::MultiSelect {
-          checked,
-          onchange: onselect.reform(move |checked: CheckboxState| {
-            let mut selected_assets = selected_assets.clone();
+      onselect.emit(selected_assets);
+    },
+  );
 
-            match checked {
-              CheckboxState::Checked => {
-                selected_assets.push(asset_item.clone());
-              }
-              CheckboxState::Unchecked => {
-                selected_assets.retain(|item| item.id != asset_item.id);
-              }
-              CheckboxState::Indeterminate => {}
-            }
-
-            selected_assets
-          }),
-        }
-      })
-    };
+  let items = assets.iter().map(|asset_item| {
+    let selected = props.selected_assets.contains(asset_item);
+    let dataset = DataspaceDataset::from(asset_item.clone());
+    let asset_item = asset_item.clone();
 
     html!(
-      <Card selectable=true selected={props.selected_assets.contains(asset_item)}>
-        <CardHeader {selectable_actions}>{ asset_item_name }</CardHeader>
-      </Card>
+      <DatasetCard
+        {dataset}
+        {selected}
+        on_selected={on_selected.reform(move |selected| (asset_item.clone(), selected) )}
+      />
     )
   });
 

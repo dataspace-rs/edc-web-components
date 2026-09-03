@@ -111,17 +111,7 @@ pub fn ListAssetsGallery(props: &ListAssetsTableProps) -> Html {
     .asset_items
     .clone()
     .into_iter()
-    .map(|asset_item| DataspaceDataset {
-      id: asset_item.id,
-      title: asset_item.name,
-      version: asset_item.version,
-      comment: asset_item.description,
-      thumbnail: asset_item.thumbnail,
-      creator: asset_item.creator,
-      keywords: asset_item.keywords,
-      policies: vec![],
-      dcterm_types: vec![],
-    })
+    .map(DataspaceDataset::from)
     .map(|dataset| {
       let asset_id = dataset.id.clone();
 

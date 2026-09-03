@@ -69,7 +69,7 @@ fn PolicySelectorInner(props: &PolicySelectorInnerProps) -> HtmlResult {
   let policies = (*policies).clone();
 
   let items = policies.iter().map(|policy_definition_item| {
-    let policy_definition_item_id = policy_definition_item.id.to_string();
+    let policy_definition_item_name = policy_definition_item.name.to_string();
     let onselect = props.onselect.clone();
 
     let selectable_actions = {
@@ -90,7 +90,7 @@ fn PolicySelectorInner(props: &PolicySelectorInnerProps) -> HtmlResult {
         selectable=true
         selected={Some(policy_definition_item) == props.selected_policy.as_ref()}
       >
-        <CardHeader {selectable_actions}>{ policy_definition_item_id }</CardHeader>
+        <CardHeader {selectable_actions}>{ policy_definition_item_name }</CardHeader>
       </Card>
     )
   });

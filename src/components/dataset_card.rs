@@ -8,6 +8,10 @@ pub struct DatasetCardProps {
   pub dataset: DataspaceDataset,
   #[prop_or_default]
   pub on_offer_click: Option<Callback<()>>,
+  #[prop_or_default]
+  pub selected: bool,
+  #[prop_or_default]
+  pub on_selected: Option<Callback<bool>>,
   #[prop_or(AttrValue::Static("Select"))]
   pub button_label: AttrValue,
 }
@@ -102,16 +106,40 @@ pub fn DatasetCard(props: &DatasetCardProps) -> Html {
     }
   });
 
+  let selectable_actions = if let Some(on_selected) = props.on_selected.clone() {
+    let checked = if props.selected {
+      CheckboxState::Checked
+    } else {
+      CheckboxState::Unchecked
+    };
+
+    Some(yew::props!(CardSelectableActionsObjectProperties {
+      action: CardSelectableActionsVariant::MultiSelect {
+        checked,
+        onchange: on_selected.reform(move |checked: CheckboxState| {
+          match checked {
+            CheckboxState::Checked => true,
+            CheckboxState::Unchecked | CheckboxState::Indeterminate => false,
+          }
+        }),
+      }
+    }))
+  } else {
+    None
+  };
+
   html!(
-    <Card full_height=true class={card_class.clone()}>
+    <Card full_height=true class={card_class.clone()} selectable={props.on_selected.is_some()}>
       { thumbnail }
       <div class={version_class.clone()}>
         <Badge read=true>{ "v" }{ version }</Badge>
       </div>
-      <CardTitle>
-        <div>{ provider_logo }</div>
-        <Truncate content={title} />
-      </CardTitle>
+      <CardHeader {selectable_actions}>
+        <div>
+          <div>{ provider_logo }</div>
+          <Truncate content={title} />
+        </div>
+      </CardHeader>
       <CardBody>
         <Stack gutter=true>
           <StackItem fill=true>
