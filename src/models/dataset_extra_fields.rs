@@ -1,7 +1,7 @@
 use edc_connector_client::types::ExtraTokenFields;
 use edc_federated_catalog_client::models::{Creator, Thumbnail};
 use serde::Deserialize;
-use serde_with::serde_as;
+use serde_with::{OneOrMany, formats::PreferMany, serde_as};
 
 #[serde_as]
 #[derive(Deserialize, Debug, Clone)]
@@ -21,8 +21,10 @@ pub struct DatasetExtraFields {
   #[serde(alias = "http://xmlns.com/foaf/0.1/thumbnail", default)]
   pub thumbnail: Option<Thumbnail>,
   #[serde(alias = "dcat:keyword", default)]
+  #[serde_as(deserialize_as = "OneOrMany<_, PreferMany>")]
   pub keywords: Vec<String>,
   #[serde(alias = "dct:type", alias = "http://purl.org/dc/terms/type", default)]
+  #[serde_as(deserialize_as = "OneOrMany<_, PreferMany>")]
   pub dcterm_types: Vec<String>,
 }
 
