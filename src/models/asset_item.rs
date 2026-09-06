@@ -22,6 +22,44 @@ pub struct AssetItem {
   pub proxy_body: bool,
 }
 
+impl AssetItem {
+  pub fn is_filtered(&self, search: &Option<String>, dcterm_types: &[String]) -> bool {
+    let text_content = format!(
+      "{} {} {} {}",
+      self.name.to_lowercase(),
+      self.description.clone().unwrap_or_default().to_lowercase(),
+      self.keywords.join(" ").to_lowercase(),
+      self
+        .creator
+        .clone()
+        .map(|creator| creator.name.unwrap_or_default().to_lowercase())
+        .unwrap_or_default()
+    );
+
+    if !dcterm_types.is_empty() {
+      if self
+        .dcterm_types
+        .iter()
+        .any(|dcterm_type| dcterm_types.contains(dcterm_type))
+      {
+        if let Some(search) = &search {
+          text_content.contains(&search.to_lowercase())
+        } else {
+          true
+        }
+      } else {
+        false
+      }
+    } else {
+      if let Some(search) = &search {
+        text_content.contains(&search.to_lowercase())
+      } else {
+        true
+      }
+    }
+  }
+}
+
 impl From<Asset> for AssetItem {
   fn from(asset: Asset) -> Self {
     let id = asset.id().to_string();
@@ -117,7 +155,7 @@ impl From<edc_federated_catalog_client::models::Dataset> for AssetItem {
         resource: Some(thumbnail.resource),
       }),
       keywords: dataset.keywords,
-      dcterm_types: vec!["ABC".to_string()],
+      dcterm_types: dataset.dcterm_types,
       base_url: "".to_string(),
       proxy_path: false,
       proxy_query_params: false,

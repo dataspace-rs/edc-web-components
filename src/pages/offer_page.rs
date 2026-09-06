@@ -13,11 +13,15 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct OfferPageProps {
-  pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+  pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
   pub on_new_asset: Callback<()>,
   pub on_new_policy: Callback<()>,
   pub on_new_contract: Callback<()>,
   pub participant_did: String,
+  #[prop_or_default]
+  pub search: Option<String>,
+  #[prop_or_default]
+  pub dcterm_types: Vec<String>,
 }
 
 #[component]
@@ -76,11 +80,13 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
             {on_offset}
             {on_limit}
             force_refresh={*refresh}
-            onselectedoffer={props.onselectedoffer.clone()}
+            on_selected_offer={props.on_selected_offer.clone()}
             on_new_asset={props.on_new_asset.clone()}
             on_new_policy={props.on_new_policy.clone()}
             on_new_contract={props.on_new_contract.clone()}
             participant_did={props.participant_did.clone()}
+            search={props.search.clone()}
+            dcterm_types={props.dcterm_types.clone()}
           />
         </Suspense>
       </StackItem>
@@ -95,11 +101,15 @@ pub struct OfferPageInnerProps {
   pub on_offset: Callback<usize>,
   pub on_limit: Callback<usize>,
   pub force_refresh: usize,
-  pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+  pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
   pub on_new_asset: Callback<()>,
   pub on_new_policy: Callback<()>,
   pub on_new_contract: Callback<()>,
   pub participant_did: String,
+  #[prop_or_default]
+  pub search: Option<String>,
+  #[prop_or_default]
+  pub dcterm_types: Vec<String>,
 }
 
 #[component]
@@ -112,10 +122,13 @@ pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
       edc_connector_context,
       props.limit,
       props.offset,
+      props.search.clone(),
+      props.dcterm_types.clone(),
       props.force_refresh,
     ),
     |parameters| async move {
-      let (participant_did, edc_connector_context, limit, offset, _) = (*parameters).clone();
+      let (participant_did, edc_connector_context, limit, offset, search, dcterm_types, _) =
+        (*parameters).clone();
 
       if let Some(did_web) = DidWeb::new(&participant_did)
         && let Some(dsp_endpoint) = get_dsp_endpoint(&did_web).await
@@ -153,6 +166,7 @@ pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
 
               (asset_item, selected_offer)
             })
+            .filter(|(asset_item, _)| asset_item.is_filtered(&search, &dcterm_types))
             .collect::<Vec<_>>()
             .into_iter()
             .unzip()
@@ -169,13 +183,13 @@ pub fn OfferPageInner(props: &OfferPageInnerProps) -> HtmlResult {
     (*asset_items).clone();
 
   let onshow = use_callback(
-    (props.onselectedoffer.clone(), selected_offers),
-    |dataset_id, (onselectedoffer, selected_offers)| {
+    (props.on_selected_offer.clone(), selected_offers),
+    |dataset_id, (on_selected_offer, selected_offers)| {
       if let Some(selected_offer) = selected_offers
         .iter()
         .find(|selected_offer| selected_offer.dataset_id == dataset_id)
       {
-        onselectedoffer.emit(selected_offer.clone());
+        on_selected_offer.emit(selected_offer.clone());
       }
     },
   );

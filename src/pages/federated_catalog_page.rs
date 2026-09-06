@@ -7,13 +7,20 @@ use yew::suspense::use_future_with;
 use yew_oauth2::hook::use_latest_access_token;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
-pub struct CatalogPageProps {
-  pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+pub struct FederatedCatalogPageProps {
+  pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
   pub on_manage_catalog: Callback<()>,
+  #[prop_or("/federated-catalog".to_string())]
+  pub federated_catalog_endpoint: String,
+
+  #[prop_or_default]
+  pub search: Option<String>,
+  #[prop_or_default]
+  pub dcterm_types: Vec<String>,
 }
 
 #[component]
-pub fn CatalogPage(props: &CatalogPageProps) -> Html {
+pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
   let refresh = use_state(|| 0usize);
   let fallback = html! {
     <Bullseye>
@@ -35,10 +42,13 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
       </StackItem>
       <StackItem>
         <Suspense {fallback}>
-          <CatalogPageInner
+          <FederatedCatalogPageInner
             force_refresh={*refresh}
-            onselectedoffer={props.onselectedoffer.clone()}
+            on_selected_offer={props.on_selected_offer.clone()}
             on_manage_catalog={props.on_manage_catalog.clone()}
+            federated_catalog_endpoint={props.federated_catalog_endpoint.clone()}
+            search={props.search.clone()}
+            dcterm_types={props.dcterm_types.clone()}
           />
         </Suspense>
       </StackItem>
@@ -47,25 +57,38 @@ pub fn CatalogPage(props: &CatalogPageProps) -> Html {
 }
 
 #[derive(Clone, Debug, PartialEq, Properties)]
-pub struct CatalogPageInnerProps {
+pub struct FederatedCatalogPageInnerProps {
   pub force_refresh: usize,
-  pub onselectedoffer: Callback<SelectedFederatedCatalogOffer>,
+  pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
   pub on_manage_catalog: Callback<()>,
+  #[prop_or("/federated-catalog".to_string())]
+  pub federated_catalog_endpoint: String,
+  #[prop_or_default]
+  pub search: Option<String>,
+  #[prop_or_default]
+  pub dcterm_types: Vec<String>,
 }
 
 #[component]
-pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
+pub fn FederatedCatalogPageInner(props: &FederatedCatalogPageInnerProps) -> HtmlResult {
   let latest_access_token_context = use_latest_access_token().unwrap();
 
   let asset_items = use_future_with(
-    (latest_access_token_context.clone(), props.force_refresh),
+    (
+      props.federated_catalog_endpoint.clone(),
+      props.search.clone(),
+      props.dcterm_types.clone(),
+      latest_access_token_context.clone(),
+      props.force_refresh,
+    ),
     |parameters| async move {
-      let (latest_access_token_context, _) = (*parameters).clone();
+      let (federated_catalog_endpoint, search, dcterm_types, latest_access_token_context, _) =
+        (*parameters).clone();
 
       let server_url = web_sys::window().unwrap().location().origin().unwrap();
       let federated_catalog_client = FederatedCatalogClient::new(
         reqwest::Client::new(),
-        format!("{server_url}/federated-catalog"),
+        format!("{server_url}{}", federated_catalog_endpoint),
         latest_access_token_context.access_token(),
         FederatedCatalogClientVersion::V4,
       );
@@ -92,6 +115,7 @@ pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
 
               (asset_item, selected_offer)
             })
+            .filter(|(asset_item, _)| asset_item.is_filtered(&search, &dcterm_types))
             .collect::<Vec<_>>()
         })
         .unzip()
@@ -102,13 +126,13 @@ pub fn CatalogPageInner(props: &CatalogPageInnerProps) -> HtmlResult {
     (*asset_items).clone();
 
   let onshow = use_callback(
-    (props.onselectedoffer.clone(), selected_offers),
-    |dataset_id, (onselectedoffer, selected_offers)| {
+    (props.on_selected_offer.clone(), selected_offers),
+    |dataset_id, (on_selected_offer, selected_offers)| {
       if let Some(selected_offer) = selected_offers
         .iter()
         .find(|selected_offer| selected_offer.dataset_id == dataset_id)
       {
-        onselectedoffer.emit(selected_offer.clone());
+        on_selected_offer.emit(selected_offer.clone());
       }
     },
   );
