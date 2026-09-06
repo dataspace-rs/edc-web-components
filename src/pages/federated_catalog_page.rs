@@ -12,7 +12,8 @@ pub struct FederatedCatalogPageProps {
   pub on_manage_catalog: Callback<()>,
   #[prop_or("/federated-catalog".to_string())]
   pub federated_catalog_endpoint: String,
-
+  #[prop_or_default]
+  pub display_search: bool,
   #[prop_or_default]
   pub search: Option<String>,
   #[prop_or_default]
@@ -28,6 +29,34 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
     </Bullseye>
   };
 
+  let search = use_state(String::new);
+
+  let onchange = use_callback(search.setter(), move |value, search_setter| {
+    search_setter.set(value);
+  });
+
+  let onclear = use_callback(search.setter(), move |_, search_setter| {
+    search_setter.set(String::new());
+  });
+
+  let (search_component, search) = if props.display_search {
+    let inner = html!(
+      <StackItem>
+        <SearchInput placeholder="Search" value={(*search).clone()} {onchange} {onclear} />
+      </StackItem>
+    );
+
+    let search = if (*search).is_empty() {
+      None
+    } else {
+      Some((*search).clone())
+    };
+
+    (inner, search)
+  } else {
+    (html!(), props.search.clone())
+  };
+
   html!(
     <Stack gutter=true>
       <StackItem>
@@ -40,6 +69,7 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
           </SplitItem>
         </Split>
       </StackItem>
+      { search_component }
       <StackItem>
         <Suspense {fallback}>
           <FederatedCatalogPageInner
@@ -47,7 +77,7 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
             on_selected_offer={props.on_selected_offer.clone()}
             on_manage_catalog={props.on_manage_catalog.clone()}
             federated_catalog_endpoint={props.federated_catalog_endpoint.clone()}
-            search={props.search.clone()}
+            {search}
             dcterm_types={props.dcterm_types.clone()}
           />
         </Suspense>

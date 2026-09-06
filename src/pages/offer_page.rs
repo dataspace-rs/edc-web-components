@@ -19,6 +19,8 @@ pub struct OfferPageProps {
   pub on_new_contract: Callback<()>,
   pub participant_did: String,
   #[prop_or_default]
+  pub display_search: bool,
+  #[prop_or_default]
   pub search: Option<String>,
   #[prop_or_default]
   pub dcterm_types: Vec<String>,
@@ -53,6 +55,34 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
     </Bullseye>
   };
 
+  let search = use_state(String::new);
+
+  let onchange = use_callback(search.setter(), move |value, search_setter| {
+    search_setter.set(value);
+  });
+
+  let onclear = use_callback(search.setter(), move |_, search_setter| {
+    search_setter.set(String::new());
+  });
+
+  let (search_component, search) = if props.display_search {
+    let inner = html!(
+      <StackItem>
+        <SearchInput placeholder="Search" value={(*search).clone()} {onchange} {onclear} />
+      </StackItem>
+    );
+
+    let search = if (*search).is_empty() {
+      None
+    } else {
+      Some((*search).clone())
+    };
+
+    (inner, search)
+  } else {
+    (html!(), props.search.clone())
+  };
+
   let sub_title = if path.contains("participant") {
     String::from("Data offerings available from the selected participant: ")
       + &*props.participant_did.clone()
@@ -72,6 +102,7 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
           </SplitItem>
         </Split>
       </StackItem>
+      { search_component }
       <StackItem>
         <Suspense {fallback}>
           <OfferPageInner
@@ -85,7 +116,7 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
             on_new_policy={props.on_new_policy.clone()}
             on_new_contract={props.on_new_contract.clone()}
             participant_did={props.participant_did.clone()}
-            search={props.search.clone()}
+            {search}
             dcterm_types={props.dcterm_types.clone()}
           />
         </Suspense>
