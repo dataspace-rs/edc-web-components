@@ -8,8 +8,13 @@ use yew_oauth2::hook::use_latest_access_token;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct FederatedCatalogPageProps {
+  #[prop_or("Catalog".to_string())]
+  pub title: String,
+  #[prop_or("Explore and access available data offers from your list of trusted and followed participants.".to_string())]
+  pub description: String,
   pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
-  pub on_manage_catalog: Callback<()>,
+  #[prop_or_default]
+  pub on_manage_catalog: Option<Callback<()>>,
   #[prop_or("/federated-catalog".to_string())]
   pub federated_catalog_endpoint: String,
   #[prop_or_default]
@@ -18,6 +23,10 @@ pub struct FederatedCatalogPageProps {
   pub search: Option<String>,
   #[prop_or_default]
   pub dcterm_types: Vec<String>,
+  #[prop_or("No such offer".to_string())]
+  pub empty_title: String,
+  #[prop_or("You may not have registered participants.".to_string())]
+  pub empty_description: String,
 }
 
 #[component]
@@ -62,10 +71,8 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "Catalog" }</Title>
-            <p>
-              { "Explore and access available data offers from your list of trusted and followed participants." }
-            </p>
+            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+            <p>{ &props.description }</p>
           </SplitItem>
         </Split>
       </StackItem>
@@ -79,6 +86,8 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
             federated_catalog_endpoint={props.federated_catalog_endpoint.clone()}
             {search}
             dcterm_types={props.dcterm_types.clone()}
+            empty_title={props.empty_title.clone()}
+            empty_description={props.empty_description.clone()}
           />
         </Suspense>
       </StackItem>
@@ -90,13 +99,18 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
 pub struct FederatedCatalogPageInnerProps {
   pub force_refresh: usize,
   pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
-  pub on_manage_catalog: Callback<()>,
+  #[prop_or_default]
+  pub on_manage_catalog: Option<Callback<()>>,
   #[prop_or("/federated-catalog".to_string())]
   pub federated_catalog_endpoint: String,
   #[prop_or_default]
   pub search: Option<String>,
   #[prop_or_default]
   pub dcterm_types: Vec<String>,
+  #[prop_or("No such offer".to_string())]
+  pub empty_title: String,
+  #[prop_or("You may not have registered participants.".to_string())]
+  pub empty_description: String,
 }
 
 #[component]
@@ -168,14 +182,17 @@ pub fn FederatedCatalogPageInner(props: &FederatedCatalogPageInnerProps) -> Html
   );
 
   if asset_items.is_empty() {
+    let primary = props.on_manage_catalog.as_ref().map(|on_manage_catalog| {
+      Action::new(
+        "Manage my catalog subscriptions",
+        on_manage_catalog.reform(|_| ()),
+      )
+    });
+
     Ok(html! {
-      <EmptyState
-        title="Empty state"
-        icon={Icon::Cubes}
-        primary={Action::new("Manage my catalog subscriptions", props.on_manage_catalog.reform(|_| ()))}
-      >
+      <EmptyState title={props.empty_title.to_string()} {primary}>
         <div>
-          <p>{ "You do not have any registered catalogs yet." }</p>
+          <p>{ &props.empty_description }</p>
         </div>
       </EmptyState>
     })
