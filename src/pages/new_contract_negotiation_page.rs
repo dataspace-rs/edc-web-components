@@ -1,6 +1,6 @@
-use crate::components::ConstraintRenderer;
+use crate::components::PolicyCard;
 use crate::contexts::use_edc_connector_context;
-use crate::models::DatasetExtraFields;
+use crate::models::{DatasetExtraFields, PolicyDefinitionItem};
 use base64::prelude::*;
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::Protocol;
@@ -257,60 +257,20 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
           None
         }
       })
-      .map(|(policy, offer_id): (&Policy, String)| {
+      .map(|(policy, _offer_id): (&Policy, String)| {
         let onchange = onchange.clone();
-
-        let permissions = policy.permissions().iter().map(|permission| {
-          html! {
-            <ConstraintRenderer
-              action={permission.action().clone()}
-              constraints={permission.constraints().to_vec()}
-            />
-          }
-        });
-
-        let obligations = policy.obligations().iter().map(|obligation| {
-          html! {
-            <ConstraintRenderer
-              action={obligation.action().clone()}
-              constraints={obligation.constraints().to_vec()}
-            />
-          }
-        });
-
-        let prohibitions = policy.prohibitions().iter().map(|prohibition| {
-          html! {
-            <ConstraintRenderer
-              action={prohibition.action().clone()}
-              constraints={prohibition.constraints().to_vec()}
-            />
-          }
-        });
+        let policy_definition_item = PolicyDefinitionItem::from(policy);
+        let selected = (*selected_offer).as_ref() == Some(policy);
 
         let policy = policy.clone();
 
         html!(
-          <Card id="selectable-offer" selectable=true {disabled}>
-            <CardHeader
-              selectable_actions={yew::props!(CardSelectableActionsObjectProperties {
-                      action: CardSelectableActionsVariant::SingleSelect {
-                          onchange: Some(onchange.reform(move |_| policy.clone())),
-                      },
-                      base: yew::props!(CardSelectableActionsObjectBase {
-                          name: "selectable-offer"
-                      })
-                  })}
-            >
-              <CardTitle>{ offer_id.to_string() }</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <DescriptionList>
-                <DescriptionGroup term="Permissions">{ for permissions }</DescriptionGroup>
-                <DescriptionGroup term="Obligations">{ for obligations }</DescriptionGroup>
-                <DescriptionGroup term="Prohibitions">{ for prohibitions }</DescriptionGroup>
-              </DescriptionList>
-            </CardBody>
-          </Card>
+          <PolicyCard
+            {policy_definition_item}
+            {selected}
+            {disabled}
+            on_click={onchange.reform(move |_| policy.clone())}
+          />
         )
       });
 
@@ -322,7 +282,7 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
           <DescriptionGroup term="Provider ID">{ provider_id }</DescriptionGroup>
           <DescriptionGroup term="Asset ID">{ asset_id }</DescriptionGroup>
           <DescriptionGroup term="Asset Name">{ asset_name }</DescriptionGroup>
-          <DescriptionGroup term="Offer IDs">
+          <DescriptionGroup term="Offers">
             <Gallery gutter=true>{ for offers }</Gallery>
           </DescriptionGroup>
         </DescriptionList>

@@ -53,18 +53,25 @@ pub fn ExtensiblePropertiesEdit(props: &ExtensiblePropertiesEditProps) -> Html {
     html_nested!(
       <>
         <GridItem cols={[4]}>
-          <TextInput
-            required=true
-            value={key.to_string()}
-            onchange={onchange_key.reform(move |key| (old_key.clone(), key))}
-          />
+          <FormGroup label="Key" required=true>
+            <TextInput
+              required=true
+              value={key.to_string()}
+              onchange={onchange_key.reform(move |key| (old_key.clone(), key))}
+            />
+          </FormGroup>
         </GridItem>
         <GridItem cols={[8]}>
-          <TextInput
-            required=true
-            value={serde_json_value}
-            onchange={onchange_value.reform(move |value| (key.clone(), value))}
-          />
+          <FormGroup
+            label="Value"
+            label_icon={LabelIcon::Help(html_nested!(<PopoverBody>{ "Enter a valid json." } </PopoverBody>))}
+          >
+            <TextInput
+              required=true
+              value={serde_json_value}
+              onchange={onchange_value.reform(move |value| (key.clone(), value))}
+            />
+          </FormGroup>
         </GridItem>
       </>
     )
@@ -76,7 +83,7 @@ pub fn ExtensiblePropertiesEdit(props: &ExtensiblePropertiesEditProps) -> Html {
         <Button variant={ButtonVariant::Primary} icon={Icon::Plus} {onclick}>{ "Add" }</Button>
       </StackItem>
       <StackItem>
-        <Grid>{ for items }</Grid>
+        <Grid gutter=true>{ for items }</Grid>
       </StackItem>
     </Stack>
   )

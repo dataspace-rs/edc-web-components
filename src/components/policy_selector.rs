@@ -1,3 +1,4 @@
+use crate::components::PolicyCard;
 use crate::contexts::use_edc_connector_context;
 use crate::models::PolicyDefinitionItem;
 use edc_connector_client::EdcConnectorApiVersion;
@@ -69,29 +70,14 @@ fn PolicySelectorInner(props: &PolicySelectorInnerProps) -> HtmlResult {
   let policies = (*policies).clone();
 
   let items = policies.iter().map(|policy_definition_item| {
-    let policy_definition_item_name = policy_definition_item.name.to_string();
-    let onselect = props.onselect.clone();
-
-    let selectable_actions = {
-      let policy_definition_item = policy_definition_item.clone();
-
-      yew::props!(CardSelectableActionsObjectProperties {
-        action: CardSelectableActionsVariant::Click {
-          onclick: Some(onselect.reform(move |_| policy_definition_item.clone()))
-        },
-        base: yew::props!(CardSelectableActionsObjectBase {
-          name: props.select_id.clone(),
-        })
-      })
-    };
+    let policy_definition_item = policy_definition_item.clone();
 
     html!(
-      <Card
-        selectable=true
-        selected={Some(policy_definition_item) == props.selected_policy.as_ref()}
-      >
-        <CardHeader {selectable_actions}>{ policy_definition_item_name }</CardHeader>
-      </Card>
+      <PolicyCard
+        policy_definition_item={policy_definition_item.clone()}
+        selected={Some(&policy_definition_item) == props.selected_policy.as_ref()}
+        on_click={props.onselect.reform(move |_| policy_definition_item.clone())}
+      />
     )
   });
 
