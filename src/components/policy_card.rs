@@ -10,6 +10,8 @@ pub struct PolicyCardProps {
   pub selected: bool,
   #[prop_or_default]
   pub disabled: bool,
+  #[prop_or("selectable-policy".to_string())]
+  pub policy_selection_group_id: String,
   pub on_click: Callback<()>,
 }
 
@@ -54,16 +56,14 @@ pub fn PolicyCard(props: &PolicyCardProps) -> Html {
       }
     });
 
-  let selectable_actions = {
-    let name = props.policy_definition_item.id.clone();
-
-    yew::props!(CardSelectableActionsObjectProperties {
-      action: CardSelectableActionsVariant::SingleSelect {
-        onchange: Some(props.on_click.reform(move |_| ())),
-      },
-      base: yew::props!(CardSelectableActionsObjectBase { name })
+  let selectable_actions = yew::props!(CardSelectableActionsObjectProperties {
+    action: CardSelectableActionsVariant::SingleSelect {
+      onchange: Some(props.on_click.reform(move |_| ())),
+    },
+    base: yew::props!(CardSelectableActionsObjectBase {
+      name: props.policy_selection_group_id.clone()
     })
-  };
+  });
 
   let extensible_properties = props
     .policy_definition_item

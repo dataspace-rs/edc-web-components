@@ -77,6 +77,7 @@ fn PolicySelectorInner(props: &PolicySelectorInnerProps) -> HtmlResult {
         policy_definition_item={policy_definition_item.clone()}
         selected={Some(&policy_definition_item) == props.selected_policy.as_ref()}
         on_click={props.onselect.reform(move |_| policy_definition_item.clone())}
+        policy_selection_group_id={props.select_id.clone()}
       />
     )
   });
