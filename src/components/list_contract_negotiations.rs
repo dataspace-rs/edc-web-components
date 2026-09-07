@@ -16,6 +16,10 @@ pub struct ListContractNegotiationsProps {
   pub on_switch_view_consumer: Callback<bool>,
   pub on_show_contract_negotiation: Callback<String>,
   pub on_statuses: Callback<Vec<(String, bool)>>,
+  #[prop_or(true)]
+  pub show_status_selector: bool,
+  #[prop_or(true)]
+  pub show_consumer_provider_switch: bool,
 }
 
 #[component]
@@ -65,13 +69,27 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
 
   let (entries, _) = use_table_data(MemoizedTableModel::new(Rc::new(rows)));
 
-  let statuses_selector = {
+  let statuses_selector = if props.show_status_selector {
     html!(
       <MultiStateSelector
         selectable_items={props.statuses.clone()}
         on_selected={props.on_statuses.clone()}
       />
     )
+  } else {
+    html!()
+  };
+
+  let consumer_provider_switch = if props.show_consumer_provider_switch {
+    html!(
+      <Switch
+        label="as Consumer"
+        label_off="as Provider"
+        onchange={props.on_switch_view_consumer.clone()}
+      />
+    )
+  } else {
+    html!()
   };
 
   html!(
@@ -79,12 +97,8 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
       <Toolbar>
         <ToolbarContent>
           <ToolbarItem r#type={ToolbarItemType::BulkSelect}>
+            { consumer_provider_switch }
             { statuses_selector }
-            <Switch
-              label="as Consumer"
-              label_off="as Provider"
-              onchange={props.on_switch_view_consumer.clone()}
-            />
           </ToolbarItem>
           <ToolbarItem r#type={ToolbarItemType::Pagination}>
             <Pagination

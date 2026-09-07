@@ -121,6 +121,10 @@ pub struct ContractNegotiationPageInnerProps {
   pub on_statuses: Callback<Vec<(String, bool)>>,
   pub force_refresh: usize,
   pub on_show_contract_negotiation: Callback<String>,
+  #[prop_or(true)]
+  pub show_status_selector: bool,
+  #[prop_or(true)]
+  pub show_consumer_provider_switch: bool,
 }
 
 #[component]
@@ -203,6 +207,8 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
       on_switch_view_consumer={props.on_switch_view_consumer.clone()}
       on_show_contract_negotiation={props.on_show_contract_negotiation.clone()}
       on_statuses={props.on_statuses.clone()}
+      show_status_selector={props.show_status_selector}
+      show_consumer_provider_switch={props.show_consumer_provider_switch}
     />
   ))
 }
