@@ -142,11 +142,10 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
 
         spawn_local(async move {
           if let Some(edc_client) = edc_connector_context.get_client() {
-            //let counter_party_address = federated_catalog_offer.service.endpoint_url.clone();
             let counter_party_address = originator.clone();
             let counter_party_id = provider_id.clone();
 
-            log::warn!("counter_party_address: {}", counter_party_address);
+            log::info!("counter_party_address: {}", counter_party_address);
             let policy: Policy = policy.clone();
 
             if let Some(id) = policy.id() {
@@ -202,21 +201,6 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
                 .prohibitions(policy.prohibitions().to_vec())
                 .obligations(policy.obligations().to_vec())
                 .target(Target::Simple(asset_id));
-
-              let policy_builder =
-                policy_builder.extensible_properties(std::collections::HashMap::<
-                  String,
-                  serde_json::Value,
-                >::from([
-                  (
-                    "policy:isan".to_string(),
-                    serde_json::Value::String("123456".to_string()),
-                  ),
-                  (
-                    "policy:fpd".to_string(),
-                    serde_json::Value::String("25".to_string()),
-                  ),
-                ]));
 
               let policy = policy_builder.build();
 

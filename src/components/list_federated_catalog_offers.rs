@@ -3,7 +3,7 @@ use patternfly_yew::prelude::*;
 use std::rc::Rc;
 use yew::prelude::*;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct SelectedFederatedCatalogOffer {
   pub originator: String,
   pub provider_id: String,

@@ -304,7 +304,6 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
           values={(*extensible_properties).clone()}
           onchange={onchange_extensible_properties}
         />
-        { format!("{:#?}", (*extensible_properties).clone()) }
       </FormGroup>
       <FormGroup label="Assignee">
         <TextInput value={(*assignee).clone()} onchange={onchange_assignee} />
