@@ -1,4 +1,6 @@
 use crate::models::PolicyKind;
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use edc_connector_client::types::policy::{
   Obligation, Permission, Policy, PolicyDefinition, Prohibition,
 };
@@ -25,7 +27,7 @@ impl From<PolicyDefinition> for PolicyDefinitionItem {
         .private_property("name")
         .ok()
         .and_then(|name| name)
-        .unwrap_or(policy_definition.id().to_string()),
+        .unwrap_or(extract_id(policy_definition.id().to_string())),
       kind: PolicyKind::from(policy_definition.policy().kind()).to_string(),
       permissions: policy_definition.policy().permissions().to_vec(),
       obligations: policy_definition.policy().obligations().to_vec(),
@@ -47,7 +49,7 @@ impl From<&Policy> for PolicyDefinitionItem {
   fn from(policy: &Policy) -> Self {
     PolicyDefinitionItem {
       id: policy.id().cloned().unwrap_or_default(),
-      name: policy.id().cloned().unwrap_or_default(),
+      name: extract_id(policy.id().cloned().unwrap_or_default()),
       kind: PolicyKind::from(policy.kind()).to_string(),
       permissions: policy.permissions().to_vec(),
       obligations: policy.obligations().to_vec(),
@@ -56,5 +58,17 @@ impl From<&Policy> for PolicyDefinitionItem {
       assignee: policy.assignee().cloned(),
       assigner: policy.assigner().cloned(),
     }
+  }
+}
+
+pub fn extract_id(offer_id: String) -> String {
+  if let Some(value) = offer_id.split(":").next() {
+    BASE64_STANDARD
+      .decode(value)
+      .ok()
+      .and_then(|offer| String::from_utf8(offer).ok())
+      .unwrap()
+  } else {
+    offer_id
   }
 }
