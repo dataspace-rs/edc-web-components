@@ -62,13 +62,14 @@ impl From<&Policy> for PolicyDefinitionItem {
 }
 
 pub fn extract_id(offer_id: String) -> String {
-  if let Some(value) = offer_id.split(":").next() {
-    BASE64_STANDARD
-      .decode(value)
-      .ok()
-      .and_then(|offer| String::from_utf8(offer).ok())
-      .unwrap()
-  } else {
-    offer_id
-  }
+  offer_id
+    .split(":")
+    .next()
+    .and_then(|value| {
+      BASE64_STANDARD
+        .decode(value)
+        .ok()
+        .and_then(|offer| String::from_utf8(offer).ok())
+    })
+    .unwrap_or(offer_id)
 }
