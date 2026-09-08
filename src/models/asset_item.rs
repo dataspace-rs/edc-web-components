@@ -21,6 +21,10 @@ pub struct AssetItem {
   pub proxy_query_params: bool,
   pub proxy_method: bool,
   pub proxy_body: bool,
+  pub oauth2_client_id: String,
+  pub oauth2_client_secret_key: String,
+  pub oauth2_token_url: String,
+  pub oauth2_scope: String,
 }
 
 impl AssetItem {
@@ -124,6 +128,30 @@ impl From<Asset> for AssetItem {
     let proxy_method = get_boolean_property(asset.data_address(), "proxyMethod");
     let proxy_body = get_boolean_property(asset.data_address(), "proxyBody");
 
+    let oauth2_client_id = asset
+      .data_address()
+      .property("oauth2:clientId")
+      .unwrap_or_default()
+      .unwrap_or_default();
+
+    let oauth2_client_secret_key = asset
+      .data_address()
+      .property("oauth2:clientSecretKey")
+      .unwrap_or_default()
+      .unwrap_or_default();
+
+    let oauth2_scope = asset
+      .data_address()
+      .property("oauth2:scope")
+      .unwrap_or_default()
+      .unwrap_or_default();
+
+    let oauth2_token_url = asset
+      .data_address()
+      .property("oauth2:tokenUrl")
+      .unwrap_or_default()
+      .unwrap_or_default();
+
     AssetItem {
       id,
       name,
@@ -139,6 +167,10 @@ impl From<Asset> for AssetItem {
       proxy_query_params,
       proxy_method,
       proxy_body,
+      oauth2_client_id,
+      oauth2_client_secret_key,
+      oauth2_token_url,
+      oauth2_scope,
     }
   }
 }
@@ -169,6 +201,10 @@ impl From<edc_federated_catalog_client::models::Dataset> for AssetItem {
       proxy_query_params: false,
       proxy_method: false,
       proxy_body: false,
+      oauth2_client_id: "".to_string(),
+      oauth2_client_secret_key: "".to_string(),
+      oauth2_token_url: "".to_string(),
+      oauth2_scope: "".to_string(),
     }
   }
 }
@@ -203,6 +239,10 @@ impl From<&Dataset<DatasetExtraFields>> for AssetItem {
       proxy_query_params: false,
       proxy_method: false,
       proxy_body: false,
+      oauth2_client_id: "".to_string(),
+      oauth2_client_secret_key: "".to_string(),
+      oauth2_token_url: "".to_string(),
+      oauth2_scope: "".to_string(),
     }
   }
 }
