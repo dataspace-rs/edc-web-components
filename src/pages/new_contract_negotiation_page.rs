@@ -91,6 +91,8 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
               catalog_dataset.id().to_string(),
               catalog_dataset.extra.name.clone(),
               catalog_dataset.offers().to_vec(),
+              catalog_dataset.extra.description.clone(),
+              catalog_dataset.extra.creator.clone(),
             )
           })
       } else {
@@ -242,6 +244,8 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
     let asset_id = catalog_dataset.0.clone();
     let asset_name = catalog_dataset.1.clone();
     let policies = catalog_dataset.2;
+    let description = catalog_dataset.3;
+    let creator = catalog_dataset.4;
     let disabled = *signing;
 
     let offers = policies
@@ -276,12 +280,30 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
 
     let disabled = selected_offer.is_none() || *signing;
 
+    let details = if let Some(value) = description {
+      html!(<DescriptionGroup term="Description">{ value }</DescriptionGroup>)
+    } else {
+      html!()
+    };
+
+    let provider = if let Some(value) = creator {
+      html!(
+        <>
+          <DescriptionGroup term="Provider">{ value.name }</DescriptionGroup>
+          <DescriptionGroup term="Provider ID">{ provider_id }</DescriptionGroup>
+        </>
+      )
+    } else {
+      html!()
+    };
+
     Ok(html!(
       <>
         <DescriptionList>
-          <DescriptionGroup term="Provider ID">{ provider_id }</DescriptionGroup>
+          { provider }
           <DescriptionGroup term="Asset ID">{ asset_id }</DescriptionGroup>
           <DescriptionGroup term="Asset Name">{ asset_name }</DescriptionGroup>
+          { details }
           <DescriptionGroup term="Offers">
             <Gallery gutter=true>{ for offers }</Gallery>
           </DescriptionGroup>
