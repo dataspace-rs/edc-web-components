@@ -280,22 +280,20 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
 
     let disabled = selected_offer.is_none() || *signing;
 
-    let details = if let Some(value) = description {
-      html!(<DescriptionGroup term="Description">{ value }</DescriptionGroup>)
-    } else {
-      html!()
-    };
+    let details = description
+      .map(|value| html!(<DescriptionGroup term="Description">{ value }</DescriptionGroup>))
+      .unwrap_or_default();
 
-    let provider = if let Some(value) = creator {
-      html!(
-        <>
-          <DescriptionGroup term="Provider">{ value.name }</DescriptionGroup>
-          <DescriptionGroup term="Provider ID">{ provider_id }</DescriptionGroup>
-        </>
-      )
-    } else {
-      html!()
-    };
+    let provider = creator
+      .map(|value| {
+        html!(
+          <>
+            <DescriptionGroup term="Provider">{ value.name }</DescriptionGroup>
+            <DescriptionGroup term="Provider ID">{ provider_id }</DescriptionGroup>
+          </>
+        )
+      })
+      .unwrap_or_default();
 
     Ok(html!(
       <>
