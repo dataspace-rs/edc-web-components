@@ -108,7 +108,7 @@ pub fn ReviewContractNegotiation(props: &ReviewContractNegotiationProps) -> Html
         if let Some(edc_connector_client) = edc_connector_client.get_client() {
           if let Err(error) = edc_connector_client
             .contract_negotiations(edc_connector_client::EdcConnectorApiVersion::V4)
-            .terminate(&contract_negotiation_id, &rejection_message)
+            .review_terminate(&contract_negotiation_id, &rejection_message)
             .await
           {
             log::error!("Error approving contract negotiation: {:?}", error);
