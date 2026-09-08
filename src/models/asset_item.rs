@@ -14,6 +14,7 @@ pub struct AssetItem {
   pub creator: Option<Creator>,
   pub thumbnail: Option<Thumbnail>,
   pub keywords: Vec<String>,
+  pub landing_page: Option<String>,
   pub dcterm_types: Vec<String>,
   pub base_url: String,
   pub proxy_path: bool,
@@ -95,6 +96,11 @@ impl From<Asset> for AssetItem {
       })
       .unwrap_or_default();
 
+    let landing_page = asset
+      .properties()
+      .get::<String>("http://www.w3.org/ns/dcat#landingPage")
+      .unwrap_or_default();
+
     let dcterm_types = asset
       .properties()
       .get_raw("http://purl.org/dc/terms/type")
@@ -126,6 +132,7 @@ impl From<Asset> for AssetItem {
       creator,
       thumbnail,
       keywords,
+      landing_page,
       dcterm_types,
       base_url,
       proxy_path,
@@ -155,6 +162,7 @@ impl From<edc_federated_catalog_client::models::Dataset> for AssetItem {
         resource: Some(thumbnail.resource),
       }),
       keywords: dataset.keywords,
+      landing_page: dataset.landing_page,
       dcterm_types: dataset.dcterm_types,
       base_url: "".to_string(),
       proxy_path: false,
@@ -188,6 +196,7 @@ impl From<&Dataset<DatasetExtraFields>> for AssetItem {
         resource: Some(thumbnail.resource.to_owned()),
       }),
       keywords: extra.keywords.clone(),
+      landing_page: extra.landing_page.clone(),
       dcterm_types: extra.dcterm_types.clone(),
       base_url: "".to_string(),
       proxy_path: false,

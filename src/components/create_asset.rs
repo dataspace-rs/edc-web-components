@@ -30,9 +30,12 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
   let description = use_state(String::new);
   let thumbnail_url = use_state(String::new);
   let keywords = use_state(Vec::<String>::new);
-  let base_url = use_state(String::new);
+  let landing_page = use_state(String::new);
+
   let company_name = use_state(|| props.company_name.clone().unwrap_or_default());
   let company_logo_url = use_state(|| props.company_logo_url.clone().unwrap_or_default());
+
+  let base_url = use_state(String::new);
   let content_type = use_state(|| "application/json".to_string());
   let proxy_path = use_state(|| false);
   let proxy_query_params = use_state(|| false);
@@ -43,6 +46,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
   let token_url = use_state(String::new);
   let scopes = use_state(|| "openid".to_string());
   let headers = use_state(HashMap::<String, String>::new);
+
   let selected_dcterm_types = use_state(|| {
     props
       .dcterm_types
@@ -65,6 +69,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
         description.clone(),
         thumbnail_url.clone(),
         keywords.clone(),
+        landing_page.clone(),
         selected_dcterm_types.clone(),
         props.dcterm_types.clone(),
       ),
@@ -89,7 +94,16 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
     |event: SubmitEvent,
      (
       edc_connector_context,
-      (name, version, description, thumbnail_url, keywords, selected_dcterm_types, dcterm_types),
+      (
+        name,
+        version,
+        description,
+        thumbnail_url,
+        keywords,
+        landing_page,
+        selected_dcterm_types,
+        dcterm_types,
+      ),
       base_url,
       (company_name, company_logo_url),
       content_type,
@@ -105,6 +119,8 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       let description = (**description).clone();
       let thumbnail_url = (**thumbnail_url).clone();
       let keywords = (**keywords).clone();
+      let landing_page = (**landing_page).clone();
+
       let base_url = (**base_url).clone();
       let company_name = (**company_name).clone();
       let company_logo_url = (**company_logo_url).clone();
@@ -254,6 +270,12 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
           new_asset_builder
         };
 
+        let new_asset_builder = if !landing_page.is_empty() {
+          new_asset_builder.property("http://www.w3.org/ns/dcat#landingPage", landing_page)
+        } else {
+          new_asset_builder
+        };
+
         let new_asset = new_asset_builder.build();
 
         if let Some(client) = edc_connector_context.get_client() {
@@ -289,6 +311,10 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
 
   let onchange_keywords = use_callback(keywords.setter(), |keywords, setter| {
     setter.set(keywords);
+  });
+
+  let onchange_landing_page = use_callback(landing_page.setter(), |value, setter| {
+    setter.set(value);
   });
 
   let onchange_company_name = use_callback(company_name.setter(), |value, setter| {
@@ -478,6 +504,13 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
               </FormGroup>
               <FormGroup label="Keywords">
                 <StringListEdit values={(*keywords).clone()} onchange={onchange_keywords} />
+              </FormGroup>
+              <FormGroup label="Landing Page">
+                <TextInput
+                  required=true
+                  value={(*landing_page).to_string()}
+                  onchange={onchange_landing_page}
+                />
               </FormGroup>
               { offer_types }
             </FlexItem>

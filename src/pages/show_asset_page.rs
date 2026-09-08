@@ -153,6 +153,9 @@ pub fn ShowAssetPageInner(props: &ShowAssetPageProps) -> HtmlResult {
                 { asset_item.description.unwrap_or_default() }
               </DescriptionGroup>
               <DescriptionGroup term="Keywords">{ for keywords }</DescriptionGroup>
+              <DescriptionGroup term="Landing Page">
+                { asset_item.landing_page.unwrap_or_default() }
+              </DescriptionGroup>
               { dcterm_types }
             </DescriptionList>
           </CardBody>

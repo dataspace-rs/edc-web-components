@@ -23,6 +23,8 @@ pub struct DatasetExtraFields {
   #[serde(alias = "dcat:keyword", default)]
   #[serde_as(deserialize_as = "OneOrMany<_, PreferMany>")]
   pub keywords: Vec<String>,
+  #[serde(alias = "dcat:landingPage", default)]
+  pub landing_page: Option<String>,
   #[serde(alias = "dct:type", alias = "http://purl.org/dc/terms/type", default)]
   #[serde_as(deserialize_as = "OneOrMany<_, PreferMany>")]
   pub dcterm_types: Vec<String>,
