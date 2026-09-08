@@ -162,21 +162,41 @@ pub fn ShowAssetPageInner(props: &ShowAssetPageProps) -> HtmlResult {
             <Title level={Level::H2} size={Size::XXXLarge}>{ "Dataset Source" }</Title>
           </CardHeader>
           <CardBody>
-            <DescriptionList>
-              <DescriptionGroup term="Base URL">{ asset_item.base_url }</DescriptionGroup>
-              <DescriptionGroup term="Proxy Path">
-                <Switch disabled=true checked={asset_item.proxy_path} />
-              </DescriptionGroup>
-              <DescriptionGroup term="Proxy Query Parameters">
-                <Switch disabled=true checked={asset_item.proxy_query_params} />
-              </DescriptionGroup>
-              <DescriptionGroup term="Proxy Method">
-                <Switch disabled=true checked={asset_item.proxy_method} />
-              </DescriptionGroup>
-              <DescriptionGroup term="Proxy Body">
-                <Switch disabled=true checked={asset_item.proxy_body} />
-              </DescriptionGroup>
-            </DescriptionList>
+            <Split gutter=true>
+              <SplitItem fill=true>
+                <DescriptionList>
+                  <DescriptionGroup term="Base URL">{ asset_item.base_url }</DescriptionGroup>
+                  <DescriptionGroup term="Proxy Path">
+                    <Switch disabled=true checked={asset_item.proxy_path} />
+                  </DescriptionGroup>
+                  <DescriptionGroup term="Proxy Query Parameters">
+                    <Switch disabled=true checked={asset_item.proxy_query_params} />
+                  </DescriptionGroup>
+                  <DescriptionGroup term="Proxy Method">
+                    <Switch disabled=true checked={asset_item.proxy_method} />
+                  </DescriptionGroup>
+                  <DescriptionGroup term="Proxy Body">
+                    <Switch disabled=true checked={asset_item.proxy_body} />
+                  </DescriptionGroup>
+                </DescriptionList>
+              </SplitItem>
+              <SplitItem fill=true>
+                <DescriptionList>
+                  <DescriptionGroup term="OpenID Client ID">
+                    { asset_item.oauth2_client_id }
+                  </DescriptionGroup>
+                  <DescriptionGroup term="OpenID Client Secret Key">
+                    { asset_item.oauth2_client_secret_key }
+                  </DescriptionGroup>
+                  <DescriptionGroup term="OpenID Token URL">
+                    { asset_item.oauth2_token_url }
+                  </DescriptionGroup>
+                  <DescriptionGroup term="OpenID Scopes">
+                    { asset_item.oauth2_scope }
+                  </DescriptionGroup>
+                </DescriptionList>
+              </SplitItem>
+            </Split>
           </CardBody>
         </Card>
         <Flex>
