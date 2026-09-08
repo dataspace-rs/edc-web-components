@@ -113,17 +113,49 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
     },
   );
 
-  if let Some(transfer_process) = transfer_process {
-    let transfer_proces_id = transfer_process.id().to_string();
+  let suspend_transfer = use_callback(
+    edc_connector_client.clone(),
+    |transfer_process_id: String, edc_connector_client| {
+      let edc_connector_client = edc_connector_client.clone();
+      let transfer_process_id = transfer_process_id.clone();
 
-    let start_edrs = if transfer_process.state() == &TransferProcessState::Started {
+      spawn_local(async move {
+        if let Some(client) = edc_connector_client.get_client()
+          && let Err(error) = client
+            .transfer_processes(edc_connector_client::EdcConnectorApiVersion::V3)
+            .suspend(&transfer_process_id, "completed")
+            .await
+        {
+          log::error!("Error getting data address {error}");
+        }
+      });
+    },
+  );
+
+  if let Some(transfer_process) = transfer_process {
+    let transfer_process_id = transfer_process.id().to_string();
+    let complete_transfer_process_id = transfer_process.id().to_string();
+
+    let actions = if transfer_process.state() == &TransferProcessState::Started {
       html!(
-        <Button
-          variant={ButtonVariant::Primary}
-          onclick={do_transfer.reform(move |_| transfer_proces_id.clone())}
-        >
-          { "Retrieve Dataset" }
-        </Button>
+        <Flex>
+          <FlexItem>
+            <Button
+              variant={ButtonVariant::Primary}
+              onclick={do_transfer.reform(move |_| transfer_process_id.clone())}
+            >
+              { "Retrieve Dataset" }
+            </Button>
+          </FlexItem>
+          <FlexItem>
+            <Button
+              variant={ButtonVariant::Warning}
+              onclick={suspend_transfer.reform(move |_| complete_transfer_process_id.clone())}
+            >
+              { "Suspend Transfer" }
+            </Button>
+          </FlexItem>
+        </Flex>
       )
     } else {
       html!()
@@ -153,7 +185,7 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
             {on_finalized}
           />
         </StackItem>
-        <StackItem>{ start_edrs }</StackItem>
+        <StackItem>{ actions }</StackItem>
       </Stack>
     ))
   } else {
