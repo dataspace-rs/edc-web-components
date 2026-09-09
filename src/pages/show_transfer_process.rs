@@ -113,6 +113,42 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
     },
   );
 
+  let backdropper = use_backdrop();
+  let show_enpoint_information = use_callback(
+    (edc_connector_client.clone(), backdropper),
+    |transfer_process_id: String, (edc_connector_client, backdropper)| {
+      let edc_connector_client = edc_connector_client.clone();
+      let backdropper = backdropper.clone();
+      let transfer_process_id = transfer_process_id.clone();
+
+      spawn_local(async move {
+        if let Some(client) = edc_connector_client.get_client()
+          && let Ok(data_address) = client
+            .edrs(edc_connector_client::EdcConnectorApiVersion::V3)
+            .get_data_address(&transfer_process_id)
+            .await
+          && let Ok(Some(endpoint)) = data_address.property::<String>("endpoint")
+          && let Ok(Some(authorization)) = data_address.property::<String>("authorization")
+        && let Some(backdropper) = backdropper {
+            backdropper.open(Backdrop::new(html!(
+              <Bullseye>
+                <Modal title="Transfer Endpoint Information" variant={ModalVariant::Medium}>
+                  <DescriptionList>
+                    <DescriptionGroup term="Endpoint URL">
+                      <Clipboard readonly=true value={endpoint} />
+                    </DescriptionGroup>
+                    <DescriptionGroup term="Authorization Header">
+                      <Clipboard readonly=true value={authorization} />
+                    </DescriptionGroup>
+                  </DescriptionList>
+                </Modal>
+              </Bullseye>
+            )));
+        }
+      });
+    },
+  );
+
   let suspend_transfer = use_callback(
     edc_connector_client.clone(),
     |transfer_process_id: String, edc_connector_client| {
@@ -134,6 +170,7 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
 
   if let Some(transfer_process) = transfer_process {
     let transfer_process_id = transfer_process.id().to_string();
+    let endpoint_transfer_process_id = transfer_process.id().to_string();
     let complete_transfer_process_id = transfer_process.id().to_string();
 
     let actions = if transfer_process.state() == &TransferProcessState::Started {
@@ -143,14 +180,25 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
             <Button
               variant={ButtonVariant::Primary}
               onclick={do_transfer.reform(move |_| transfer_process_id.clone())}
+              icon={Icon::Download}
             >
               { "Retrieve Dataset" }
             </Button>
           </FlexItem>
           <FlexItem>
             <Button
+              variant={ButtonVariant::Primary}
+              onclick={show_enpoint_information.reform(move |_| endpoint_transfer_process_id.clone())}
+              icon={Icon::Code}
+            >
+              { "Endpoint Information" }
+            </Button>
+          </FlexItem>
+          <FlexItem>
+            <Button
               variant={ButtonVariant::Warning}
               onclick={suspend_transfer.reform(move |_| complete_transfer_process_id.clone())}
+              icon={Icon::Pause}
             >
               { "Suspend Transfer" }
             </Button>
@@ -186,6 +234,7 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
           />
         </StackItem>
         <StackItem>{ actions }</StackItem>
+        <StackItem />
       </Stack>
     ))
   } else {

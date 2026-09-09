@@ -78,10 +78,10 @@ pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
   } else {
     let profiles = props.policy.profiles().iter().map(|profile| {
       html_nested! {
-      <FlexItem>
-        <Label color={Color::Blue} label={profile.to_string()} />
-      </FlexItem>
-    }
+        <FlexItem>
+          <Label color={Color::Blue} label={profile.to_string()} />
+        </FlexItem>
+      }
     });
 
     html!(
@@ -100,16 +100,16 @@ pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
       .iter()
       .map(|(key, value)| {
         html_nested! {
-        <StackItem>
-          <DescriptionGroup term={key.to_string()}>
-            <CodeBlock>
-              <CodeBlockCode>
-                { serde_json::to_string_pretty(value).unwrap_or_default() }
-              </CodeBlockCode>
-            </CodeBlock>
-          </DescriptionGroup>
-        </StackItem>
-      }
+          <StackItem>
+            <DescriptionGroup term={key.to_string()}>
+              <CodeBlock>
+                <CodeBlockCode>
+                  { serde_json::to_string_pretty(value).unwrap_or_default() }
+                </CodeBlockCode>
+              </CodeBlock>
+            </DescriptionGroup>
+          </StackItem>
+        }
       });
 
     html!(
