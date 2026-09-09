@@ -169,7 +169,7 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
             <DescriptionGroup term="Contract Agreement Id">
               { transfer_process.contract_id() }
             </DescriptionGroup>
-            <DescriptionGroup term="Correlation Contract Agreement ID">
+            <DescriptionGroup term="Correlation Transfer Process ID">
               { transfer_process.correlation_id() }
             </DescriptionGroup>
             <DescriptionGroup term="Asset ID">{ transfer_process.asset_id() }</DescriptionGroup>
