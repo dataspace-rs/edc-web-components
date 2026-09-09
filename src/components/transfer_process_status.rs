@@ -28,14 +28,14 @@ pub fn TransferProcessStatus(props: &TransferProcessStatusProps) -> Html {
   let edc_connector_client = use_edc_connector_context();
 
   let transfer_process_state = use_state(|| None);
-  let transfer_process_error = use_state(|| Option::<String>::None);
+  let transfer_process_message = use_state(|| Option::<String>::None);
 
   use_effect_with(
     (
       props.transfer_process_id.clone(),
       edc_connector_client.clone(),
       transfer_process_state.setter(),
-      transfer_process_error.setter(),
+      transfer_process_message.setter(),
       props.on_finalized.clone(),
       props.on_started.clone(),
     ),
@@ -43,14 +43,14 @@ pub fn TransferProcessStatus(props: &TransferProcessStatusProps) -> Html {
       transfer_process_id,
       edc_connector_client,
       transfer_process_state_setter,
-      transfer_process_error_setter,
+       transfer_process_message_setter,
       on_finalized,
       on_started,
     )| {
       let transfer_process_id = transfer_process_id.clone();
       let edc_connector_client = edc_connector_client.clone();
       let transfer_process_state_setter = transfer_process_state_setter.clone();
-      let transfer_process_error_setter = transfer_process_error_setter.clone();
+      let transfer_process_message_setter = transfer_process_message_setter.clone();
       let on_finalized = on_finalized.clone();
       let on_started = on_started.clone();
 
@@ -76,7 +76,7 @@ pub fn TransferProcessStatus(props: &TransferProcessStatusProps) -> Html {
               .map(|error_detail| error_detail.to_string())
           });
 
-          transfer_process_error_setter.set(error_message);
+          transfer_process_message_setter.set(error_message);
 
           transfer_process_state_setter.set(transfer_process);
 
@@ -87,6 +87,7 @@ pub fn TransferProcessStatus(props: &TransferProcessStatusProps) -> Html {
 
           if state == Some(TransferProcessState::Completed)
             || state == Some(TransferProcessState::Terminated)
+            || state == Some(TransferProcessState::Suspended)
           {
             on_finalized.emit(());
             break;
@@ -99,14 +100,22 @@ pub fn TransferProcessStatus(props: &TransferProcessStatusProps) -> Html {
   );
 
   match (
-    (*transfer_process_error).clone(),
+    (*transfer_process_message).clone(),
     (*transfer_process_state).clone(),
   ) {
-    (Some(error_message), _) => html!(
-      <Alert title="Transfer Process failed" r#type={AlertType::Danger}>
-        <div>{ error_message }</div>
-      </Alert>
-    ),
+    (Some(message), Some(transfer_process)) => {
+      let (title, r#type) = if transfer_process.state() == &TransferProcessState::Terminated {
+        ("Transfer Process failed", AlertType::Success)
+      } else {
+        ("Transfer Process suspended", AlertType::Danger)
+      };
+
+      html!(
+        <Alert {title} {r#type}>
+          <div>{ message }</div>
+        </Alert>
+      )
+    }
     (None, Some(transfer_process)) => {
       let transfer_process: TransferProcess = transfer_process;
 
