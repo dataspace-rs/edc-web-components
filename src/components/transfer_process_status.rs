@@ -43,7 +43,7 @@ pub fn TransferProcessStatus(props: &TransferProcessStatusProps) -> Html {
       transfer_process_id,
       edc_connector_client,
       transfer_process_state_setter,
-       transfer_process_message_setter,
+      transfer_process_message_setter,
       on_finalized,
       on_started,
     )| {

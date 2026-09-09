@@ -8,16 +8,20 @@ pub struct ShowPolicyProps {
   pub policy: Policy,
   #[prop_or_default]
   pub name: Option<String>,
+  #[prop_or_default]
+  pub hide_kind: bool,
+  #[prop_or_default]
+  pub hide_id: bool,
+  #[prop_or_default]
+  pub hide_name: bool,
+  #[prop_or_default]
+  pub hide_profiles: bool,
+  #[prop_or_default]
+  pub hide_extensible_properties: bool,
 }
 
 #[component]
 pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
-  let kind = match props.policy.kind() {
-    PolicyKind::Set => "Set",
-    PolicyKind::Offer => "Offer",
-    PolicyKind::Agreement => "Agreement",
-  };
-
   let permissions = props.policy.permissions().iter().map(|permission| {
     html! {
       <ConstraintRenderer
@@ -45,20 +49,57 @@ pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
     }
   });
 
-  let profiles = props.policy.profiles().iter().map(|profile| {
-    html_nested! {
+  let id = if props.hide_id {
+    html!()
+  } else {
+    html!(<DescriptionGroup term="Id">{ props.policy.id() }</DescriptionGroup>)
+  };
+
+  let name = if props.hide_name {
+    html!()
+  } else {
+    html!(<DescriptionGroup term="Name">{ props.name.clone() }</DescriptionGroup>)
+  };
+
+  let kind = if props.hide_kind {
+    html!()
+  } else {
+    let kind = match props.policy.kind() {
+      PolicyKind::Set => "Set",
+      PolicyKind::Offer => "Offer",
+      PolicyKind::Agreement => "Agreement",
+    };
+
+    html!(<DescriptionGroup term="Kind">{ kind }</DescriptionGroup>)
+  };
+
+  let profiles = if props.hide_profiles {
+    html!()
+  } else {
+    let profiles = props.policy.profiles().iter().map(|profile| {
+      html_nested! {
       <FlexItem>
         <Label color={Color::Blue} label={profile.to_string()} />
       </FlexItem>
     }
-  });
+    });
 
-  let extensible_properties = props
-    .policy
-    .extensible_properties()
-    .iter()
-    .map(|(key, value)| {
-      html_nested! {
+    html!(
+      <DescriptionGroup term="Profiles">
+        <Flex>{ for profiles }</Flex>
+      </DescriptionGroup>
+    )
+  };
+
+  let extensible_properties = if props.hide_extensible_properties {
+    html!()
+  } else {
+    let extensible_properties = props
+      .policy
+      .extensible_properties()
+      .iter()
+      .map(|(key, value)| {
+        html_nested! {
         <StackItem>
           <DescriptionGroup term={key.to_string()}>
             <CodeBlock>
@@ -69,13 +110,22 @@ pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
           </DescriptionGroup>
         </StackItem>
       }
-    });
+      });
+
+    html!(
+      <DescriptionGroup term="Extensible Properties">
+        <DescriptionList mode={[DescriptionListMode::Horizontal]}>
+          { for extensible_properties }
+        </DescriptionList>
+      </DescriptionGroup>
+    )
+  };
 
   html!(
     <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-      <DescriptionGroup term="Id">{ props.policy.id() }</DescriptionGroup>
-      <DescriptionGroup term="Name">{ props.name.clone() }</DescriptionGroup>
-      <DescriptionGroup term="Kind">{ kind }</DescriptionGroup>
+      { id }
+      { name }
+      { kind }
       <DescriptionGroup term="Assigner">
         { props.policy.assigner().cloned().unwrap_or_default() }
       </DescriptionGroup>
@@ -85,14 +135,8 @@ pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
       <DescriptionGroup term="Permissions">{ for permissions }</DescriptionGroup>
       <DescriptionGroup term="Obligations">{ for obligations }</DescriptionGroup>
       <DescriptionGroup term="Prohibitions">{ for prohibitions }</DescriptionGroup>
-      <DescriptionGroup term="Profiles">
-        <Flex>{ for profiles }</Flex>
-      </DescriptionGroup>
-      <DescriptionGroup term="Extensible Properties">
-        <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-          { for extensible_properties }
-        </DescriptionList>
-      </DescriptionGroup>
+      { profiles }
+      { extensible_properties }
     </DescriptionList>
   )
 }
