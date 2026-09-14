@@ -258,6 +258,7 @@ impl From<AssetItem> for DataspaceDataset {
       creator: asset_item.creator,
       keywords: asset_item.keywords,
       dcterm_types: asset_item.dcterm_types,
+      landing_page: asset_item.landing_page,
       policies: vec![],
     }
   }

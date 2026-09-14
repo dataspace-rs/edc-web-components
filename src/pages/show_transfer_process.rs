@@ -129,21 +129,22 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
             .await
           && let Ok(Some(endpoint)) = data_address.property::<String>("endpoint")
           && let Ok(Some(authorization)) = data_address.property::<String>("authorization")
-        && let Some(backdropper) = backdropper {
-            backdropper.open(Backdrop::new(html!(
-              <Bullseye>
-                <Modal title="Transfer Endpoint Information" variant={ModalVariant::Medium}>
-                  <DescriptionList>
-                    <DescriptionGroup term="Endpoint URL">
-                      <Clipboard readonly=true value={endpoint} />
-                    </DescriptionGroup>
-                    <DescriptionGroup term="Authorization Header">
-                      <Clipboard readonly=true value={authorization} />
-                    </DescriptionGroup>
-                  </DescriptionList>
-                </Modal>
-              </Bullseye>
-            )));
+          && let Some(backdropper) = backdropper
+        {
+          backdropper.open(Backdrop::new(html!(
+            <Bullseye>
+              <Modal title="Transfer Endpoint Information" variant={ModalVariant::Medium}>
+                <DescriptionList>
+                  <DescriptionGroup term="Endpoint URL">
+                    <Clipboard readonly=true value={endpoint} />
+                  </DescriptionGroup>
+                  <DescriptionGroup term="Authorization Header">
+                    <Clipboard readonly=true value={authorization} />
+                  </DescriptionGroup>
+                </DescriptionList>
+              </Modal>
+            </Bullseye>
+          )));
         }
       });
     },

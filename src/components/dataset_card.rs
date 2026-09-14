@@ -1,3 +1,4 @@
+use crate::components::LandingPage;
 use crate::models::DataspaceDataset;
 use patternfly_yew::prelude::*;
 use stylist::yew::styled_component;
@@ -54,9 +55,11 @@ pub fn DatasetCard(props: &DatasetCardProps) -> Html {
     overflow: hidden;
   );
 
-  let offer_button_class = css!(
-    text-align: right;
-  );
+  let landing_page = if let Some(landing_page) = props.dataset.landing_page.clone() {
+    html!(<LandingPage {landing_page} />)
+  } else {
+    html!()
+  };
 
   let offer_button = if let Some(offer) = props.on_offer_click.clone() {
     html!(
@@ -146,7 +149,10 @@ pub fn DatasetCard(props: &DatasetCardProps) -> Html {
             <div class={description_class.clone()}>{ comment }</div>
           </StackItem>
           <StackItem>
-            <div class={offer_button_class.clone()}>{ offer_button.clone() }</div>
+            <Split gutter=true>
+              <SplitItem fill=true>{ landing_page.clone() }</SplitItem>
+              <SplitItem>{ offer_button.clone() }</SplitItem>
+            </Split>
           </StackItem>
         </Stack>
       </CardBody>

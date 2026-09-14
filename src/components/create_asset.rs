@@ -393,6 +393,11 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
         }),
       })
     },
+    landing_page: if (*landing_page).is_empty() {
+      None
+    } else {
+      Some((*landing_page).clone())
+    },
     keywords: (*keywords).clone(),
     policies: vec![],
     dcterm_types: vec![],

@@ -10,6 +10,7 @@ pub struct DataspaceDataset {
   pub comment: Option<String>,
   pub thumbnail: Option<Thumbnail>,
   pub creator: Option<Creator>,
+  pub landing_page: Option<String>,
   pub keywords: Vec<String>,
   pub policies: Vec<Policy>,
   pub dcterm_types: Vec<String>,
