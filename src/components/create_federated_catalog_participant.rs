@@ -16,7 +16,6 @@ pub struct CreateFederatedCatalogParticipantProps {
 #[component]
 pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipantProps) -> Html {
   let id = use_state(|| "".to_string());
-  let name = use_state(|| "".to_string());
   let target_url = use_state(|| "".to_string());
 
   let onchange_id = use_callback(
@@ -36,10 +35,6 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
     },
   );
 
-  let onchange_name = use_callback(name.setter(), |value, name_setter| {
-    name_setter.set(value);
-  });
-
   let onchange_target_url = use_callback(target_url.setter(), |value, target_url_setter| {
     target_url_setter.set(value);
   });
@@ -51,18 +46,16 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
   let onsubmit = use_callback(
     (
       id.clone(),
-      name.clone(),
       target_url.clone(),
       props.on_create.clone(),
       latest_access_token_context.clone(),
     ),
-    |event: SubmitEvent, (id, name, target_url, on_create, latest_access_token_context)| {
+    |event: SubmitEvent, (id, target_url, on_create, latest_access_token_context)| {
       event.prevent_default();
       let on_create = on_create.clone();
       let latest_access_token_context = latest_access_token_context.clone();
 
       let id = (**id).clone();
-      let name = (**name).clone();
       let target_url = (**target_url).clone();
 
       spawn_local(async move {
@@ -77,7 +70,7 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
         match federated_catalog_management_client
           .create_participant(&FederatedCatalogParticipantCreateForm {
             id: id.clone(),
-            name: name.clone(),
+            name: "".to_string(),
             target_url: target_url.clone(),
           })
           .await
@@ -97,9 +90,6 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
     <Form {onsubmit}>
       <FormGroup label="Counter Party DID" required=true>
         <TextInput required=true value={(*id).to_string()} onchange={onchange_id} />
-      </FormGroup>
-      <FormGroup label="Counter Party Name" required=true>
-        <TextInput required=true value={(*name).to_string()} onchange={onchange_name} />
       </FormGroup>
       <FormGroup label="Counter Party Address" required=true>
         <TextInput

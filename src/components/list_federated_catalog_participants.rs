@@ -1,3 +1,4 @@
+use crate::components::DidLabel;
 use edc_federated_catalog_client::models::FederatedCatalogParticipant;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
@@ -15,8 +16,7 @@ pub struct ListFederatedCatalogParticipantsProps {
 pub fn ListFederatedCatalogParticipants(props: &ListFederatedCatalogParticipantsProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
-      <TableColumn<Columns> label="Counter Party Name" index={Columns::Name} />
-      <TableColumn<Columns> label="Counter Party DID" index={Columns::CounterPartyDid} />
+      <TableColumn<Columns> label="Counter Party" index={Columns::Name} />
       <TableColumn<Columns> label="Counter Party Address" index={Columns::CounterPartyAddress} />
       <TableColumn<Columns> label="" index={Columns::Actions} />
     </TableHeader<Columns>>
@@ -49,7 +49,6 @@ pub fn ListFederatedCatalogParticipants(props: &ListFederatedCatalogParticipants
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Columns {
   Name,
-  CounterPartyDid,
   CounterPartyAddress,
   Actions,
 }
@@ -64,8 +63,9 @@ struct FederatedCatalogParticipantRenderer {
 impl TableEntryRenderer<Columns> for FederatedCatalogParticipantRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::Name => html! { self.federated_catalog_participant.name.to_string() },
-      Columns::CounterPartyDid => html! { self.federated_catalog_participant.id.to_string() },
+      Columns::Name => {
+        html! { <DidLabel did={self.federated_catalog_participant.id.to_string()} /> }
+      }
       Columns::CounterPartyAddress => html! {
         self.federated_catalog_participant.target_url.to_string()
       },

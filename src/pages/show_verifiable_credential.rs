@@ -1,3 +1,4 @@
+use crate::components::DidLabel;
 use crate::contexts::use_edc_identity_hub_context;
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
@@ -78,10 +79,11 @@ pub fn ShowVerifiableCredentialPageInner(props: &ShowVerifiableCredentialPagePro
     Ok(html!(
       <DescriptionList mode={[DescriptionListMode::Horizontal]}>
         <DescriptionGroup term="Id">{ verifiable_credential.id }</DescriptionGroup>
-        <DescriptionGroup term="Issuer ID">{ verifiable_credential.issuer_id }</DescriptionGroup>
-        <DescriptionGroup term="Holder ID">{ verifiable_credential.holder_id }</DescriptionGroup>
-        <DescriptionGroup term="Created at">
-          { chrono::DateTime::from_timestamp_millis(verifiable_credential.created_at.timestamp()).unwrap().format("%Y-%m-%d %H:%M:%S").to_string() }
+        <DescriptionGroup term="Issuer">
+          <DidLabel did={verifiable_credential.issuer_id} />
+        </DescriptionGroup>
+        <DescriptionGroup term="Holder">
+          <DidLabel did={verifiable_credential.holder_id} />
         </DescriptionGroup>
         <DescriptionGroup term="Insurance Date">
           { verifiable_credential.verifiable_credential.credential.issuance_date.format("%Y-%m-%d %H:%M:%S").to_string() }
@@ -90,7 +92,7 @@ pub fn ShowVerifiableCredentialPageInner(props: &ShowVerifiableCredentialPagePro
           { verifiable_credential.verifiable_credential.credential.expiration_date.format("%Y-%m-%d %H:%M:%S").to_string() }
         </DescriptionGroup>
         <DescriptionGroup term="Name">
-          { verifiable_credential.verifiable_credential.credential.name }
+          <DidLabel did={verifiable_credential.verifiable_credential.credential.name} />
         </DescriptionGroup>
         <DescriptionGroup term="Description">
           { verifiable_credential.verifiable_credential.credential.description.unwrap_or_default() }

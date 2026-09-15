@@ -1,4 +1,4 @@
-use crate::components::MultiStateSelector;
+use crate::components::{DidLabel, MultiStateSelector};
 use crate::models::ContractNegotiationItem;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
@@ -28,7 +28,7 @@ pub fn ListContractNegotiations(props: &ListContractNegotiationsProps) -> Html {
     <TableHeader<Columns>>
       <TableColumn<Columns> label="State" index={Columns::State} />
       <TableColumn<Columns> label="Contract Agreement ID" index={Columns::ContractAgreementId} />
-      <TableColumn<Columns> label="Counter Party ID" index={Columns::CounterPartyId} />
+      <TableColumn<Columns> label="Counter Party" index={Columns::CounterPartyId} />
       <TableColumn<Columns> label="Protocol" index={Columns::Protocol} />
       <TableColumn<Columns> label="Kind" index={Columns::Kind} />
       <TableColumn<Columns> label="" index={Columns::Actions} />
@@ -149,7 +149,7 @@ impl TableEntryRenderer<Columns> for ContractNegotiationItemRenderer {
         html! { <Label label={self.item.state.to_string()} {color} /> }
       },
       Columns::ContractAgreementId => html! { self.item.contract_agreement_id.to_string() },
-      Columns::CounterPartyId => html! { self.item.counter_party_id.to_string() },
+      Columns::CounterPartyId => html! { <DidLabel did={self.item.counter_party_id.to_string()} /> },
       Columns::Protocol => html! { self.item.protocol.to_string() },
       Columns::Kind => html! { self.item.kind.to_string() },
       Columns::Actions => {

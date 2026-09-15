@@ -1,3 +1,4 @@
+use crate::components::DidLabel;
 use crate::models::VerifiableCredential;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
@@ -14,9 +15,8 @@ pub struct ListVerifiableCredentialsProps {
 pub fn ListVerifiableCredentials(props: &ListVerifiableCredentialsProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
-      <TableColumn<Columns> label="Issuer ID" index={Columns::IssuerId} />
-      <TableColumn<Columns> label="Holder ID" index={Columns::HolderId} />
-      <TableColumn<Columns> label="Created at" index={Columns::CreatedAt} />
+      <TableColumn<Columns> label="Issuer" index={Columns::IssuerId} />
+      <TableColumn<Columns> label="Holder" index={Columns::HolderId} />
       <TableColumn<Columns> label="Insurance Date" index={Columns::InsuranceDate} />
       <TableColumn<Columns> label="Expiration Date" index={Columns::ExpirationDate} />
       <TableColumn<Columns> label="" index={Columns::Actions} />
@@ -49,7 +49,6 @@ pub fn ListVerifiableCredentials(props: &ListVerifiableCredentialsProps) -> Html
 enum Columns {
   IssuerId,
   HolderId,
-  CreatedAt,
   InsuranceDate,
   ExpirationDate,
   Actions,
@@ -65,18 +64,19 @@ struct VerifiableCredentialRenderer {
 impl TableEntryRenderer<Columns> for VerifiableCredentialRenderer {
   fn render_cell(&self, context: CellContext<'_, Columns>) -> Cell {
     match context.column {
-      Columns::IssuerId => html! { self.verifiable_credential.issuer_id.to_string() },
-      Columns::HolderId => html! { self.verifiable_credential.holder_id.to_string() },
-      Columns::CreatedAt => html! {
-        chrono::DateTime::from_timestamp_millis(self.verifiable_credential.created_at as i64).unwrap().format("%Y-%m-%d %H:%M:%S")
+      Columns::IssuerId => html! {
+        <DidLabel did={self.verifiable_credential.issuer_id.to_string()} />
       },
-      Columns::InsuranceDate => html!{
+      Columns::HolderId => html! {
+        <DidLabel did={self.verifiable_credential.holder_id.to_string()} />
+      },
+      Columns::InsuranceDate => html! {
         self.verifiable_credential.issuance_date.format("%Y-%m-%d %H:%M:%S")
       },
-      Columns::ExpirationDate => html!{
+      Columns::ExpirationDate => html! {
         self.verifiable_credential.expiration_date.format("%Y-%m-%d %H:%M:%S")
       },
-      Columns::Actions => html!{
+      Columns::Actions => html! {
         <Split gutter=true>
           <SplitItem>
             <ShowVerifiableCredential
@@ -91,9 +91,9 @@ impl TableEntryRenderer<Columns> for VerifiableCredentialRenderer {
             />
           </SplitItem>
         </Split>
-      }
+      },
     }
-      .into()
+    .into()
   }
 }
 

@@ -1,3 +1,4 @@
+use crate::components::DidLabel;
 use crate::contexts::use_edc_connector_context;
 use crate::models::ContractAgreementItem;
 use edc_connector_client::types::contract_agreement::ContractAgreement;
@@ -78,18 +79,14 @@ pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) ->
             <DescriptionGroup term="Contract Signing Date">
               { contract_agreement_item.signing_date }
             </DescriptionGroup>
-            <DescriptionGroup term="Consumer Id">
-              { contract_agreement_item.consumer_id }
+            <DescriptionGroup term="Consumer">
+              <DidLabel did={contract_agreement_item.consumer_id} />
             </DescriptionGroup>
-            <DescriptionGroup term="Provider Id">
-              { contract_agreement_item.provider_id }
+            <DescriptionGroup term="Provider">
+              <DidLabel did={contract_agreement_item.provider_id} />
             </DescriptionGroup>
-            <DescriptionGroup term="Asset ID">
-              { contract_agreement_item.asset_id }
-            </DescriptionGroup>
-            <DescriptionGroup term="Policy ID">
-              { contract_agreement_item.policy_id }
-            </DescriptionGroup>
+            <DescriptionGroup term="Asset">{ contract_agreement_item.asset_id }</DescriptionGroup>
+            <DescriptionGroup term="Policy">{ contract_agreement_item.policy_id }</DescriptionGroup>
           </DescriptionList>
         </StackItem>
         <StackItem>{ initiate_transfer_process }</StackItem>
