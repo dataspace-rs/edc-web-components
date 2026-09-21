@@ -169,6 +169,9 @@ pub fn ShowAssetPageInner(props: &ShowAssetPageProps) -> HtmlResult {
               <SplitItem fill=true>
                 <DescriptionList>
                   <DescriptionGroup term="Base URL">{ asset_item.base_url }</DescriptionGroup>
+                  <DescriptionGroup term="DataSource Type">
+                    { asset_item.datasource_type }
+                  </DescriptionGroup>
                   <DescriptionGroup term="Proxy Path">
                     <Switch disabled=true checked={asset_item.proxy_path} />
                   </DescriptionGroup>

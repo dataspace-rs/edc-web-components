@@ -1,5 +1,5 @@
 use crate::models::dataset_extra_fields::DatasetExtraFields;
-use crate::models::{Creator, DataspaceDataset, Thumbnail};
+use crate::models::{Creator, DataSourceTypes, DataspaceDataset, Thumbnail};
 use edc_connector_client::types::asset::Asset;
 use edc_connector_client::types::catalog::Dataset;
 use edc_connector_client::types::data_address::DataAddress;
@@ -17,6 +17,7 @@ pub struct AssetItem {
   pub landing_page: Option<String>,
   pub dcterm_types: Vec<String>,
   pub base_url: String,
+  pub datasource_type: String,
   pub proxy_path: bool,
   pub proxy_query_params: bool,
   pub proxy_method: bool,
@@ -123,6 +124,12 @@ impl From<Asset> for AssetItem {
       .unwrap_or_default()
       .unwrap_or_default();
 
+    let datasource_type = asset
+      .data_address()
+      .property("type")
+      .unwrap_or_default()
+      .unwrap_or_default();
+
     let proxy_path = get_boolean_property(asset.data_address(), "proxyPath");
     let proxy_query_params = get_boolean_property(asset.data_address(), "proxyQueryParams");
     let proxy_method = get_boolean_property(asset.data_address(), "proxyMethod");
@@ -163,6 +170,7 @@ impl From<Asset> for AssetItem {
       landing_page,
       dcterm_types,
       base_url,
+      datasource_type,
       proxy_path,
       proxy_query_params,
       proxy_method,
@@ -197,6 +205,7 @@ impl From<edc_federated_catalog_client::models::Dataset> for AssetItem {
       landing_page: dataset.landing_page,
       dcterm_types: dataset.dcterm_types,
       base_url: "".to_string(),
+      datasource_type: DataSourceTypes::HttpData.to_string(),
       proxy_path: false,
       proxy_query_params: false,
       proxy_method: false,
@@ -235,6 +244,7 @@ impl From<&Dataset<DatasetExtraFields>> for AssetItem {
       landing_page: extra.landing_page.clone(),
       dcterm_types: extra.dcterm_types.clone(),
       base_url: "".to_string(),
+      datasource_type: DataSourceTypes::HttpData.to_string(),
       proxy_path: false,
       proxy_query_params: false,
       proxy_method: false,

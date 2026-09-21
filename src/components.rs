@@ -25,6 +25,7 @@ mod list_transfer_processes;
 mod list_verifiable_credentials;
 mod logo;
 mod multi_state_selector;
+mod one_state_selector;
 mod policy_card;
 mod policy_reference;
 mod policy_selector;
