@@ -188,7 +188,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
 
       spawn_local(async move {
         let mut data_address_builder = DataAddress::builder()
-          .kind(&*kind)
+          .kind(&kind)
           .property("baseUrl", base_url)
           .property("proxyPath", if proxy_path { "true" } else { "false" })
           .property(

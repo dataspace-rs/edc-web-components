@@ -19,7 +19,7 @@ pub fn OneStateSelector(props: &OneStateSelectorProps) -> Html {
         .enumerate()
         .for_each(|(ind, (_, selected))| {
           if ind == index {
-            *selected = !selected.clone();
+            *selected = !*selected;
           } else {
             *selected = false;
           }
