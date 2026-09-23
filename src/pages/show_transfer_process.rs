@@ -112,11 +112,21 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
             log::info!("Response: {:?}", content_type);
             log::info!("Response: {:?}", response.status());
 
-            if let Ok(data) = response.bytes().await
+            if content_type.starts_with("text/html")
+              && let Some(location) = response
+                .headers()
+                .get("Location")
+                .map(|value| value.to_str().unwrap_or_default())
+              && let Some(window) = web_sys::window()
+            {
+              let _ = window.open_with_url_and_target(location, "_blank");
+            } else if let Ok(data) = response.bytes().await
               && let Err(error) =
                 save_byte_array(&format!("data.{extension}"), &content_type, &data)
             {
               log::error!("Error saving byte array: {:?}", error);
+            } else {
+              log::info!("Downloaded data");
             }
           }
         }
