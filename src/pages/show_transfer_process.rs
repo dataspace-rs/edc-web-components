@@ -10,15 +10,26 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowTransferProcessPageProps {
+  #[prop_or("Transfer".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
   pub transfer_process_id: String,
 }
 
 #[component]
 pub fn ShowTransferProcessPage(props: &ShowTransferProcessPageProps) -> Html {
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Transfer" }</Title>
-      <Suspense fallback="Loading ...">
+      <Title level={Level::H2} size={Size::XXXLarge}>{ &props.title }</Title>
+      { tag_line }
+      <Suspense fallback={html! {<Bullseye><Spinner /></Bullseye>}}>
         <ShowTransferProcessPageInner transfer_process_id={props.transfer_process_id.clone()} />
       </Suspense>
     </>

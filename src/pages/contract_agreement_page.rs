@@ -11,6 +11,10 @@ use yew::suspense::use_future_with;
 pub struct ContractAgreementPageProps {
   #[prop_or_default]
   pub onshow: Callback<String>,
+  #[prop_or("List Contract Agreements".to_string())]
+  pub title: String,
+  #[prop_or(Some("A contract agreement is the finalized, legally binding contract signed between parties after successful negotiation.".to_string()))]
+  pub tag_line: Option<String>,
 }
 
 #[component]
@@ -35,13 +39,17 @@ pub fn ContractAgreementPage(props: &ContractAgreementPageProps) -> Html {
     },
   );
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
-        <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Agreements" }</Title>
-        <p>
-          { "A contract agreement is the finalized, legally binding contract signed between parties after successful negotiation." }
-        </p>
+        <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+        { tag_line }
       </StackItem>
       <StackItem>
         <Suspense>

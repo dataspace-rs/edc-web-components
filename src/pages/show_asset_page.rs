@@ -8,6 +8,10 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowAssetPageProps {
+  #[prop_or("Show Asset".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
   pub asset_id: String,
   pub on_deleted: Callback<()>,
   pub dcterm_types: Vec<(String, String)>,
@@ -15,10 +19,17 @@ pub struct ShowAssetPageProps {
 
 #[component]
 pub fn ShowAssetPage(props: &ShowAssetPageProps) -> Html {
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Show Asset" }</Title>
-      <Suspense fallback="Loading ...">
+      <Title level={Level::H2} size={Size::XXXLarge}>{ &props.title }</Title>
+      { tag_line }
+      <Suspense fallback={html! {<Bullseye><Spinner /></Bullseye>}}>
         <ShowAssetPageInner
           asset_id={props.asset_id.clone()}
           on_deleted={props.on_deleted.clone()}

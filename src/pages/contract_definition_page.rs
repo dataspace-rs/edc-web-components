@@ -11,6 +11,10 @@ use yew::suspense::use_future_with;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ContractDefinitionPageProps {
   pub on_new_contract_definition: Callback<()>,
+  #[prop_or("List Contract Definitions".to_string())]
+  pub title: String,
+  #[prop_or(Some("A contract definition links an asset to an access policy and a contract policy. The contract definition constitutes an offer to the other participants".to_string()))]
+  pub tag_line: Option<String>,
 }
 
 #[component]
@@ -63,15 +67,19 @@ pub fn ContractDefinitionPage(props: &ContractDefinitionPageProps) -> Html {
     },
   );
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Definitions" }</Title>
-            <p>
-              { "A contract definition links an asset to an access policy and a contract policy. The contract definition constitutes an offer to the other participants." }
-            </p>
+            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+            { tag_line }
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>

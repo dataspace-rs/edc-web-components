@@ -12,6 +12,10 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowContractNegotiationPageProps {
+  #[prop_or("Contract Negotiation".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
   pub contract_negotiation_id: String,
   #[prop_or_default]
   pub on_contract_agreement_click: Callback<String>,
@@ -19,10 +23,17 @@ pub struct ShowContractNegotiationPageProps {
 
 #[component]
 pub fn ShowContractNegotiationPage(props: &ShowContractNegotiationPageProps) -> Html {
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Contract Negotiation" }</Title>
-      <Suspense fallback="Loading ...">
+      <Title level={Level::H2} size={Size::XXXLarge}>{ &props.title }</Title>
+      { tag_line }
+      <Suspense fallback={html! {<Bullseye><Spinner /></Bullseye>}}>
         <ShowContractNegotiationPageInner
           contract_negotiation_id={props.contract_negotiation_id.clone()}
           on_contract_agreement_click={props.on_contract_agreement_click.clone()}

@@ -11,6 +11,12 @@ use yew::suspense::use_future_with;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct CommonExpressionLanguagePageProps {
   pub on_new_cel: Callback<()>,
+  #[prop_or("Common Expression Language Library".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
+  #[prop_or("Create a CEL Expression".to_string())]
+  pub create_title: String,
 }
 #[component]
 pub fn CommonExpressionLanguagePage(props: &CommonExpressionLanguagePageProps) -> Html {
@@ -59,18 +65,23 @@ pub fn CommonExpressionLanguagePage(props: &CommonExpressionLanguagePageProps) -
     on_new_cel.emit(());
   });
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>
-              { "Common Expression Language Library" }
-            </Title>
+            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+            { tag_line }
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>
-              { "Create an CEL Expression" }
+              { &props.create_title }
             </Button>
           </SplitItem>
         </Split>

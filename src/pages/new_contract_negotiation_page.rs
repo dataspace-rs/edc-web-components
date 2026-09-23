@@ -1,10 +1,10 @@
-use crate::components::PolicyCard;
+use crate::components::{DatasetCard, PolicyCard};
 use crate::contexts::use_edc_connector_context;
-use crate::models::{DatasetExtraFields, PolicyDefinitionItem};
+use crate::models::{AssetItem, DataspaceDataset, PolicyDefinitionItem};
 use base64::prelude::*;
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::Protocol;
-use edc_connector_client::types::catalog::{Dataset, DatasetRequest};
+use edc_connector_client::types::catalog::DatasetRequest;
 use edc_connector_client::types::contract_negotiation::ContractRequest;
 use edc_connector_client::types::policy::{
   AtomicConstraint, Constraint, LeftOperand, Operator, Permission, Policy, PolicyKind, Target,
@@ -17,6 +17,10 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct NewContractNegotiationPageProps {
+  #[prop_or("Negotiate a Contract".to_string())]
+  pub title: String,
+  #[prop_or(Some("Start a new negotiation on the selected data offer and proposing terms to establish a binding sharing contract.".to_string()))]
+  pub tag_line: Option<String>,
   pub originator: String,
   pub provider_id: String,
   pub dataset_id: String,
@@ -25,17 +29,17 @@ pub struct NewContractNegotiationPageProps {
 
 #[component]
 pub fn NewContractNegotiationPage(props: &NewContractNegotiationPageProps) -> Html {
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
-        <Split gutter=true>
-          <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "Negotiate a Contract" }</Title>
-            <p>
-              { "Start a new negotiation on the selected data offer and proposing terms to establish a binding sharing contract." }
-            </p>
-          </SplitItem>
-        </Split>
+        <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+        { tag_line }
       </StackItem>
       <StackItem>
         <Suspense>
@@ -81,27 +85,30 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
           .protocol(Protocol::default())
           .build();
 
-        edc_connector_client
+        let asset = edc_connector_client
           .catalogue(EdcConnectorApiVersion::V4)
           .dataset(&dataset_request)
           .await
-          .ok()
-          .map(|catalog_dataset: Dataset<DatasetExtraFields>| {
-            (
-              catalog_dataset.id().to_string(),
-              catalog_dataset.extra.name.clone(),
-              catalog_dataset.offers().to_vec(),
-              catalog_dataset.extra.description.clone(),
-              catalog_dataset.extra.creator.clone(),
-            )
-          })
+          .ok();
+
+        let offers = asset
+          .as_ref()
+          .map(|asset| asset.offers().to_vec())
+          .unwrap_or_default();
+
+        let dataset = asset
+          .as_ref()
+          .map(AssetItem::from)
+          .map(DataspaceDataset::from);
+
+        (dataset, offers)
       } else {
-        None
+        (None, vec![])
       }
     },
   )?;
 
-  let catalog_dataset = (*catalog_dataset).clone();
+  let (catalog_dataset, policies) = (*catalog_dataset).clone();
 
   let selected_offer = use_state_eq(|| None);
   let signing = use_state(|| false);
@@ -136,7 +143,7 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
       {
         let originator = originator.clone();
         let provider_id = provider_id.clone();
-        let asset_id = catalog_dataset.0.to_string();
+        let asset_id = catalog_dataset.id.to_string();
 
         signing_setter.set(true);
         let signing_setter = signing_setter.clone();
@@ -240,12 +247,6 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
   );
 
   if let Some(catalog_dataset) = catalog_dataset {
-    let provider_id = props.provider_id.clone();
-    let asset_id = catalog_dataset.0.clone();
-    let asset_name = catalog_dataset.1.clone();
-    let policies = catalog_dataset.2;
-    let description = catalog_dataset.3;
-    let creator = catalog_dataset.4;
     let disabled = *signing;
 
     let offers = policies
@@ -280,28 +281,10 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
 
     let disabled = selected_offer.is_none() || *signing;
 
-    let details = description
-      .map(|value| html!(<DescriptionGroup term="Description">{ value }</DescriptionGroup>))
-      .unwrap_or_default();
-
-    let provider = creator
-      .map(|value| {
-        html!(
-          <>
-            <DescriptionGroup term="Provider">{ value.name }</DescriptionGroup>
-            <DescriptionGroup term="Provider ID">{ provider_id }</DescriptionGroup>
-          </>
-        )
-      })
-      .unwrap_or_default();
-
     Ok(html!(
       <>
+        <DatasetCard dataset={catalog_dataset} />
         <DescriptionList>
-          { provider }
-          <DescriptionGroup term="Asset ID">{ asset_id }</DescriptionGroup>
-          <DescriptionGroup term="Asset Name">{ asset_name }</DescriptionGroup>
-          { details }
           <DescriptionGroup term="Offers">
             <Gallery gutter=true>{ for offers }</Gallery>
           </DescriptionGroup>

@@ -13,6 +13,10 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct OfferPageProps {
+  #[prop_or("List Offers".to_string())]
+  pub title: String,
+  #[prop_or(Some("Review and verify your active data offerings exactly as they are displayed to external participants searching the network.".to_string()))]
+  pub tag_line: Option<String>,
   pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
   pub on_new_asset: Callback<()>,
   pub on_new_policy: Callback<()>,
@@ -31,7 +35,6 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
   let refresh = use_state(|| 0usize);
   let offset = use_state(|| 0usize);
   let limit = use_state(|| 10usize);
-  let path = web_sys::window().unwrap().location().pathname().unwrap();
 
   let on_offset = use_callback(
     (refresh.clone(), offset.setter()),
@@ -83,24 +86,17 @@ pub fn OfferPage(props: &OfferPageProps) -> Html {
     (html!(), props.search.clone())
   };
 
-  let sub_title = if path.contains("participant") {
-    String::from("Data offerings available from the selected participant: ")
-      + &*props.participant_did.clone()
-  } else {
-    String::from(
-      "Review and verify your active data offerings exactly as they are displayed to external participants searching the network.",
-    )
-  };
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
 
   html!(
     <Stack gutter=true>
       <StackItem>
-        <Split gutter=true>
-          <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "List Offers" }</Title>
-            <p>{ sub_title }</p>
-          </SplitItem>
-        </Split>
+        <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+        { tag_line }
       </StackItem>
       { search_component }
       <StackItem>

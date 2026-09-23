@@ -10,6 +10,12 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct PolicyPageProps {
+  #[prop_or("List Policies".to_string())]
+  pub title: String,
+  #[prop_or(Some("A policy consists of one or more rules. The policy is then bound to an asset during the creation of the contract definition.".to_string()))]
+  pub tag_line: Option<String>,
+  #[prop_or("Create a Policy".to_string())]
+  pub create_title: String,
   pub on_new_policy: Callback<()>,
   pub onshow: Callback<String>,
 }
@@ -62,19 +68,23 @@ pub fn PolicyPage(props: &PolicyPageProps) -> Html {
     on_new_policy.emit(());
   });
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "List Policies" }</Title>
-            <p>
-              { "A policy consists of one or more rules. The policy is then bound to an asset during the creation of the contract definition." }
-            </p>
+            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+            { tag_line }
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>
-              { "Create a Policy" }
+              { &props.create_title }
             </Button>
           </SplitItem>
         </Split>

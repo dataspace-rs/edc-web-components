@@ -10,8 +10,8 @@ use yew::prelude::*;
 pub struct FederatedCatalogPageProps {
   #[prop_or("Catalog".to_string())]
   pub title: String,
-  #[prop_or("Explore and access available data offers from your list of trusted and followed participants.".to_string())]
-  pub description: String,
+  #[prop_or(Some("Explore and access available data offers from your list of trusted and followed participants.".to_string()))]
+  pub tag_line: Option<String>,
   pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
   #[prop_or_default]
   pub on_manage_catalog: Option<Callback<()>>,
@@ -66,15 +66,17 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
     (html!(), props.search.clone())
   };
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
-        <Split gutter=true>
-          <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
-            <p>{ &props.description }</p>
-          </SplitItem>
-        </Split>
+        <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+        { tag_line }
       </StackItem>
       { search_component }
       <StackItem>

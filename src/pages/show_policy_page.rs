@@ -6,15 +6,26 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowPolicyPageProps {
+  #[prop_or("Policy".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
   pub policy_id: String,
 }
 
 #[component]
 pub fn ShowPolicyPage(props: &ShowPolicyPageProps) -> Html {
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Policy" }</Title>
-      <Suspense fallback="Loading ...">
+      <Title level={Level::H2} size={Size::XXXLarge}>{ &props.title }</Title>
+      { tag_line }
+      <Suspense fallback={html! {<Bullseye><Spinner /></Bullseye>}}>
         <ShowPolicyPageInner policy_id={props.policy_id.clone()} />
       </Suspense>
     </>

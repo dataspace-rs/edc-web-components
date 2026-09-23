@@ -11,6 +11,12 @@ use yew::suspense::use_future_with;
 pub struct AssetPageProps {
   pub on_new_asset: Callback<()>,
   pub onshow: Callback<String>,
+  #[prop_or("List Assets".to_string())]
+  pub title: String,
+  #[prop_or(Some("The data you hold, before any of it is offered.".to_string()))]
+  pub tag_line: Option<String>,
+  #[prop_or("Create an CEL Expression".to_string())]
+  pub create_title: String,
 }
 
 #[component]
@@ -39,17 +45,23 @@ pub fn AssetPage(props: &AssetPageProps) -> Html {
     on_new_asset.emit(());
   });
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "List Assets" }</Title>
-            <p>{ "The data you hold, before any of it is offered." }</p>
+            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+            { tag_line }
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>
-              { "Create an Asset" }
+              { &props.create_title }
             </Button>
           </SplitItem>
         </Split>

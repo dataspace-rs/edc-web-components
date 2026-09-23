@@ -6,15 +6,26 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowVerifiableCredentialPageProps {
+  #[prop_or("Verifiable Credential".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
   pub verifiable_credential_id: String,
 }
 
 #[component]
 pub fn ShowVerifiableCredentialPage(props: &ShowVerifiableCredentialPageProps) -> Html {
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Verifiable Credential" }</Title>
-      <Suspense fallback="Loading ...">
+      <Title level={Level::H2} size={Size::XXXLarge}>{ &props.title }</Title>
+      { tag_line }
+      <Suspense fallback={html! {<Bullseye><Spinner /></Bullseye>}}>
         <ShowVerifiableCredentialPageInner
           verifiable_credential_id={props.verifiable_credential_id.clone()}
         />

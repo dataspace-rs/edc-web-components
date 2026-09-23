@@ -11,6 +11,10 @@ use yew::suspense::use_future_with;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ContractNegotiationPageProps {
   pub on_show_contract_negotiation: Callback<String>,
+  #[prop_or("List Contract Negotiations".to_string())]
+  pub title: String,
+  #[prop_or(Some("A contract negotiation represents the active, multi-step process between two parties to agree on data sharing terms.".to_string()))]
+  pub tag_line: Option<String>,
 }
 
 #[component]
@@ -77,17 +81,17 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
     </Bullseye>
   };
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
-        <Split gutter=true>
-          <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "List Contract Negotiations" }</Title>
-            <p>
-              { "A contract negotiation represents the active, multi-step process between two parties to agree on data sharing terms." }
-            </p>
-          </SplitItem>
-        </Split>
+        <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+        { tag_line }
       </StackItem>
       <StackItem>
         <Suspense {fallback}>

@@ -8,6 +8,10 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct ShowContractAgreementPageProps {
+  #[prop_or("Contract Agreement".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
   pub contract_agreement_id: String,
   #[prop_or_default]
   pub on_initiate_transfer_process: Option<Callback<ContractAgreement>>,
@@ -15,10 +19,17 @@ pub struct ShowContractAgreementPageProps {
 
 #[component]
 pub fn ShowContractAgreementPage(props: &ShowContractAgreementPageProps) -> Html {
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Contract Agreement" }</Title>
-      <Suspense fallback="Loading ...">
+      <Title level={Level::H2} size={Size::XXXLarge}>{ &props.title }</Title>
+      { tag_line }
+      <Suspense fallback={html! {<Bullseye><Spinner /></Bullseye>}}>
         <ShowContractAgreementPageInner
           contract_agreement_id={props.contract_agreement_id.clone()}
           on_initiate_transfer_process={props.on_initiate_transfer_process.clone()}

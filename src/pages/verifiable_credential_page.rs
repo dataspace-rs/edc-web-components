@@ -8,6 +8,12 @@ use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct VerifiableCredentialPageProps {
+  #[prop_or("My Wallet".to_string())]
+  pub title: String,
+  #[prop_or(None)]
+  pub tag_line: Option<String>,
+  #[prop_or("Request a Verifiable Credential".to_string())]
+  pub create_title: String,
   pub on_new_verifiable_credential: Callback<()>,
   pub onshow: Callback<String>,
 }
@@ -53,16 +59,23 @@ pub fn VerifiableCredentialPage(props: &VerifiableCredentialPageProps) -> Html {
     },
   );
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "My Wallet" }</Title>
+            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+            { tag_line }
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>
-              { "Request a Verifiable Credential" }
+              { &props.create_title }
             </Button>
           </SplitItem>
         </Split>

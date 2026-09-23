@@ -15,7 +15,7 @@ pub struct CelAtomicConstraintEditProps {
 #[component]
 pub fn CelAtomicConstraintEdit(props: &CelAtomicConstraintEditProps) -> Html {
   html!(
-    <Suspense fallback="Loading...">
+    <Suspense fallback={html! {<Bullseye><Spinner size={SpinnerSize::Sm} /></Bullseye>}}>
       <CelSelector
         cel_left_operand={props.cel_left_operand.clone()}
         on_change={props.on_change.clone()}

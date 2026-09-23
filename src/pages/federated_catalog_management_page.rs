@@ -11,6 +11,10 @@ use yew_oauth2::hook::use_latest_access_token;
 pub struct ListFederatedCatalogParticipantsProps {
   #[prop_or_default]
   pub on_show_offer: Option<Callback<FederatedCatalogParticipant>>,
+  #[prop_or("Federated Catalog Participants".to_string())]
+  pub title: String,
+  #[prop_or(Some("Manage your followed participants, discover their latest data catalogs, and control your active catalog subscriptions.".to_string()))]
+  pub tag_line: Option<String>,
 }
 
 #[component]
@@ -45,17 +49,19 @@ pub fn FederatedCatalogManagementPage(props: &ListFederatedCatalogParticipantsPr
     refresh.set(**refresh + 1);
   });
 
+  let tag_line = props
+    .tag_line
+    .as_ref()
+    .map(|tag_line| html!(<p>{ tag_line }</p>))
+    .unwrap_or_default();
+
   html!(
     <Stack gutter=true>
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>
-              { "Federated Catalog Participants" }
-            </Title>
-            <p>
-              { "Manage your followed participants, discover their latest data catalogs, and control your active catalog subscriptions." }
-            </p>
+            <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
+            { tag_line }
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>{ "Add" }</Button>
