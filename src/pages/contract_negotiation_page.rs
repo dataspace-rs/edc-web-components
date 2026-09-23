@@ -1,9 +1,10 @@
 use crate::components::ListContractNegotiations;
 use crate::contexts::use_edc_connector_context;
-use crate::models::ContractNegotiationItem;
+use crate::models::{ConsumerProvider, ContractNegotiationItem};
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::query::{Query, SortOrder};
 use patternfly_yew::prelude::*;
+use std::collections::HashSet;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
 
@@ -17,7 +18,7 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
   let refresh = use_state(|| 0usize);
   let offset = use_state(|| 0usize);
   let limit = use_state(|| 10usize);
-  let switch_view_consumer = use_state(|| false);
+  let consumer_provider = use_state(HashSet::default);
   let statuses = use_state(|| {
     vec![
       ("Initial".to_string(), false),
@@ -54,10 +55,10 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
     },
   );
 
-  let on_switch_view_consumer = use_callback(
-    (refresh.clone(), switch_view_consumer.setter()),
-    |switch, (refresh, switch_setter)| {
-      switch_setter.set(switch);
+  let on_consumer_provider = use_callback(
+    (refresh.clone(), consumer_provider.setter()),
+    |consumer_provider, (refresh, consumer_provider_setter)| {
+      consumer_provider_setter.set(consumer_provider);
       refresh.set(**refresh + 1);
     },
   );
@@ -93,14 +94,14 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
           <ContractNegotiationPageInner
             offset={*offset}
             limit={*limit}
-            switch_view_consumer={*switch_view_consumer}
             statuses={(*statuses).clone()}
             {on_offset}
             {on_limit}
-            {on_switch_view_consumer}
             {on_statuses}
             force_refresh={*refresh}
             on_show_contract_negotiation={props.on_show_contract_negotiation.clone()}
+            consumer_provider={(*consumer_provider).clone()}
+            {on_consumer_provider}
           />
         </Suspense>
       </StackItem>
@@ -112,19 +113,18 @@ pub fn ContractNegotiationPage(props: &ContractNegotiationPageProps) -> Html {
 pub struct ContractNegotiationPageInnerProps {
   pub offset: usize,
   pub limit: usize,
-  pub switch_view_consumer: bool,
   #[prop_or_default]
   pub statuses: Vec<(String, bool)>,
   pub on_offset: Callback<usize>,
   pub on_limit: Callback<usize>,
-  pub on_switch_view_consumer: Callback<bool>,
   pub on_statuses: Callback<Vec<(String, bool)>>,
   pub force_refresh: usize,
   pub on_show_contract_negotiation: Callback<String>,
   #[prop_or(true)]
   pub show_status_selector: bool,
-  #[prop_or(true)]
-  pub show_consumer_provider_switch: bool,
+  #[prop_or_default]
+  pub consumer_provider: HashSet<ConsumerProvider>,
+  pub on_consumer_provider: Callback<HashSet<ConsumerProvider>>,
 }
 
 #[component]
@@ -136,26 +136,25 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
       edc_connector_context,
       props.limit,
       props.offset,
-      props.switch_view_consumer,
+      props.consumer_provider.clone(),
       props.statuses.clone(),
       props.force_refresh,
     ),
     |parameters| async move {
-      let (edc_connector_context, limit, offset, switch_view_consumer, statuses, _) =
+      let (edc_connector_context, limit, offset, consumer_provider, statuses, _) =
         (*parameters).clone();
 
-      let query_builder = Query::builder()
-        .limit(limit as u32)
-        .offset(offset as u32)
-        .filter(
-          "type",
-          "=",
-          if switch_view_consumer {
-            "CONSUMER"
-          } else {
-            "PROVIDER"
-          },
-        );
+      let query_builder = Query::builder().limit(limit as u32).offset(offset as u32);
+
+      let query_builder = match (
+        consumer_provider.contains(&ConsumerProvider::Consumer),
+        consumer_provider.contains(&ConsumerProvider::Provider),
+      ) {
+        (true, true) => query_builder,
+        (true, false) => query_builder.filter("type", "=", "CONSUMER"),
+        (false, true) => query_builder.filter("type", "=", "PROVIDER"),
+        (false, false) => query_builder,
+      };
 
       let query_builder = if statuses.iter().all(|(_, selected)| *selected)
         || statuses.iter().all(|(_, selected)| !*selected)
@@ -200,15 +199,14 @@ pub fn ContractNegotiationPageInner(props: &ContractNegotiationPageInnerProps) -
       contract_negotiation_items={contract_negotiation_items}
       offset={props.offset}
       limit={props.limit}
-      switch={props.switch_view_consumer}
       statuses={props.statuses.clone()}
       on_offset={props.on_offset.clone()}
       on_limit={props.on_limit.clone()}
-      on_switch_view_consumer={props.on_switch_view_consumer.clone()}
       on_show_contract_negotiation={props.on_show_contract_negotiation.clone()}
       on_statuses={props.on_statuses.clone()}
       show_status_selector={props.show_status_selector}
-      show_consumer_provider_switch={props.show_consumer_provider_switch}
+      consumer_provider={props.consumer_provider.clone()}
+      on_consumer_provider={props.on_consumer_provider.clone()}
     />
   ))
 }

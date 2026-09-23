@@ -40,7 +40,7 @@ pub fn TransferProcessPage(props: &TransferProcessPageProps) -> Html {
   html!(
     <Stack gutter=true>
       <StackItem>
-        <Title level={Level::H3} size={Size::XXLarge}>{ "List Transfer Processes" }</Title>
+        <Title level={Level::H3} size={Size::XXLarge}>{ "Transfers" }</Title>
       </StackItem>
       <StackItem>
         <Suspense>

@@ -1,4 +1,4 @@
-use crate::components::TransferProcessStatus;
+use crate::components::{AssetReference, ContractAgreementReference, TransferProcessStatus};
 use crate::contexts::use_edc_connector_context;
 use edc_connector_client::types::transfer_process::TransferProcessState;
 use patternfly_yew::prelude::*;
@@ -17,7 +17,7 @@ pub struct ShowTransferProcessPageProps {
 pub fn ShowTransferProcessPage(props: &ShowTransferProcessPageProps) -> Html {
   html!(
     <>
-      <Title level={Level::H2} size={Size::XXXLarge}>{ "Transfer Process" }</Title>
+      <Title level={Level::H2} size={Size::XXXLarge}>{ "Transfer" }</Title>
       <Suspense fallback="Loading ...">
         <ShowTransferProcessPageInner transfer_process_id={props.transfer_process_id.clone()} />
       </Suspense>
@@ -215,13 +215,17 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
         <StackItem>
           <DescriptionList mode={[DescriptionListMode::Horizontal]}>
             <DescriptionGroup term="Id">{ transfer_process.id() }</DescriptionGroup>
-            <DescriptionGroup term="Contract Agreement Id">
-              { transfer_process.contract_id() }
+            <DescriptionGroup term="Contract Agreement">
+              <ContractAgreementReference
+                contract_agreement_id={transfer_process.contract_id().to_string()}
+              />
             </DescriptionGroup>
-            <DescriptionGroup term="Correlation Transfer Process ID">
+            <DescriptionGroup term="Correlation Transfer ID">
               { transfer_process.correlation_id() }
             </DescriptionGroup>
-            <DescriptionGroup term="Asset ID">{ transfer_process.asset_id() }</DescriptionGroup>
+            <DescriptionGroup term="Asset">
+              <AssetReference asset_id={transfer_process.asset_id().to_string()} />
+            </DescriptionGroup>
             <DescriptionGroup term="Transfer Type">
               { transfer_process.transfer_type() }
             </DescriptionGroup>

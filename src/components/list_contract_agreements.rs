@@ -1,4 +1,5 @@
-use crate::components::{AssetReference, DidLabel, PolicyReference};
+use crate::components::show_policy_reference::ShowPolicyReference;
+use crate::components::{AssetReference, DidLabel};
 use crate::models::ContractAgreementItem;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
@@ -12,10 +13,6 @@ pub struct ListContractAgreementsProps {
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
   pub onshow: Callback<String>,
-  #[prop_or_default]
-  pub on_asset_click: Callback<String>,
-  #[prop_or_default]
-  pub on_policy_click: Callback<String>,
 }
 
 #[component]
@@ -58,8 +55,6 @@ pub fn ListContractAgreements(props: &ListContractAgreementsProps) -> Html {
     .map(|contract_agreement_item| ContractAgreementItemRenderer {
       item: contract_agreement_item.clone(),
       onshow: props.onshow.clone(),
-      on_asset_click: props.on_asset_click.clone(),
-      on_policy_click: props.on_policy_click.clone(),
     })
     .collect();
 
@@ -103,8 +98,6 @@ enum Columns {
 struct ContractAgreementItemRenderer {
   item: ContractAgreementItem,
   onshow: Callback<String>,
-  on_asset_click: Callback<String>,
-  on_policy_click: Callback<String>,
 }
 
 impl ContractAgreementItemRenderer {}
@@ -115,24 +108,8 @@ impl TableEntryRenderer<Columns> for ContractAgreementItemRenderer {
       Columns::ContractSigningDate => html!(self.item.signing_date.to_string()),
       Columns::Consumer => html! { <DidLabel did={self.item.consumer_id.to_string()} /> },
       Columns::Provider => html! { <DidLabel did={self.item.provider_id.to_string()} /> },
-      Columns::Asset => {
-        let asset_id = self.item.asset_id.to_string();
-        html!(
-          <AssetReference
-            asset_id={self.item.asset_id.to_string()}
-            on_click={self.on_asset_click.reform(move |_| asset_id.clone())}
-          />
-        )
-      }
-      Columns::Policy => {
-        let policy_id = self.item.asset_id.to_string();
-        html!(
-          <PolicyReference
-            policy_id={self.item.policy_id.to_string()}
-            on_click={self.on_policy_click.reform(move |_| policy_id.clone())}
-          />
-        )
-      }
+      Columns::Asset => html!(<AssetReference asset_id={self.item.asset_id.to_string()} />),
+      Columns::Policy => html!(<ShowPolicyReference policy={self.item.policy.clone()} />),
       Columns::Action => {
         let id = self.item.id.clone();
         html!(

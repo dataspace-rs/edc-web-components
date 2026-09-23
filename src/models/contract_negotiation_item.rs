@@ -7,6 +7,7 @@ pub struct ContractNegotiationItem {
   pub state: String,
   pub contract_agreement_id: String,
   pub counter_party_id: String,
+  pub asset_id: String,
   pub counter_party_address: String,
   pub protocol: String,
   pub kind: String,
@@ -27,6 +28,8 @@ impl From<ContractNegotiation> for ContractNegotiationItem {
       .clone()
       .unwrap_or_default();
 
+    let asset_id = contract_negotiation.asset_id().clone().unwrap_or_default();
+
     let counter_party_address = contract_negotiation.counter_party_address().to_string();
     let protocol = contract_negotiation.protocol().to_string();
     let kind = ContractNegotiationKind::from(contract_negotiation.kind()).to_string();
@@ -36,6 +39,7 @@ impl From<ContractNegotiation> for ContractNegotiationItem {
       state,
       contract_agreement_id,
       counter_party_id,
+      asset_id,
       counter_party_address,
       protocol,
       kind,

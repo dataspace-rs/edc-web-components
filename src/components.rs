@@ -1,5 +1,6 @@
 mod asset_reference;
 mod asset_selector;
+mod contract_agreement_reference;
 mod contract_negotiation_status;
 mod contraint_renderer;
 mod create_asset;
@@ -33,12 +34,14 @@ mod request_verifiable_credential;
 mod review_contract_negotiation;
 mod show_data_plane;
 mod show_policy;
+mod show_policy_reference;
 mod simple_or_id_field;
 mod string_list_edit;
 mod transfer_process_status;
 
 pub use asset_reference::*;
 pub use asset_selector::*;
+pub use contract_agreement_reference::*;
 pub use contract_negotiation_status::*;
 pub use contraint_renderer::*;
 pub use create_asset::*;

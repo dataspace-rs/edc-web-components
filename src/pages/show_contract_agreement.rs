@@ -1,6 +1,6 @@
-use crate::components::DidLabel;
-use crate::contexts::use_edc_connector_context;
-use crate::models::ContractAgreementItem;
+use crate::components::{AssetReference, DatasetCard, DidLabel, ShowPolicy};
+use crate::contexts::{use_edc_connector_context, use_edc_federated_catalog_assets_context};
+use crate::models::{AssetItem, ContractAgreementItem, DataspaceDataset};
 use edc_connector_client::types::contract_agreement::ContractAgreement;
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
@@ -31,28 +31,52 @@ pub fn ShowContractAgreementPage(props: &ShowContractAgreementPageProps) -> Html
 #[component]
 pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) -> HtmlResult {
   let edc_connector_client = use_edc_connector_context();
+  let edc_federated_catalog_assets_context = use_edc_federated_catalog_assets_context();
 
-  let contract_agreement = use_future_with(
+  let contract_agreement_and_asset = use_future_with(
     (
       props.contract_agreement_id.clone(),
       edc_connector_client.clone(),
+      edc_federated_catalog_assets_context.clone(),
     ),
     |properties| async move {
-      let (contract_agreement_id, edc_connector_client) = (*properties).clone();
+      let (contract_agreement_id, edc_connector_client, edc_federated_catalog_assets_context) =
+        (*properties).clone();
 
       if let Some(client) = edc_connector_client.get_client() {
-        client
+        let contract_agreement = client
           .contract_agreements(edc_connector_client::EdcConnectorApiVersion::V4)
           .get(&contract_agreement_id)
           .await
-          .ok()
+          .ok();
+
+        if let Some(contract_agreement) = contract_agreement {
+          let asset = if let Some(edc_federated_catalog_assets_context) =
+            edc_federated_catalog_assets_context
+            && let Some(asset_item) =
+              edc_federated_catalog_assets_context.asset(contract_agreement.asset_id())
+          {
+            Some(asset_item.clone())
+          } else {
+            client
+              .assets(edc_connector_client::EdcConnectorApiVersion::V4)
+              .get(contract_agreement.asset_id())
+              .await
+              .ok()
+              .map(AssetItem::from)
+          };
+
+          (Some(contract_agreement), asset)
+        } else {
+          (None, None)
+        }
       } else {
-        None
+        (None, None)
       }
     },
   )?;
 
-  let contract_agreement = (*contract_agreement).clone();
+  let (contract_agreement, asset_item) = (*contract_agreement_and_asset).clone();
 
   if let Some(contract_agreement) = contract_agreement {
     let contract_agreement_item = ContractAgreementItem::from(contract_agreement.clone());
@@ -71,6 +95,14 @@ pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) ->
         html!()
       };
 
+    let asset = if let Some(asset_item) = asset_item {
+      let dataset = DataspaceDataset::from(asset_item.clone());
+
+      html!(<DatasetCard {dataset} />)
+    } else {
+      html!(<AssetReference asset_id={contract_agreement_item.asset_id} />)
+    };
+
     Ok(html!(
       <Stack gutter=true>
         <StackItem>
@@ -85,8 +117,14 @@ pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) ->
             <DescriptionGroup term="Provider">
               <DidLabel did={contract_agreement_item.provider_id} />
             </DescriptionGroup>
-            <DescriptionGroup term="Asset">{ contract_agreement_item.asset_id }</DescriptionGroup>
-            <DescriptionGroup term="Policy">{ contract_agreement_item.policy_id }</DescriptionGroup>
+            <DescriptionGroup term="Asset">{ asset }</DescriptionGroup>
+            <DescriptionGroup term="Policy">
+              <Card>
+                <CardBody>
+                  <ShowPolicy policy={contract_agreement_item.policy} />
+                </CardBody>
+              </Card>
+            </DescriptionGroup>
           </DescriptionList>
         </StackItem>
         <StackItem>{ initiate_transfer_process }</StackItem>

@@ -1,4 +1,4 @@
-use crate::contexts::use_edc_connector_context;
+use crate::contexts::{RedirectionAction, use_edc_connector_context, use_redirection_context};
 use crate::models::PolicyDefinitionItem;
 use edc_connector_client::EdcConnectorApiVersion;
 use patternfly_yew::prelude::*;
@@ -8,14 +8,13 @@ use yew::suspense::use_future_with;
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct PolicyReferenceProps {
   pub policy_id: String,
-  pub on_click: Callback<()>,
 }
 
 #[component]
 pub fn PolicyReference(props: &PolicyReferenceProps) -> Html {
   html! {
     <Suspense fallback={html! {<Bullseye><Spinner size={SpinnerSize::Sm} /></Bullseye>}}>
-      <PolicyReferenceInner policy_id={props.policy_id.clone()} on_click={props.on_click.clone()} />
+      <PolicyReferenceInner policy_id={props.policy_id.clone()} />
     </Suspense>
   }
 }
@@ -23,6 +22,7 @@ pub fn PolicyReference(props: &PolicyReferenceProps) -> Html {
 #[component]
 pub fn PolicyReferenceInner(props: &PolicyReferenceProps) -> HtmlResult {
   let edc_connector_context = use_edc_connector_context();
+  let redirection_context = use_redirection_context();
 
   let policy = use_future_with(
     (props.policy_id.clone(), edc_connector_context.clone()),
@@ -47,12 +47,27 @@ pub fn PolicyReferenceInner(props: &PolicyReferenceProps) -> HtmlResult {
   let label = if let Some(policy) = policy {
     policy.name
   } else {
-    props.policy_id.clone()
+    "Policy".to_string()
   };
 
+  let onclick = redirection_context
+    .map(|redirection_context| {
+      let policy_id = props.policy_id.clone();
+
+      redirection_context
+        .redirect_to()
+        .reform(move |_| RedirectionAction::Policy(policy_id.clone()))
+    })
+    .unwrap_or_default();
+
   Ok(html!(
-    <Button variant={ButtonVariant::InlineLink} onclick={props.on_click.reform(|_| ())}>
-      { label }
+    <Button variant={ButtonVariant::InlineLink} {onclick}>
+      <Flex>
+        <FlexItem modifiers={[FlexModifier::Align(Alignment::Center).all()]}>
+          <yew_icons::Icon data={yew_icons::IconData::LUCIDE_SHIELD} />
+        </FlexItem>
+        <FlexItem modifiers={[FlexModifier::Align(Alignment::Center).all()]}>{ label }</FlexItem>
+      </Flex>
     </Button>
   ))
 }

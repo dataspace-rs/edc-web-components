@@ -58,7 +58,7 @@ pub fn VerifiableCredentialPage(props: &VerifiableCredentialPageProps) -> Html {
       <StackItem>
         <Split gutter=true>
           <SplitItem fill=true>
-            <Title level={Level::H3} size={Size::XXLarge}>{ "Verifiable Credentials" }</Title>
+            <Title level={Level::H3} size={Size::XXLarge}>{ "My Wallet" }</Title>
           </SplitItem>
           <SplitItem>
             <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>

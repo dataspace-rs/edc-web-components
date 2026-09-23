@@ -1,3 +1,4 @@
+use crate::components::{AssetReference, ContractAgreementReference};
 use crate::models::TransferProcessItem;
 use patternfly_yew::prelude::*;
 use std::rc::Rc;
@@ -18,9 +19,8 @@ pub fn ListTransferProcesses(props: &ListTransferProcessesProps) -> Html {
   let header = html_nested! {
     <TableHeader<Columns>>
       <TableColumn<Columns> label="State" index={Columns::State} />
-      <TableColumn<Columns> label="Asset ID" index={Columns::AssetId} />
-      <TableColumn<Columns> label="Contract ID" index={Columns::ContractId} />
-      <TableColumn<Columns> label="Transfer Type" index={Columns::TransferType} />
+      <TableColumn<Columns> label="Asset" index={Columns::Asset} />
+      <TableColumn<Columns> label="Contract Agreement" index={Columns::ContractAgreement} />
       <TableColumn<Columns> label="Kind" index={Columns::Kind} />
       <TableColumn<Columns> label="" index={Columns::Actions} />
     </TableHeader<Columns>>
@@ -84,9 +84,8 @@ pub fn ListTransferProcesses(props: &ListTransferProcessesProps) -> Html {
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Columns {
   State,
-  AssetId,
-  ContractId,
-  TransferType,
+  Asset,
+  ContractAgreement,
   Kind,
   Actions,
 }
@@ -107,9 +106,10 @@ impl TableEntryRenderer<Columns> for ListTransferProcessRenderer {
 
         html!(<Label {color} label={self.0.state.to_string()} />)
       }
-      Columns::AssetId => html!(self.0.asset_id.to_string()),
-      Columns::ContractId => html! { self.0.contract_id.to_string() },
-      Columns::TransferType => html!(self.0.transfer_type.to_string()),
+      Columns::Asset => html!(<AssetReference asset_id={self.0.asset_id.to_string()} />),
+      Columns::ContractAgreement => html!(
+        <ContractAgreementReference contract_agreement_id={self.0.contract_id.to_string()} />
+      ),
       Columns::Kind => html!(self.0.kind.to_string()),
       Columns::Actions => {
         let id = self.0.id.clone();

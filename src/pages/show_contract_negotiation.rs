@@ -1,4 +1,6 @@
-use crate::components::ContractNegotiationStatus;
+use crate::components::{
+  AssetReference, ContractAgreementReference, ContractNegotiationStatus, DidLabel,
+};
 use crate::contexts::use_edc_connector_context;
 #[cfg(feature = "contract-negotiation-review")]
 use edc_connector_client::types::contract_negotiation::{
@@ -69,24 +71,16 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
   let contract_negotiation = (*contract_negotiation).clone();
 
   if let Some(contract_negotiation) = contract_negotiation {
-    let contract_agreement =
-      if let Some(contract_agreement_id) = contract_negotiation.contract_agreement_id() {
-        let onclick = {
-          let contract_agreement_id = contract_agreement_id.clone();
-
-          props
-            .on_contract_agreement_click
-            .reform(move |_| contract_agreement_id.clone())
-        };
-
+    let contract_agreement = contract_negotiation
+      .contract_agreement_id()
+      .map(|contract_agreement_id| {
         html!(
-          <DescriptionGroup term="Contract Agreement Id">
-            <Button variant={ButtonVariant::InlineLink} {onclick}>{ contract_agreement_id }</Button>
+          <DescriptionGroup term="Contract Agreement">
+            <ContractAgreementReference contract_agreement_id={contract_agreement_id.clone()} />
           </DescriptionGroup>
         )
-      } else {
-        html!()
-      };
+      })
+      .unwrap_or_default();
 
     let state =
       Some(crate::models::ContractNegotiationState::from(contract_negotiation.state()).to_string())
@@ -132,12 +126,17 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
         <StackItem>
           <DescriptionList mode={[DescriptionListMode::Horizontal]}>
             <DescriptionGroup term="Id">{ contract_negotiation.id() }</DescriptionGroup>
+            <DescriptionGroup term="Counter Party">
+              <DidLabel did={contract_negotiation.counter_party_id().clone().unwrap_or_default()} />
+            </DescriptionGroup>
+            <DescriptionGroup term="Asset">
+              <AssetReference
+                asset_id={contract_negotiation.asset_id().clone().unwrap_or_default()}
+              />
+            </DescriptionGroup>
             { state }
             <DescriptionGroup term="Kind">{ kind }</DescriptionGroup>
             { contract_agreement }
-            <DescriptionGroup term="Counter Party ID">
-              { contract_negotiation.counter_party_id().clone().unwrap_or_default() }
-            </DescriptionGroup>
           </DescriptionList>
         </StackItem>
         <StackItem>

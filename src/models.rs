@@ -1,5 +1,6 @@
 mod asset_item;
 mod common_expression_language_item;
+mod consumer_provider;
 mod contract_agreement_item;
 mod contract_definition_item;
 mod contract_negotiation_item;
@@ -19,6 +20,7 @@ mod verifiable_credential;
 
 pub use asset_item::*;
 pub use common_expression_language_item::*;
+pub use consumer_provider::*;
 pub use contract_agreement_item::*;
 pub use contract_definition_item::*;
 pub use contract_negotiation_item::*;

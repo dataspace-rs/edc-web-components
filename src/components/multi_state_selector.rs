@@ -5,6 +5,10 @@ use yew::prelude::*;
 pub struct MultiStateSelectorProps {
   pub selectable_items: Vec<(String, bool)>,
   pub on_selected: Callback<Vec<(String, bool)>>,
+  #[prop_or("All".to_string())]
+  pub none_selected_label: String,
+  #[prop_or("All".to_string())]
+  pub all_selected_label: String,
 }
 
 #[component]
@@ -31,13 +35,18 @@ pub fn MultiStateSelector(props: &MultiStateSelectorProps) -> Html {
       )
     });
 
-  let text = if props.selectable_items.iter().all(|(_, selected)| *selected)
-    || props
-      .selectable_items
-      .iter()
-      .all(|(_, selected)| !*selected)
-  {
-    "All".to_string()
+  let all_selected = props.selectable_items.iter().all(|(_, selected)| *selected);
+  let none_selected = props
+    .selectable_items
+    .iter()
+    .all(|(_, selected)| !*selected);
+
+  let text = if all_selected || none_selected {
+    if none_selected {
+      props.none_selected_label.clone()
+    } else {
+      props.all_selected_label.clone()
+    }
   } else {
     props
       .selectable_items

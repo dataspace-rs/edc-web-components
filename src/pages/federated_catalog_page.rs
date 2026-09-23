@@ -1,10 +1,10 @@
 use crate::components::{ListAssetsGallery, SelectedFederatedCatalogOffer};
-use crate::models::AssetItem;
-use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
+use crate::contexts::{
+  EdcFederatedCatalogAssetsContextProvider, EdcFederatedCatalogAssetsFetcher,
+  use_edc_federated_catalog_assets_context,
+};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
-use yew::suspense::use_future_with;
-use yew_oauth2::hook::use_latest_access_token;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct FederatedCatalogPageProps {
@@ -78,18 +78,22 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
       </StackItem>
       { search_component }
       <StackItem>
-        <Suspense {fallback}>
-          <FederatedCatalogPageInner
-            force_refresh={*refresh}
-            on_selected_offer={props.on_selected_offer.clone()}
-            on_manage_catalog={props.on_manage_catalog.clone()}
-            federated_catalog_endpoint={props.federated_catalog_endpoint.clone()}
-            {search}
-            dcterm_types={props.dcterm_types.clone()}
-            empty_title={props.empty_title.clone()}
-            empty_description={props.empty_description.clone()}
-          />
-        </Suspense>
+        <EdcFederatedCatalogAssetsContextProvider>
+          <Suspense {fallback}>
+            <EdcFederatedCatalogAssetsFetcher
+              federated_catalog_endpoint={props.federated_catalog_endpoint.clone()}
+              force_refresh={*refresh}
+              {search}
+              dcterm_types={props.dcterm_types.clone()}
+            />
+            <FederatedCatalogPageInner
+              on_selected_offer={props.on_selected_offer.clone()}
+              on_manage_catalog={props.on_manage_catalog.clone()}
+              empty_title={props.empty_title.clone()}
+              empty_description={props.empty_description.clone()}
+            />
+          </Suspense>
+        </EdcFederatedCatalogAssetsContextProvider>
       </StackItem>
     </Stack>
   )
@@ -97,16 +101,9 @@ pub fn FederatedCatalogPage(props: &FederatedCatalogPageProps) -> Html {
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct FederatedCatalogPageInnerProps {
-  pub force_refresh: usize,
   pub on_selected_offer: Callback<SelectedFederatedCatalogOffer>,
   #[prop_or_default]
   pub on_manage_catalog: Option<Callback<()>>,
-  #[prop_or("/federated-catalog".to_string())]
-  pub federated_catalog_endpoint: String,
-  #[prop_or_default]
-  pub search: Option<String>,
-  #[prop_or_default]
-  pub dcterm_types: Vec<String>,
   #[prop_or("No such offer".to_string())]
   pub empty_title: String,
   #[prop_or("You may not have registered participants.".to_string())]
@@ -114,60 +111,14 @@ pub struct FederatedCatalogPageInnerProps {
 }
 
 #[component]
-pub fn FederatedCatalogPageInner(props: &FederatedCatalogPageInnerProps) -> HtmlResult {
-  let latest_access_token_context = use_latest_access_token().unwrap();
+pub fn FederatedCatalogPageInner(props: &FederatedCatalogPageInnerProps) -> Html {
+  let edc_federated_catalog_assets_context = use_edc_federated_catalog_assets_context()
+    .expect("EdcFederatedCatalogAssetsContextProvider missing");
 
-  let asset_items = use_future_with(
-    (
-      props.federated_catalog_endpoint.clone(),
-      props.search.clone(),
-      props.dcterm_types.clone(),
-      latest_access_token_context.clone(),
-      props.force_refresh,
-    ),
-    |parameters| async move {
-      let (federated_catalog_endpoint, search, dcterm_types, latest_access_token_context, _) =
-        (*parameters).clone();
-
-      let server_url = web_sys::window().unwrap().location().origin().unwrap();
-      let federated_catalog_client = FederatedCatalogClient::new(
-        reqwest::Client::new(),
-        format!("{server_url}{}", federated_catalog_endpoint),
-        latest_access_token_context.access_token(),
-        FederatedCatalogClientVersion::V4,
-      );
-
-      federated_catalog_client
-        .list_offers()
-        .await
-        .unwrap_or_default()
-        .iter()
-        .flat_map(|federated_catalog_offer| {
-          federated_catalog_offer
-            .dataset
-            .clone()
-            .into_iter()
-            .map(|dataset| {
-              let dataset_id = dataset.id.clone();
-              let asset_item = AssetItem::from(dataset);
-
-              let selected_offer = SelectedFederatedCatalogOffer {
-                originator: federated_catalog_offer.originator.clone(),
-                provider_id: federated_catalog_offer.participant_id.id.clone(),
-                dataset_id,
-              };
-
-              (asset_item, selected_offer)
-            })
-            .filter(|(asset_item, _)| asset_item.is_filtered(&search, &dcterm_types))
-            .collect::<Vec<_>>()
-        })
-        .unzip()
-    },
-  )?;
-
-  let (asset_items, selected_offers): (Vec<AssetItem>, Vec<SelectedFederatedCatalogOffer>) =
-    (*asset_items).clone();
+  let asset_items = edc_federated_catalog_assets_context.asset_items().to_vec();
+  let selected_offers = edc_federated_catalog_assets_context
+    .selected_offers()
+    .to_vec();
 
   let onshow = use_callback(
     (props.on_selected_offer.clone(), selected_offers),
@@ -189,14 +140,14 @@ pub fn FederatedCatalogPageInner(props: &FederatedCatalogPageInnerProps) -> Html
       )
     });
 
-    Ok(html! {
+    html! {
       <EmptyState title={props.empty_title.to_string()} {primary}>
         <div>
           <p>{ &props.empty_description }</p>
         </div>
       </EmptyState>
-    })
+    }
   } else {
-    Ok(html!(<ListAssetsGallery {asset_items} {onshow} />))
+    html!(<ListAssetsGallery {asset_items} {onshow} />)
   }
 }

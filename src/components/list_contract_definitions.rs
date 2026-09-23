@@ -12,10 +12,6 @@ pub struct ListContractDefinitionsProps {
   pub onoffset: Callback<usize>,
   pub onlimit: Callback<usize>,
   pub ondelete: Callback<String>,
-  #[prop_or_default]
-  pub on_policy_click: Callback<String>,
-  #[prop_or_default]
-  pub on_asset_click: Callback<String>,
 }
 
 #[component]
@@ -57,8 +53,6 @@ pub fn ListContractDefinitions(props: &ListContractDefinitionsProps) -> Html {
     .map(|contract_definition_item| ContractDefinitionItemRenderer {
       contract_definition_item: contract_definition_item.clone(),
       ondelete: props.ondelete.clone(),
-      on_policy_click: props.on_policy_click.clone(),
-      on_asset_click: props.on_asset_click.clone(),
     })
     .collect();
 
@@ -101,8 +95,6 @@ enum Columns {
 struct ContractDefinitionItemRenderer {
   contract_definition_item: ContractDefinitionItem,
   ondelete: Callback<String>,
-  on_policy_click: Callback<String>,
-  on_asset_click: Callback<String>,
 }
 
 impl ContractDefinitionItemRenderer {}
@@ -112,33 +104,22 @@ impl TableEntryRenderer<Columns> for ContractDefinitionItemRenderer {
     match context.column {
       Columns::Name => html! { self.contract_definition_item.name.to_string() },
       Columns::AccessPolicy => {
-        let access_policy_id = self.contract_definition_item.access_policy_id.to_string();
         html!(
-          <PolicyReference
-            policy_id={self.contract_definition_item.access_policy_id.to_string()}
-            on_click={self.on_policy_click.reform(move |_| access_policy_id.clone())}
-          />
+          <PolicyReference policy_id={self.contract_definition_item.access_policy_id.to_string()} />
         )
       },
       Columns::ContractPolicy => {
-        let contract_policy_id = self.contract_definition_item.contract_policy_id.to_string();
         html!(
           <PolicyReference
             policy_id={self.contract_definition_item.contract_policy_id.to_string()}
-            on_click={self.on_policy_click.reform(move |_| contract_policy_id.clone())}
           />
         )
       },
       Columns::Assets => {
         let assets = self.contract_definition_item.asset_ids.iter().map(|asset_id| {
-          let asset_id = asset_id.clone();
-
           html_nested!(
             <FlexItem>
-              <AssetReference
-                asset_id={asset_id.clone()}
-                on_click={self.on_asset_click.reform(move |_| asset_id.clone())}
-              />
+              <AssetReference asset_id={asset_id.clone()} />
             </FlexItem>
           )
         });

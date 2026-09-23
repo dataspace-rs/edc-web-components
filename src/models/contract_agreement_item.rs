@@ -1,4 +1,5 @@
 use edc_connector_client::types::contract_agreement::ContractAgreement;
+use edc_connector_client::types::policy::Policy;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ContractAgreementItem {
@@ -7,6 +8,7 @@ pub struct ContractAgreementItem {
   pub consumer_id: String,
   pub provider_id: String,
   pub asset_id: String,
+  pub policy: Policy,
   pub policy_id: String,
 }
 
@@ -33,6 +35,7 @@ impl From<ContractAgreement> for ContractAgreementItem {
       consumer_id,
       provider_id,
       asset_id,
+      policy: contract_agreement.policy().clone(),
       policy_id,
     }
   }
