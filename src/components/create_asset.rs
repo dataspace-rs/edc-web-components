@@ -1,7 +1,7 @@
-use crate::components::one_state_selector::OneStateSelector;
+use crate::components::datasource_selector::DatasourceSelector;
 use crate::components::{DatasetCard, MultiStateSelector, StringListEdit};
 use crate::contexts::use_edc_connector_context;
-use crate::models::{Creator, DataSourceTypes, DataspaceDataset, Thumbnail, datasource_default};
+use crate::models::{Creator, DataspaceDataset, Thumbnail};
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::properties::ToValue;
 use edc_connector_client::types::{asset::NewAsset, data_address::DataAddress};
@@ -20,23 +20,13 @@ pub struct CreateAssetProps {
   pub on_create: Callback<()>,
   #[prop_or_default]
   pub dcterm_types: Option<Vec<(String, String)>>,
-  #[prop_or_default]
-  pub datasource_types: Option<Vec<(String, String)>>,
 }
 
 #[component]
 pub fn CreateAsset(props: &CreateAssetProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
-  let selected_kind_state = use_state(|| {
-    props
-      .datasource_types
-      .as_ref()
-      .unwrap_or(&datasource_default())
-      .iter()
-      .map(|(_, label)| (label.clone(), false))
-      .collect::<Vec<(String, bool)>>()
-  });
+  let selected_kind_state = use_state(String::new);
   let name = use_state(String::new);
   let version = use_state(String::new);
   let description = use_state(String::new);
@@ -77,10 +67,6 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       edc_connector_context.clone(),
       (
         selected_kind_state.clone(),
-        props
-          .datasource_types
-          .clone()
-          .unwrap_or(datasource_default()),
         name.clone(),
         version.clone(),
         description.clone(),
@@ -113,7 +99,6 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
       edc_connector_context,
       (
         selected_kind,
-        kinds,
         name,
         version,
         description,
@@ -170,18 +155,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
         }
       };
 
-      let kind = {
-        let selected_kind = (**selected_kind).clone();
-        let kinds = (*kinds).clone();
-
-        selected_kind
-          .iter()
-          .zip(kinds.iter())
-          .filter(|((_, selected), (_, _))| *selected)
-          .map(|((_, _), (id, _))| id.clone())
-          .next()
-          .unwrap_or(DataSourceTypes::HttpData.to_string())
-      };
+      let kind = (**selected_kind).clone();
 
       let edc_connector_context = edc_connector_context.clone();
       let on_create = on_create.clone();
@@ -464,29 +438,10 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
 
   let on_selected_kind = use_callback(
     selected_kind_state.setter(),
-    |selected_kind: Vec<(String, bool)>, selected_kind_setter| {
+    |selected_kind: String, selected_kind_setter| {
       selected_kind_setter.set(selected_kind);
     },
   );
-
-  let datasource_types = {
-    let selected_kind = (*selected_kind_state).clone();
-
-    let items = props
-      .datasource_types
-      .clone()
-      .unwrap_or(datasource_default())
-      .iter()
-      .zip(selected_kind.iter())
-      .map(|((_, label), (_, selected))| (label.clone(), *selected))
-      .collect::<Vec<(String, bool)>>();
-
-    html!(
-      <FormGroup label="DataSource Type">
-        <OneStateSelector selectable_items={items} on_selected={on_selected_kind} />
-      </FormGroup>
-    )
-  };
 
   html!(
     <Form {onsubmit}>
@@ -604,7 +559,12 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
                   r#type={TextInputType::Url}
                 />
               </FormGroup>
-              { datasource_types }
+              <FormGroup label="DataSource Type">
+                <DatasourceSelector
+                  selected_kind={(*selected_kind_state).clone()}
+                  {on_selected_kind}
+                />
+              </FormGroup>
               <FormGroup label="Content Type">
                 <TextInput value={(*content_type).to_string()} onchange={onchange_content_type} />
               </FormGroup>

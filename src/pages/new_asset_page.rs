@@ -11,8 +11,6 @@ pub struct NewAssetPageProps {
   pub on_create: Callback<()>,
   #[prop_or_default]
   pub dcterm_types: Option<Vec<(String, String)>>,
-  #[prop_or_default]
-  pub datasource_types: Option<Vec<(String, String)>>,
 }
 
 #[component]
@@ -26,7 +24,6 @@ pub fn NewAssetPage(props: &NewAssetPageProps) -> Html {
         company_name={props.company_name.clone()}
         company_logo_url={props.company_logo_url.clone()}
         dcterm_types={props.dcterm_types.clone()}
-        datasource_types={props.datasource_types.clone()}
       />
     </>
   )

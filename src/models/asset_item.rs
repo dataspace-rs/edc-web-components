@@ -1,5 +1,5 @@
 use crate::models::dataset_extra_fields::DatasetExtraFields;
-use crate::models::{Creator, DataSourceTypes, DataspaceDataset, Thumbnail};
+use crate::models::{Creator, DataspaceDataset, Thumbnail};
 use edc_connector_client::types::asset::Asset;
 use edc_connector_client::types::catalog::Dataset;
 use edc_connector_client::types::data_address::DataAddress;
@@ -205,7 +205,7 @@ impl From<edc_federated_catalog_client::models::Dataset> for AssetItem {
       landing_page: dataset.landing_page,
       dcterm_types: dataset.dcterm_types,
       base_url: "".to_string(),
-      datasource_type: DataSourceTypes::HttpData.to_string(),
+      datasource_type: "".to_string(),
       proxy_path: false,
       proxy_query_params: false,
       proxy_method: false,
@@ -244,7 +244,7 @@ impl From<&Dataset<DatasetExtraFields>> for AssetItem {
       landing_page: extra.landing_page.clone(),
       dcterm_types: extra.dcterm_types.clone(),
       base_url: "".to_string(),
-      datasource_type: DataSourceTypes::HttpData.to_string(),
+      datasource_type: "".to_string(),
       proxy_path: false,
       proxy_query_params: false,
       proxy_method: false,

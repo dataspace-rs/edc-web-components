@@ -3,29 +3,24 @@ use yew::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct OneStateSelectorProps {
-  pub selectable_items: Vec<(String, bool)>,
-  pub on_selected: Callback<Vec<(String, bool)>>,
+  pub selectable_items: Vec<String>,
+  pub selected_item: Option<String>,
+  pub on_selected: Callback<String>,
 }
 
 #[component]
 pub fn OneStateSelector(props: &OneStateSelectorProps) -> Html {
   let onclick = use_callback(
     (props.selectable_items.clone(), props.on_selected.clone()),
-    |index, (selectable_items, on_selected)| {
-      let mut selectable_items = selectable_items.clone();
-
-      selectable_items
-        .iter_mut()
+    |index, (selectable, on_selected)| {
+      let selected = selectable
+        .into_iter()
         .enumerate()
-        .for_each(|(ind, (_, selected))| {
-          if ind == index {
-            *selected = !*selected;
-          } else {
-            *selected = false;
-          }
-        });
+        .filter(|(ind, _)| ind == &index)
+        .map(|(_, k)| k.to_string())
+        .next();
 
-      on_selected.emit(selectable_items.clone());
+      on_selected.emit(selected.unwrap());
     },
   );
 
@@ -33,21 +28,19 @@ pub fn OneStateSelector(props: &OneStateSelectorProps) -> Html {
     .selectable_items
     .iter()
     .enumerate()
-    .map(|(index, (label, selected))| {
+    .map(|(index, label)| {
+      let selected = label.clone() == props.selected_item.clone().unwrap().as_str();
       html_nested!(
         <MenuAction onclick={onclick.reform(move |_| index)} {selected}>{ &label }</MenuAction>
       )
     });
 
-  let text = if !props.selectable_items.iter().any(|(_, selected)| *selected) {
-    "Select an option".to_string()
+  let text = if let Some(value) = props.selected_item.clone()
+    && !value.is_empty()
+  {
+    value
   } else {
-    props
-      .selectable_items
-      .iter()
-      .filter_map(|(label, selected)| if *selected { Some(label.clone()) } else { None })
-      .collect::<Vec<String>>()
-      .join(", ")
+    "Select an option".to_string()
   };
 
   html!(<Dropdown {text}>{ for actions }</Dropdown>)

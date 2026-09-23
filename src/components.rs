@@ -10,6 +10,7 @@ mod create_federated_catalog_participant;
 mod create_policy;
 mod create_transfer_process;
 mod dataset_card;
+mod datasource_selector;
 mod did_label;
 mod extensible_properties_edit;
 mod landing_page;
