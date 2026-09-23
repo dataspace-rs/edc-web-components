@@ -14,7 +14,7 @@ pub fn OneStateSelector(props: &OneStateSelectorProps) -> Html {
     (props.selectable_items.clone(), props.on_selected.clone()),
     |index, (selectable, on_selected)| {
       let selected = selectable
-        .into_iter()
+        .iter()
         .enumerate()
         .filter(|(ind, _)| ind == &index)
         .map(|(_, k)| k.to_string())
