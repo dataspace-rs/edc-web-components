@@ -3,7 +3,7 @@ use crate::contexts::use_edc_connector_context;
 use edc_connector_client::EdcConnectorApiVersion;
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
-use yew::suspense::{use_future, use_future_with};
+use yew::suspense::use_future_with;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
 pub struct DatasourceSelectorProps {
