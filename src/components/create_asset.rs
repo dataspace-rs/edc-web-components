@@ -1,3 +1,4 @@
+use crate::components::datasource_selector::DatasourceSelector;
 use crate::components::{DatasetCard, MultiStateSelector, StringListEdit};
 use crate::contexts::use_edc_connector_context;
 use crate::models::{Creator, DataspaceDataset, Thumbnail};
@@ -25,6 +26,7 @@ pub struct CreateAssetProps {
 pub fn CreateAsset(props: &CreateAssetProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
+  let selected_kind_state = use_state(String::new);
   let name = use_state(String::new);
   let version = use_state(String::new);
   let description = use_state(String::new);
@@ -64,6 +66,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
     (
       edc_connector_context.clone(),
       (
+        selected_kind_state.clone(),
         name.clone(),
         version.clone(),
         description.clone(),
@@ -95,6 +98,7 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
      (
       edc_connector_context,
       (
+        selected_kind,
         name,
         version,
         description,
@@ -151,12 +155,14 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
         }
       };
 
+      let kind = (**selected_kind).clone();
+
       let edc_connector_context = edc_connector_context.clone();
       let on_create = on_create.clone();
 
       spawn_local(async move {
         let mut data_address_builder = DataAddress::builder()
-          .kind("HttpData")
+          .kind(&kind)
           .property("baseUrl", base_url)
           .property("proxyPath", if proxy_path { "true" } else { "false" })
           .property(
@@ -430,6 +436,13 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
     html!()
   };
 
+  let on_selected_kind = use_callback(
+    selected_kind_state.setter(),
+    |selected_kind: String, selected_kind_setter| {
+      selected_kind_setter.set(selected_kind);
+    },
+  );
+
   html!(
     <Form {onsubmit}>
       <Card>
@@ -544,6 +557,12 @@ pub fn CreateAsset(props: &CreateAssetProps) -> Html {
                   value={(*base_url).to_string()}
                   onchange={onchange_base_url}
                   r#type={TextInputType::Url}
+                />
+              </FormGroup>
+              <FormGroup label="DataSource Type">
+                <DatasourceSelector
+                  selected_kind={(*selected_kind_state).clone()}
+                  {on_selected_kind}
                 />
               </FormGroup>
               <FormGroup label="Content Type">
