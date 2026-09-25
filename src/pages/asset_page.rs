@@ -15,7 +15,7 @@ pub struct AssetPageProps {
   pub title: String,
   #[prop_or(Some("The data you hold, before any of it is offered.".to_string()))]
   pub tag_line: Option<String>,
-  #[prop_or("Create an CEL Expression".to_string())]
+  #[prop_or("Create an Asset".to_string())]
   pub create_title: String,
 }
 

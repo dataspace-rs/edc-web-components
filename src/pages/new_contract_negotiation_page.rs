@@ -282,22 +282,28 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
     let disabled = selected_offer.is_none() || *signing;
 
     Ok(html!(
-      <>
-        <DatasetCard dataset={catalog_dataset} />
-        <DescriptionList>
-          <DescriptionGroup term="Offers">
-            <Gallery gutter=true>{ for offers }</Gallery>
-          </DescriptionGroup>
-        </DescriptionList>
-        <Split gutter=true>
-          <SplitItem fill=true />
-          <SplitItem>
-            <Button variant={ButtonVariant::Primary} icon={Icon::Check} {disabled} {onclick}>
-              { "Sign" }
-            </Button>
-          </SplitItem>
-        </Split>
-      </>
+      <Stack gutter=true>
+        <StackItem>
+          <DatasetCard dataset={catalog_dataset} />
+        </StackItem>
+        <StackItem>
+          <DescriptionList>
+            <DescriptionGroup term="Offers">
+              <Gallery gutter=true>{ for offers }</Gallery>
+            </DescriptionGroup>
+          </DescriptionList>
+        </StackItem>
+        <StackItem>
+          <Split gutter=true>
+            <SplitItem fill=true />
+            <SplitItem>
+              <Button variant={ButtonVariant::Primary} icon={Icon::Check} {disabled} {onclick}>
+                { "Sign" }
+              </Button>
+            </SplitItem>
+          </Split>
+        </StackItem>
+      </Stack>
     ))
   } else {
     Ok(html!({ "The offer is not available." }))
