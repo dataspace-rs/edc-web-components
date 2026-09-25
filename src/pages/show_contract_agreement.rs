@@ -117,26 +117,39 @@ pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) ->
     Ok(html!(
       <Stack gutter=true>
         <StackItem>
-          <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-            <DescriptionGroup term="Id">{ contract_agreement_item.id }</DescriptionGroup>
-            <DescriptionGroup term="Contract Signing Date">
-              { contract_agreement_item.signing_date }
-            </DescriptionGroup>
-            <DescriptionGroup term="Consumer">
-              <DidLabel did={contract_agreement_item.consumer_id} />
-            </DescriptionGroup>
-            <DescriptionGroup term="Provider">
-              <DidLabel did={contract_agreement_item.provider_id} />
-            </DescriptionGroup>
-            <DescriptionGroup term="Asset">{ asset }</DescriptionGroup>
-            <DescriptionGroup term="Policy">
+          <Flex modifiers={[FlexModifier::Justify(Justify::Start)]}>
+            <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
+              <Title level={Level::H4} size={Size::XLarge}>{ "Contract Properties" }</Title>
+              <Card>
+                <CardBody>
+                  <DescriptionList mode={[DescriptionListMode::Horizontal]}>
+                    <DescriptionGroup term="Id">{ contract_agreement_item.id }</DescriptionGroup>
+                    <DescriptionGroup term="Contract Signing Date">
+                      { contract_agreement_item.signing_date }
+                    </DescriptionGroup>
+                    <DescriptionGroup term="Consumer">
+                      <DidLabel did={contract_agreement_item.consumer_id} />
+                    </DescriptionGroup>
+                    <DescriptionGroup term="Provider">
+                      <DidLabel did={contract_agreement_item.provider_id} />
+                    </DescriptionGroup>
+                  </DescriptionList>
+                </CardBody>
+              </Card>
+            </FlexItem>
+            <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
+              <Title level={Level::H4} size={Size::XLarge}>{ "Policy" }</Title>
               <Card>
                 <CardBody>
                   <ShowPolicy policy={contract_agreement_item.policy} />
                 </CardBody>
               </Card>
-            </DescriptionGroup>
-          </DescriptionList>
+            </FlexItem>
+            <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
+              <Title level={Level::H4} size={Size::XLarge}>{ "Asset" }</Title>
+              { asset }
+            </FlexItem>
+          </Flex>
         </StackItem>
         <StackItem>{ initiate_transfer_process }</StackItem>
       </Stack>

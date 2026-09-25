@@ -76,6 +76,7 @@ pub use request_verifiable_credential::*;
 pub use review_contract_negotiation::*;
 pub use show_data_plane::*;
 pub use show_policy::*;
+pub use show_policy_reference::*;
 pub use simple_or_id_field::*;
 pub use string_list_edit::*;
 pub use transfer_process_status::*;

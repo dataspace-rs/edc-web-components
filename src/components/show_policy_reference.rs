@@ -34,9 +34,9 @@ pub fn ShowPolicyReference(props: &ShowPolicyReferenceProps) -> Html {
               variant={ButtonVariant::Primary}
               icon={Icon::Eye}
               onclick={redirection_context.redirect_to().reform(move |_| {
-            backdropper.close();
-            RedirectionAction::Policy(policy_id.clone())
-          })}
+                backdropper.close();
+                RedirectionAction::Policy(policy_id.clone())
+              })}
             >
               { "Show" }
             </Button>

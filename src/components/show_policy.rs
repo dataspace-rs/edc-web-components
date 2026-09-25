@@ -1,6 +1,8 @@
-use crate::components::ConstraintRenderer;
+mod policy_properties;
+
 use edc_connector_client::types::policy::{Policy, PolicyKind};
 use patternfly_yew::prelude::*;
+pub use policy_properties::PolicyProperties;
 use yew::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Properties)]
@@ -22,33 +24,6 @@ pub struct ShowPolicyProps {
 
 #[component]
 pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
-  let permissions = props.policy.permissions().iter().map(|permission| {
-    html! {
-      <ConstraintRenderer
-        action={permission.action().clone()}
-        constraints={permission.constraints().to_vec()}
-      />
-    }
-  });
-
-  let obligations = props.policy.obligations().iter().map(|obligation| {
-    html! {
-      <ConstraintRenderer
-        action={obligation.action().clone()}
-        constraints={obligation.constraints().to_vec()}
-      />
-    }
-  });
-
-  let prohibitions = props.policy.prohibitions().iter().map(|prohibition| {
-    html! {
-      <ConstraintRenderer
-        action={prohibition.action().clone()}
-        constraints={prohibition.constraints().to_vec()}
-      />
-    }
-  });
-
   let id = if props.hide_id {
     html!()
   } else {
@@ -73,70 +48,19 @@ pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
     html!(<DescriptionGroup term="Kind">{ kind }</DescriptionGroup>)
   };
 
-  let profiles = if props.hide_profiles {
-    html!()
-  } else {
-    let profiles = props.policy.profiles().iter().map(|profile| {
-      html_nested! {
-        <FlexItem>
-          <Label color={Color::Blue} label={profile.to_string()} />
-        </FlexItem>
-      }
-    });
-
-    html!(
-      <DescriptionGroup term="Profiles">
-        <Flex>{ for profiles }</Flex>
-      </DescriptionGroup>
-    )
-  };
-
-  let extensible_properties = if props.hide_extensible_properties {
-    html!()
-  } else {
-    let extensible_properties = props
-      .policy
-      .extensible_properties()
-      .iter()
-      .map(|(key, value)| {
-        html_nested! {
-          <StackItem>
-            <DescriptionGroup term={key.to_string()}>
-              <CodeBlock>
-                <CodeBlockCode>
-                  { serde_json::to_string_pretty(value).unwrap_or_default() }
-                </CodeBlockCode>
-              </CodeBlock>
-            </DescriptionGroup>
-          </StackItem>
-        }
-      });
-
-    html!(
-      <DescriptionGroup term="Extensible Properties">
-        <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-          { for extensible_properties }
-        </DescriptionList>
-      </DescriptionGroup>
-    )
-  };
-
   html!(
     <DescriptionList mode={[DescriptionListMode::Horizontal]}>
       { id }
       { name }
       { kind }
-      <DescriptionGroup term="Assigner">
-        { props.policy.assigner().cloned().unwrap_or_default() }
-      </DescriptionGroup>
-      <DescriptionGroup term="Assignee">
-        { props.policy.assignee().cloned().unwrap_or_default() }
-      </DescriptionGroup>
-      <DescriptionGroup term="Permissions">{ for permissions }</DescriptionGroup>
-      <DescriptionGroup term="Obligations">{ for obligations }</DescriptionGroup>
-      <DescriptionGroup term="Prohibitions">{ for prohibitions }</DescriptionGroup>
-      { profiles }
-      { extensible_properties }
+      <PolicyProperties
+        permissions={props.policy.permissions().to_vec()}
+        obligations={props.policy.obligations().to_vec()}
+        prohibitions={props.policy.prohibitions().to_vec()}
+        extensible_properties={props.policy.extensible_properties().clone()}
+        assigner={props.policy.assigner().cloned()}
+        assignee={props.policy.assignee().cloned()}
+      />
     </DescriptionList>
   )
 }

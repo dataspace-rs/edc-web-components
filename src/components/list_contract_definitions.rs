@@ -105,13 +105,17 @@ impl TableEntryRenderer<Columns> for ContractDefinitionItemRenderer {
       Columns::Name => html! { self.contract_definition_item.name.to_string() },
       Columns::AccessPolicy => {
         html!(
-          <PolicyReference policy_id={self.contract_definition_item.access_policy_id.to_string()} />
+          <PolicyReference
+            policy_id={self.contract_definition_item.access_policy_id.to_string()}
+            show_with_modal=true
+          />
         )
       },
       Columns::ContractPolicy => {
         html!(
           <PolicyReference
             policy_id={self.contract_definition_item.contract_policy_id.to_string()}
+            show_with_modal=true
           />
         )
       },

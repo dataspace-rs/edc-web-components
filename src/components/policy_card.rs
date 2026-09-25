@@ -1,4 +1,4 @@
-use crate::components::ConstraintRenderer;
+use crate::components::PolicyProperties;
 use crate::models::PolicyDefinitionItem;
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
@@ -17,65 +17,6 @@ pub struct PolicyCardProps {
 
 #[component]
 pub fn PolicyCard(props: &PolicyCardProps) -> Html {
-  let permissions = if props.policy_definition_item.permissions.is_empty() {
-    None
-  } else {
-    let permissions = props
-      .policy_definition_item
-      .permissions
-      .iter()
-      .map(|permission| {
-        html! {
-          <ConstraintRenderer
-            action={permission.action().clone()}
-            constraints={permission.constraints().to_vec()}
-          />
-        }
-      });
-
-    Some(html_nested!(<DescriptionGroup term="Permissions">{ for permissions }</DescriptionGroup>))
-  };
-
-  let obligations = if props.policy_definition_item.obligations.is_empty() {
-    None
-  } else {
-    let obligations = props
-      .policy_definition_item
-      .obligations
-      .iter()
-      .map(|obligation| {
-        html! {
-          <ConstraintRenderer
-            action={obligation.action().clone()}
-            constraints={obligation.constraints().to_vec()}
-          />
-        }
-      });
-
-    Some(html_nested!(<DescriptionGroup term="Obligations">{ for obligations }</DescriptionGroup>))
-  };
-
-  let prohibitions = if props.policy_definition_item.prohibitions.is_empty() {
-    None
-  } else {
-    let prohibitions = props
-      .policy_definition_item
-      .prohibitions
-      .iter()
-      .map(|prohibition| {
-        html! {
-          <ConstraintRenderer
-            action={prohibition.action().clone()}
-            constraints={prohibition.constraints().to_vec()}
-          />
-        }
-      });
-
-    Some(
-      html_nested!(<DescriptionGroup term="Prohibitions">{ for prohibitions }</DescriptionGroup>),
-    )
-  };
-
   let selectable_actions = yew::props!(CardSelectableActionsObjectProperties {
     action: CardSelectableActionsVariant::Click {
       onclick: Some(props.on_click.reform(move |_| ())),
@@ -85,30 +26,6 @@ pub fn PolicyCard(props: &PolicyCardProps) -> Html {
     })
   });
 
-  let extensible_properties = if props
-    .policy_definition_item
-    .extensible_properties
-    .is_empty()
-  {
-    None
-  } else {
-    let extensible_properties = props
-      .policy_definition_item
-      .extensible_properties
-      .iter()
-      .map(|(key, value)| {
-        html! { <DescriptionGroup term={key.clone()}>{ value.to_string() }</DescriptionGroup> }
-      });
-
-    Some(html_nested!(
-      <DescriptionGroup term="Extensible Properties">
-        <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-          { for extensible_properties }
-        </DescriptionList>
-      </DescriptionGroup>
-    ))
-  };
-
   html!(
     <Card selectable=true disabled={props.disabled} selected={props.selected}>
       <CardHeader {selectable_actions}>
@@ -116,10 +33,14 @@ pub fn PolicyCard(props: &PolicyCardProps) -> Html {
       </CardHeader>
       <CardBody>
         <DescriptionList>
-          { permissions }
-          { obligations }
-          { prohibitions }
-          { extensible_properties }
+          <PolicyProperties
+            permissions={props.policy_definition_item.permissions.clone()}
+            obligations={props.policy_definition_item.obligations.clone()}
+            prohibitions={props.policy_definition_item.prohibitions.clone()}
+            extensible_properties={props.policy_definition_item.extensible_properties.clone()}
+            assigner={props.policy_definition_item.assigner.clone()}
+            assignee={props.policy_definition_item.assignee.clone()}
+          />
         </DescriptionList>
       </CardBody>
     </Card>
