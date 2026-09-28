@@ -17,6 +17,8 @@ pub struct TransferProcessPageProps {
   pub contract_agreement_id: Option<String>,
   #[prop_or_default]
   pub onshow: Callback<String>,
+  #[prop_or("No transfer process".to_string())]
+  pub empty_title: String,
 }
 
 #[component]
@@ -47,6 +49,12 @@ pub fn TransferProcessPage(props: &TransferProcessPageProps) -> Html {
     },
   );
 
+  let fallback = html! {
+    <Bullseye>
+      <Spinner size={SpinnerSize::Lg} />
+    </Bullseye>
+  };
+
   html!(
     <Stack gutter=true>
       <StackItem>
@@ -54,7 +62,7 @@ pub fn TransferProcessPage(props: &TransferProcessPageProps) -> Html {
         { tag_line }
       </StackItem>
       <StackItem>
-        <Suspense>
+        <Suspense {fallback}>
           <TransferProcessPageInner
             offset={*offset}
             limit={*limit}
@@ -63,6 +71,7 @@ pub fn TransferProcessPage(props: &TransferProcessPageProps) -> Html {
             contract_agreement_id={props.contract_agreement_id.clone()}
             force_refresh={*refresh}
             onshow={props.onshow.clone()}
+            empty_title={props.empty_title.clone()}
           />
         </Suspense>
       </StackItem>
@@ -79,6 +88,8 @@ pub struct TransferProcessPageInnerProps {
   pub contract_agreement_id: Option<String>,
   pub force_refresh: usize,
   pub onshow: Callback<String>,
+  #[prop_or("No transfer process".to_string())]
+  pub empty_title: String,
 }
 
 #[component]
@@ -125,14 +136,18 @@ pub fn TransferProcessPageInner(props: &TransferProcessPageInnerProps) -> HtmlRe
 
   let transfer_processe_items = (*transfer_processe_items).clone();
 
-  Ok(html!(
-    <ListTransferProcesses
-      transfer_processe_items={transfer_processe_items}
-      offset={props.offset}
-      limit={props.limit}
-      onoffset={props.onoffset.clone()}
-      onlimit={props.onlimit.clone()}
-      onshow={props.onshow.clone()}
-    />
-  ))
+  if transfer_processe_items.is_empty() {
+    Ok(html! { <EmptyState title={props.empty_title.to_string()} /> })
+  } else {
+    Ok(html!(
+      <ListTransferProcesses
+        transfer_processe_items={transfer_processe_items}
+        offset={props.offset}
+        limit={props.limit}
+        onoffset={props.onoffset.clone()}
+        onlimit={props.onlimit.clone()}
+        onshow={props.onshow.clone()}
+      />
+    ))
+  }
 }

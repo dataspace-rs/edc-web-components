@@ -1,4 +1,4 @@
-use crate::components::DatasetCard;
+use crate::components::{DatasetCard, Identifier};
 use crate::contexts::{
   RedirectionAction, use_edc_connector_context, use_edc_federated_catalog_assets_context,
   use_redirection_context,
@@ -62,9 +62,9 @@ pub fn AssetReferenceInner(props: &AssetReferenceProps) -> HtmlResult {
   let asset = (*asset).clone();
 
   let label = if let Some(asset) = &asset {
-    asset.name.clone()
+    html!(asset.name.clone())
   } else {
-    props.asset_id.clone()
+    html!(<Identifier id={props.asset_id.clone()} />)
   };
 
   let onclick = use_callback(

@@ -57,7 +57,7 @@ pub fn ConstraintRenderer(props: &ConstraintRendererProps) -> Html {
             "isAllOf" => "Is all of".to_string(),
             "isAnyOf" => "Is any of".to_string(),
             "isNoneOf" => "Is none of".to_string(),
-            "isPärtOf" => "Is part of".to_string(),
+            "isPartOf" => "Is part of".to_string(),
             _ => operator,
           };
 

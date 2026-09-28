@@ -35,12 +35,7 @@ pub fn DidLabel(props: &DidLabelProps) -> Html {
     .map(|my_did_provider_context| my_did_provider_context.my_did().to_string())
     == Some(props.did.clone())
   {
-    html!(
-      <yew_icons::Icon
-        data={yew_icons::IconData::LUCIDE_BUILDING}
-        style="color: var(--pf-t--global--border--color--default)"
-      />
-    )
+    html!(<Label label="Me" color={Color::Blue} outline=true />)
   } else {
     html!()
   };

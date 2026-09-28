@@ -119,11 +119,17 @@ pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) ->
         <StackItem>
           <Flex modifiers={[FlexModifier::Justify(Justify::Start)]}>
             <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
-              <Title level={Level::H4} size={Size::XLarge}>{ "Contract Properties" }</Title>
               <Card>
+                <CardTitle>
+                  <Title level={Level::H2}>{ "Contract Properties" }</Title>
+                </CardTitle>
                 <CardBody>
                   <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-                    <DescriptionGroup term="Id">{ contract_agreement_item.id }</DescriptionGroup>
+                    <DescriptionGroup term="Id">
+                      <div class="pf-v6-u-font-family-monospace">
+                        { contract_agreement_item.id }
+                      </div>
+                    </DescriptionGroup>
                     <DescriptionGroup term="Contract Signing Date">
                       { contract_agreement_item.signing_date }
                     </DescriptionGroup>
@@ -138,15 +144,16 @@ pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) ->
               </Card>
             </FlexItem>
             <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
-              <Title level={Level::H4} size={Size::XLarge}>{ "Policy" }</Title>
               <Card>
+                <CardTitle>
+                  <Title level={Level::H2}>{ "Policy" }</Title>
+                </CardTitle>
                 <CardBody>
                   <ShowPolicy policy={contract_agreement_item.policy} />
                 </CardBody>
               </Card>
             </FlexItem>
             <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
-              <Title level={Level::H4} size={Size::XLarge}>{ "Asset" }</Title>
               { asset }
             </FlexItem>
           </Flex>

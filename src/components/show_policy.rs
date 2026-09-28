@@ -1,5 +1,6 @@
 mod policy_properties;
 
+use crate::components::Identifier;
 use edc_connector_client::types::policy::{Policy, PolicyKind};
 use patternfly_yew::prelude::*;
 pub use policy_properties::PolicyProperties;
@@ -24,16 +25,24 @@ pub struct ShowPolicyProps {
 
 #[component]
 pub fn ShowPolicy(props: &ShowPolicyProps) -> Html {
-  let id = if props.hide_id {
-    html!()
+  let id = if !props.hide_id
+    && let Some(id) = props.policy.id()
+  {
+    html!(
+      <DescriptionGroup term="Id">
+        <Identifier id={id.to_string()} />
+      </DescriptionGroup>
+    )
   } else {
-    html!(<DescriptionGroup term="Id">{ props.policy.id() }</DescriptionGroup>)
+    html!()
   };
 
-  let name = if props.hide_name {
-    html!()
+  let name = if !props.hide_name
+    && let Some(value) = &props.name
+  {
+    html!(<DescriptionGroup term="Name">{ value.to_string() }</DescriptionGroup>)
   } else {
-    html!(<DescriptionGroup term="Name">{ props.name.clone() }</DescriptionGroup>)
+    html!()
   };
 
   let kind = if props.hide_kind {
