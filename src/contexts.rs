@@ -1,3 +1,4 @@
+mod counter_party_dids_context;
 mod did_resolver_context;
 mod edc_connector_context;
 mod edc_federated_catalog_assets_context;
@@ -6,6 +7,7 @@ mod my_did_provider_context;
 mod policy_constraints_context;
 mod redirection_context;
 
+pub use counter_party_dids_context::*;
 pub use did_resolver_context::*;
 pub use edc_connector_context::*;
 pub use edc_federated_catalog_assets_context::*;

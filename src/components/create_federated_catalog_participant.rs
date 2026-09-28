@@ -1,3 +1,4 @@
+use crate::contexts::{CounterParty, use_counter_parties_context};
 use crate::services::get_dsp_endpoint;
 use edc_federated_catalog_client::models::FederatedCatalogParticipantCreateForm;
 use edc_federated_catalog_client::{FederatedCatalogClient, FederatedCatalogClientVersion};
@@ -15,6 +16,8 @@ pub struct CreateFederatedCatalogParticipantProps {
 
 #[component]
 pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipantProps) -> Html {
+  let counter_parties_context = use_counter_parties_context();
+
   let id = use_state(|| "".to_string());
   let target_url = use_state(|| "".to_string());
 
@@ -86,7 +89,7 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
     },
   );
 
-  html!(
+  let form = html!(
     <Form {onsubmit}>
       <FormGroup label="Counter Party DID" required=true>
         <TextInput required=true value={(*id).to_string()} onchange={onchange_id} />
@@ -109,5 +112,123 @@ pub fn CreateFederatedCatalogParticipant(props: &CreateFederatedCatalogParticipa
         <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset} />
       </ActionGroup>
     </Form>
-  )
+  );
+
+  let selected = use_state_eq(|| TabIndex::CounterPartySelect);
+  let onselect = use_callback(selected.clone(), |index, selected| selected.set(index));
+
+  let toaster = use_toaster();
+
+  let select_counter_party = use_callback(
+    (
+      props.on_create.clone(),
+      latest_access_token_context.clone(),
+      toaster.clone(),
+    ),
+    |counter_party: CounterParty, (on_create, latest_access_token_context, toaster)| {
+      let on_create = on_create.clone();
+      let latest_access_token_context = latest_access_token_context.clone();
+      let counter_party = counter_party.clone();
+      let toaster = toaster.clone();
+
+      spawn_local(async move {
+        if let Some(did_web) = DidWeb::new(&counter_party.did) {
+          if let Some(dsp_endpoint) = get_dsp_endpoint(&did_web).await {
+            let server_url = web_sys::window().unwrap().location().origin().unwrap();
+            let federated_catalog_management_client = FederatedCatalogClient::new(
+              reqwest::Client::new(),
+              format!("{server_url}/federated-catalog-management"),
+              latest_access_token_context.access_token(),
+              FederatedCatalogClientVersion::V4,
+            );
+
+            match federated_catalog_management_client
+              .create_participant(&FederatedCatalogParticipantCreateForm {
+                id: counter_party.did.clone(),
+                name: counter_party.name.to_string(),
+                target_url: dsp_endpoint.clone(),
+              })
+              .await
+            {
+              Ok(()) => {
+                on_create.emit(());
+              }
+              Err(message) => {
+                log::error!("{message}");
+                if let Some(toaster) = toaster {
+                  toaster.toast(Toast {
+                    title: "Unable to create federated catalog participant".to_string(),
+                    body: html! { <p>{ message.to_string() }</p> },
+                    r#type: AlertType::Warning,
+                    ..Default::default()
+                  });
+                }
+              }
+            }
+          } else {
+            if let Some(toaster) = toaster {
+              toaster.toast(Toast {
+                title: "Unable to create federated catalog participant".to_string(),
+                body: html! { <p>{ "No Dataspace Service available for this Participant" }</p> },
+                r#type: AlertType::Warning,
+                ..Default::default()
+              });
+            }
+          }
+        } else {
+          if let Some(toaster) = toaster {
+            toaster.toast(Toast {
+              title: "Unable to create federated catalog participant".to_string(),
+              body: html! { <p>{ "Incorrect Participant DID" }</p> },
+              r#type: AlertType::Warning,
+              ..Default::default()
+            });
+          }
+        }
+      })
+    },
+  );
+
+  if let Some(counter_parties_context) = counter_parties_context
+    && !counter_parties_context.counter_parties().is_empty()
+  {
+    let counter_parties = counter_parties_context
+      .counter_parties()
+      .iter()
+      .map(|counter_party| {
+        let onclick = {
+          let counter_party = counter_party.clone();
+
+          select_counter_party.reform(move |_| counter_party.clone())
+        };
+
+        html!(
+          <StackItem>
+            <Button variant={ButtonVariant::Secondary} {onclick}>{ &counter_party.name }</Button>
+          </StackItem>
+        )
+      });
+    html!(
+      <Tabs<TabIndex> {onselect} selected={*selected} r#box=true>
+        <Tab<TabIndex> index={TabIndex::CounterPartySelect} title="Select Counter Party">
+          <Panel>
+            <PanelMain>
+              <PanelMainBody>
+                <Stack gutter=true>{ for counter_parties }</Stack>
+              </PanelMainBody>
+            </PanelMain>
+          </Panel>
+        </Tab<TabIndex>>
+        <Tab<TabIndex> index={TabIndex::Form} title="Manual Entry">{ form }</Tab<TabIndex>>
+      </Tabs<TabIndex>>
+    )
+  } else {
+    form
+  }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TabIndex {
+  CounterPartySelect,
+  Form,
 }

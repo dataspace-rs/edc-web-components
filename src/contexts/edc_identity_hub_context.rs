@@ -1,11 +1,7 @@
 use edc_identity_hub_client::{IdentityHubClient, IdentityHubClientVersion};
-use std::{ops::Deref, rc::Rc};
 use yew::prelude::*;
 use yew_oauth2::context::LatestAccessToken;
 use yew_oauth2::prelude::use_latest_access_token;
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum EdcIdentityHubAction {}
 
 #[derive(Clone, PartialEq)]
 pub struct EdcIdentityHubState {
@@ -36,16 +32,6 @@ impl EdcIdentityHubState {
   }
 }
 
-impl Reducible for EdcIdentityHubState {
-  type Action = EdcIdentityHubAction;
-
-  fn reduce(self: Rc<Self>, _action: Self::Action) -> Rc<Self> {
-    let new_self = self.deref().clone();
-
-    new_self.into()
-  }
-}
-
 #[derive(Properties, PartialEq)]
 pub struct EdcIdentityHubContextProviderProps {
   #[prop_or_default]
@@ -58,22 +44,45 @@ pub struct EdcIdentityHubContextProviderProps {
 pub fn EdcIdentityHubContextProvider(props: &EdcIdentityHubContextProviderProps) -> Html {
   let latest_access_token_context = use_latest_access_token().unwrap();
 
-  let edc_connector_context = use_reducer(move || EdcIdentityHubState {
-    participant_id: props.participant_id.clone(),
-    participant_did: props.participant_did.clone(),
-    latest_access_token_context,
-  });
+  let edc_identity_hub_context = {
+    let latest_access_token_context = latest_access_token_context.clone();
+
+    use_state(move || EdcIdentityHubState {
+      participant_id: props.participant_id.clone(),
+      participant_did: props.participant_did.clone(),
+      latest_access_token_context,
+    })
+  };
+
+  use_effect_with(
+    (
+      props.participant_id.clone(),
+      props.participant_did.clone(),
+      edc_identity_hub_context.setter(),
+      latest_access_token_context.clone(),
+    ),
+    |(
+      participant_id,
+      participant_did,
+      edc_identity_hub_context_setter,
+      latest_access_token_context,
+    )| {
+      edc_identity_hub_context_setter.set(EdcIdentityHubState {
+        participant_id: participant_id.clone(),
+        participant_did: participant_did.clone(),
+        latest_access_token_context: latest_access_token_context.clone(),
+      });
+    },
+  );
 
   html! {
-    <ContextProvider<EdcIdentityHubContext> context={edc_connector_context}>
+    <ContextProvider<EdcIdentityHubState> context={(*edc_identity_hub_context).clone()}>
       { props.children.clone() }
-    </ContextProvider<EdcIdentityHubContext>>
+    </ContextProvider<EdcIdentityHubState>>
   }
 }
 
-pub type EdcIdentityHubContext = UseReducerHandle<EdcIdentityHubState>;
-
 #[hook]
-pub fn use_edc_identity_hub_context() -> EdcIdentityHubContext {
-  use_context::<EdcIdentityHubContext>().expect("no EDC Identity Hub context found")
+pub fn use_edc_identity_hub_context() -> EdcIdentityHubState {
+  use_context::<EdcIdentityHubState>().expect("no EDC Identity Hub context found")
 }

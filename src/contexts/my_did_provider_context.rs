@@ -1,8 +1,4 @@
-use std::{ops::Deref, rc::Rc};
 use yew::prelude::*;
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum MyDidProviderAction {}
 
 #[derive(Clone, PartialEq)]
 pub struct MyDidProviderState {
@@ -15,16 +11,6 @@ impl MyDidProviderState {
   }
 }
 
-impl Reducible for MyDidProviderState {
-  type Action = MyDidProviderAction;
-
-  fn reduce(self: Rc<Self>, _action: Self::Action) -> Rc<Self> {
-    let new_self = self.deref().clone();
-
-    new_self.into()
-  }
-}
-
 #[derive(Properties, PartialEq)]
 pub struct MyDidProviderContextProviderProps {
   #[prop_or_default]
@@ -34,20 +20,27 @@ pub struct MyDidProviderContextProviderProps {
 
 #[component]
 pub fn MyDidProviderContextProvider(props: &MyDidProviderContextProviderProps) -> Html {
-  let my_did_provider_context = use_reducer(move || MyDidProviderState {
+  let my_did_provider_context = use_state(move || MyDidProviderState {
     my_did: props.my_did.clone(),
   });
 
+  use_effect_with(
+    (props.my_did.clone(), my_did_provider_context.setter()),
+    |(my_did, my_did_provider_context_setter)| {
+      my_did_provider_context_setter.set(MyDidProviderState {
+        my_did: my_did.clone(),
+      });
+    },
+  );
+
   html! {
-    <ContextProvider<MyDidProviderContext> context={my_did_provider_context}>
+    <ContextProvider<MyDidProviderState> context={(*my_did_provider_context).clone()}>
       { props.children.clone() }
-    </ContextProvider<MyDidProviderContext>>
+    </ContextProvider<MyDidProviderState>>
   }
 }
 
-pub type MyDidProviderContext = UseReducerHandle<MyDidProviderState>;
-
 #[hook]
-pub fn use_my_did_provider_context() -> Option<MyDidProviderContext> {
-  use_context::<MyDidProviderContext>()
+pub fn use_my_did_provider_context() -> Option<MyDidProviderState> {
+  use_context::<MyDidProviderState>()
 }

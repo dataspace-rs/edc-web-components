@@ -1,5 +1,4 @@
 use edc_connector_client::types::policy::Constraint;
-use std::{ops::Deref, rc::Rc};
 use yew::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -40,15 +39,6 @@ impl PolicyConstraintRendererState {
   }
 }
 
-impl Reducible for PolicyConstraintRendererState {
-  type Action = ();
-
-  fn reduce(self: Rc<Self>, _action: Self::Action) -> Rc<Self> {
-    let new_self = self.deref().clone();
-    new_self.into()
-  }
-}
-
 #[derive(Properties, PartialEq)]
 pub struct PolicyConstraintRendererContextProviderProps {
   #[prop_or_default]
@@ -60,20 +50,27 @@ pub struct PolicyConstraintRendererContextProviderProps {
 pub fn PolicyConstraintRendererContextProvider(
   props: &PolicyConstraintRendererContextProviderProps,
 ) -> Html {
-  let context = use_reducer(move || PolicyConstraintRendererState {
+  let context = use_state(move || PolicyConstraintRendererState {
     constraints: props.constraints.clone(),
   });
 
+  use_effect_with(
+    (props.constraints.clone(), context.setter()),
+    |(constraints, context_setter)| {
+      context_setter.set(PolicyConstraintRendererState {
+        constraints: constraints.clone(),
+      });
+    },
+  );
+
   html! {
-    <ContextProvider<PolicyConstraintRendererContext> {context}>
+    <ContextProvider<PolicyConstraintRendererState> context={(*context).clone()}>
       { props.children.clone() }
-    </ContextProvider<PolicyConstraintRendererContext>>
+    </ContextProvider<PolicyConstraintRendererState>>
   }
 }
 
-pub type PolicyConstraintRendererContext = UseReducerHandle<PolicyConstraintRendererState>;
-
 #[hook]
-pub fn use_policy_constraint_renderer_context() -> Option<PolicyConstraintRendererContext> {
-  use_context::<PolicyConstraintRendererContext>()
+pub fn use_policy_constraint_renderer_context() -> Option<PolicyConstraintRendererState> {
+  use_context::<PolicyConstraintRendererState>()
 }

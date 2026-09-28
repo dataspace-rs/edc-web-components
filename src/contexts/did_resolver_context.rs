@@ -1,9 +1,5 @@
 use crate::models::Participant;
-use std::{ops::Deref, rc::Rc};
 use yew::prelude::*;
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum DidResolverAction {}
 
 #[derive(Clone, PartialEq)]
 pub struct DidResolverState {
@@ -19,16 +15,6 @@ impl DidResolverState {
   }
 }
 
-impl Reducible for DidResolverState {
-  type Action = DidResolverAction;
-
-  fn reduce(self: Rc<Self>, _action: Self::Action) -> Rc<Self> {
-    let new_self = self.deref().clone();
-
-    new_self.into()
-  }
-}
-
 #[derive(Properties, PartialEq)]
 pub struct DidResolverContextProviderProps {
   #[prop_or_default]
@@ -38,20 +24,27 @@ pub struct DidResolverContextProviderProps {
 
 #[component]
 pub fn DidResolverContextProvider(props: &DidResolverContextProviderProps) -> Html {
-  let did_resolver_context = use_reducer(move || DidResolverState {
+  let did_resolver_context = use_state(move || DidResolverState {
     participants: props.participants.clone(),
   });
 
+  use_effect_with(
+    (props.participants.clone(), did_resolver_context.setter()),
+    |(participants, did_resolver_context_setter)| {
+      did_resolver_context_setter.set(DidResolverState {
+        participants: participants.clone(),
+      });
+    },
+  );
+
   html! {
-    <ContextProvider<DidResolverContext> context={did_resolver_context}>
+    <ContextProvider<DidResolverState> context={(*did_resolver_context).clone()}>
       { props.children.clone() }
-    </ContextProvider<DidResolverContext>>
+    </ContextProvider<DidResolverState>>
   }
 }
 
-pub type DidResolverContext = UseReducerHandle<DidResolverState>;
-
 #[hook]
-pub fn use_did_resolver_context() -> Option<DidResolverContext> {
-  use_context::<DidResolverContext>()
+pub fn use_did_resolver_context() -> Option<DidResolverState> {
+  use_context::<DidResolverState>()
 }

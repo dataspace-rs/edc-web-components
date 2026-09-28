@@ -1,11 +1,7 @@
 use edc_connector_client::{Auth, EdcConnectorClient};
-use std::{ops::Deref, rc::Rc};
 use yew::prelude::*;
 use yew_oauth2::context::LatestAccessToken;
 use yew_oauth2::prelude::use_latest_access_token;
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum EdcConnectorAction {}
 
 #[derive(Clone, PartialEq)]
 pub struct EdcConnectorState {
@@ -38,16 +34,6 @@ impl EdcConnectorState {
   }
 }
 
-impl Reducible for EdcConnectorState {
-  type Action = EdcConnectorAction;
-
-  fn reduce(self: Rc<Self>, _action: Self::Action) -> Rc<Self> {
-    let new_self = self.deref().clone();
-
-    new_self.into()
-  }
-}
-
 #[derive(Properties, PartialEq)]
 pub struct EdcConnectorContextProviderProps {
   #[prop_or_default]
@@ -60,22 +46,40 @@ pub struct EdcConnectorContextProviderProps {
 pub fn EdcConnectorContextProvider(props: &EdcConnectorContextProviderProps) -> Html {
   let latest_access_token_context = use_latest_access_token();
 
-  let edc_connector_context = use_reducer(move || EdcConnectorState {
-    management_url: props.management_url.clone(),
-    api_key: props.api_key.clone(),
-    latest_access_token_context,
-  });
+  let edc_connector_context = {
+    let latest_access_token_context = latest_access_token_context.clone();
+
+    use_state(move || EdcConnectorState {
+      management_url: props.management_url.clone(),
+      api_key: props.api_key.clone(),
+      latest_access_token_context,
+    })
+  };
+
+  use_effect_with(
+    (
+      props.management_url.clone(),
+      props.api_key.clone(),
+      edc_connector_context.setter(),
+      latest_access_token_context.clone(),
+    ),
+    |(management_url, api_key, edc_connector_context_setter, latest_access_token_context)| {
+      edc_connector_context_setter.set(EdcConnectorState {
+        management_url: management_url.clone(),
+        api_key: api_key.clone(),
+        latest_access_token_context: latest_access_token_context.clone(),
+      });
+    },
+  );
 
   html! {
-    <ContextProvider<EdcConnectorContext> context={edc_connector_context}>
+    <ContextProvider<EdcConnectorState> context={(*edc_connector_context).clone()}>
       { props.children.clone() }
-    </ContextProvider<EdcConnectorContext>>
+    </ContextProvider<EdcConnectorState>>
   }
 }
 
-pub type EdcConnectorContext = UseReducerHandle<EdcConnectorState>;
-
 #[hook]
-pub fn use_edc_connector_context() -> EdcConnectorContext {
-  use_context::<EdcConnectorContext>().expect("no EDC Connector context found")
+pub fn use_edc_connector_context() -> EdcConnectorState {
+  use_context::<EdcConnectorState>().expect("no EDC Connector context found")
 }
