@@ -1,4 +1,4 @@
-use crate::components::DidLabel;
+use crate::components::{DidLabel, Identifier};
 use crate::contexts::use_edc_identity_hub_context;
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
@@ -89,7 +89,9 @@ pub fn ShowVerifiableCredentialPageInner(props: &ShowVerifiableCredentialPagePro
 
     Ok(html!(
       <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-        <DescriptionGroup term="Id">{ verifiable_credential.id }</DescriptionGroup>
+        <DescriptionGroup term="Id">
+          <Identifier id={verifiable_credential.id.to_string()} />
+        </DescriptionGroup>
         <DescriptionGroup term="Issuer">
           <DidLabel did={verifiable_credential.issuer_id} />
         </DescriptionGroup>

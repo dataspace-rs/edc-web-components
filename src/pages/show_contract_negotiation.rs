@@ -167,7 +167,7 @@ pub fn ShowContractNegotiationPageInner(props: &ShowContractNegotiationPageProps
                 <CardBody>
                   <DescriptionList mode={[DescriptionListMode::Horizontal]}>
                     <DescriptionGroup term="Id">
-                      <div class="pf-v6-u-font-family-monospace">{ contract_negotiation.id() }</div>
+                      <Identifier id={contract_negotiation.id().to_string()} />
                     </DescriptionGroup>
                     { state }
                     <DescriptionGroup term="Kind">{ kind }</DescriptionGroup>

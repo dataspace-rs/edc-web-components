@@ -1,4 +1,4 @@
-use crate::components::{AssetReference, DatasetCard, DidLabel, ShowPolicy};
+use crate::components::{AssetReference, DatasetCard, DidLabel, Identifier, ShowPolicy};
 use crate::contexts::{use_edc_connector_context, use_edc_federated_catalog_assets_context};
 use crate::models::{AssetItem, ContractAgreementItem, DataspaceDataset};
 use edc_connector_client::types::contract_agreement::ContractAgreement;
@@ -126,9 +126,7 @@ pub fn ShowContractAgreementPageInner(props: &ShowContractAgreementPageProps) ->
                 <CardBody>
                   <DescriptionList mode={[DescriptionListMode::Horizontal]}>
                     <DescriptionGroup term="Id">
-                      <div class="pf-v6-u-font-family-monospace">
-                        { contract_agreement_item.id }
-                      </div>
+                      <Identifier id={contract_agreement_item.id} />
                     </DescriptionGroup>
                     <DescriptionGroup term="Contract Signing Date">
                       { contract_agreement_item.signing_date }

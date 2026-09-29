@@ -1,4 +1,6 @@
-use crate::components::{AssetReference, ContractAgreementReference, TransferProcessStatus};
+use crate::components::{
+  AssetReference, ContractAgreementReference, Identifier, TransferProcessStatus,
+};
 use crate::contexts::use_edc_connector_context;
 use edc_connector_client::types::transfer_process::TransferProcessState;
 use patternfly_yew::prelude::*;
@@ -231,19 +233,24 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
       html!()
     };
 
+    let correlation_id = transfer_process
+      .correlation_id()
+      .map(|correlation_id| html!(<Identifier id={correlation_id.to_string()} />))
+      .unwrap_or_default();
+
     Ok(html!(
       <Stack gutter=true>
         <StackItem>
           <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-            <DescriptionGroup term="Id">{ transfer_process.id() }</DescriptionGroup>
+            <DescriptionGroup term="Id">
+              <Identifier id={transfer_process.id().to_string()} />
+            </DescriptionGroup>
             <DescriptionGroup term="Contract Agreement">
               <ContractAgreementReference
                 contract_agreement_id={transfer_process.contract_id().to_string()}
               />
             </DescriptionGroup>
-            <DescriptionGroup term="Correlation Transfer ID">
-              { transfer_process.correlation_id() }
-            </DescriptionGroup>
+            <DescriptionGroup term="Correlation Transfer ID">{ correlation_id }</DescriptionGroup>
             <DescriptionGroup term="Asset">
               <AssetReference asset_id={transfer_process.asset_id().to_string()} />
             </DescriptionGroup>
