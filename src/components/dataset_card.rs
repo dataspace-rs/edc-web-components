@@ -82,7 +82,7 @@ pub fn DatasetCard(props: &DatasetCardProps) -> Html {
     .version
     .clone()
     .map(|version| version.to_string())
-    .unwrap_or_default();
+    .unwrap_or("0.0.0".to_string());
 
   let comment = props.dataset.comment.clone().unwrap_or_default();
 
@@ -91,7 +91,8 @@ pub fn DatasetCard(props: &DatasetCardProps) -> Html {
     .thumbnail
     .clone()
     .and_then(|thumbnail| thumbnail.resource)
-    .map(|thumbnail| html! { <img src={thumbnail} class={thumbnails_class.clone()} /> });
+    .map(|thumbnail| html! { <img src={thumbnail} class={thumbnails_class.clone()} /> })
+    .unwrap_or(html!(<Skeleton height="180px" />));
 
   let provider_logo = props
     .dataset
