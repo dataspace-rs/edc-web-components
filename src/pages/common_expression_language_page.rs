@@ -1,8 +1,12 @@
 use crate::components::ListCommonExpressionLanguage;
-use crate::contexts::use_edc_connector_context;
+use crate::contexts::{
+  CelExpressionLibraryItem, use_cel_expression_library_context, use_edc_connector_context,
+};
 use crate::models::CommonExpressionLanguageItem;
 use edc_connector_client::EdcConnectorApiVersion;
+use edc_connector_client::types::common_expression_language::NewCommonExpressionLanguage;
 use edc_connector_client::types::query::Query;
+use log::error;
 use patternfly_yew::prelude::*;
 use yew::platform::spawn_local;
 use yew::prelude::*;
@@ -17,6 +21,8 @@ pub struct CommonExpressionLanguagePageProps {
   pub tag_line: Option<String>,
   #[prop_or("Create a CEL Expression".to_string())]
   pub create_title: String,
+  #[prop_or("Show Library".to_string())]
+  pub open_library_title: String,
 }
 #[component]
 pub fn CommonExpressionLanguagePage(props: &CommonExpressionLanguagePageProps) -> Html {
@@ -43,7 +49,7 @@ pub fn CommonExpressionLanguagePage(props: &CommonExpressionLanguagePageProps) -
   let edc_connector_context = use_edc_connector_context();
 
   let ondelete = use_callback(
-    (refresh.clone(), edc_connector_context),
+    (refresh.clone(), edc_connector_context.clone()),
     |asset_id: String, (refresh, edc_connector_context)| {
       let refresh = refresh.clone();
       let edc_connector_context = edc_connector_context.clone();
@@ -61,15 +67,92 @@ pub fn CommonExpressionLanguagePage(props: &CommonExpressionLanguagePageProps) -
     },
   );
 
-  let onclick = use_callback(props.on_new_cel.clone(), |_, on_new_cel| {
-    on_new_cel.emit(());
-  });
-
   let tag_line = props
     .tag_line
     .as_ref()
     .map(|tag_line| html!(<p>{ tag_line }</p>))
     .unwrap_or_default();
+
+  let cel_expression_library_context = use_cel_expression_library_context();
+
+  let expanded = use_state_eq(|| false);
+  let onclick = use_callback(expanded.clone(), |_, expanded| {
+    expanded.set(!**expanded);
+  });
+
+  let cel_expression_library = cel_expression_library_context.as_ref().map(|_| {
+    html_nested!(
+      <SplitItem>
+        <Button icon={Icon::Catalog} {onclick} variant={ButtonVariant::Secondary}>
+          { &props.open_library_title }
+        </Button>
+      </SplitItem>
+    )
+  });
+
+  let import_cel_expression = use_callback(
+    (edc_connector_context.clone(), refresh.clone()),
+    |cel_expression_library_item: CelExpressionLibraryItem, (edc_connector_context, refresh)| {
+      let edc_connector_context = edc_connector_context.clone();
+      let refresh = refresh.clone();
+
+      let new_cel_builder = NewCommonExpressionLanguage::builder()
+        .left_operand(cel_expression_library_item.left_operand.to_string())
+        .description(cel_expression_library_item.description.unwrap_or_default())
+        .scopes(cel_expression_library_item.scopes)
+        .expression(cel_expression_library_item.expression);
+
+      let new_cel = new_cel_builder.build();
+
+      spawn_local(async move {
+        if let Some(client) = edc_connector_context.get_client() {
+          match client
+            .common_expression_language(EdcConnectorApiVersion::V5Beta)
+            .create(&new_cel)
+            .await
+          {
+            Ok(_) => {
+              refresh.set(*refresh + 1);
+            }
+            Err(error) => {
+              error!("Failed to import CEL expression: {}", error);
+            }
+          }
+        }
+      })
+    },
+  );
+
+  let panel_content = cel_expression_library_context.clone().map(move |cel_expression_library| {
+    let items =
+      cel_expression_library.cel_expression_library().iter().map(|item| {
+        let name = item.name.to_string();
+        let item = item.clone();
+
+        html!(
+          <StackItem>
+            <Button
+              variant={ButtonVariant::Control}
+              icon={Icon::Import}
+              onclick={import_cel_expression.reform(move |_| item.clone())}
+            >
+              { name }
+            </Button>
+          </StackItem>
+        )
+      });
+
+    html!(
+      <Panel>
+        <PanelHeader>{ "CEL Expression Library" }</PanelHeader>
+        <PanelMain>
+          <PanelMainBody>
+            <Stack gutter=true>{ for items }</Stack>
+          </PanelMainBody>
+        </PanelMain>
+      </Panel>
+    )
+  });
 
   html!(
     <Stack gutter=true>
@@ -79,24 +162,35 @@ pub fn CommonExpressionLanguagePage(props: &CommonExpressionLanguagePageProps) -
             <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
             { tag_line }
           </SplitItem>
+          { cel_expression_library }
           <SplitItem>
-            <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>
+            <Button
+              icon={Icon::Plus}
+              onclick={props.on_new_cel.reform(|_| ())}
+              variant={ButtonVariant::Primary}
+            >
               { &props.create_title }
             </Button>
           </SplitItem>
         </Split>
       </StackItem>
       <StackItem>
-        <Suspense>
-          <CommonExpressionLanguagePageInner
-            offset={*offset}
-            limit={*limit}
-            {onoffset}
-            {onlimit}
-            {ondelete}
-            force_refresh={*refresh}
-          />
-        </Suspense>
+        <Drawer expanded={*expanded} inline=true>
+          <DrawerContent {panel_content}>
+            <DrawerContentBody>
+              <Suspense>
+                <CommonExpressionLanguagePageInner
+                  offset={*offset}
+                  limit={*limit}
+                  {onoffset}
+                  {onlimit}
+                  {ondelete}
+                  force_refresh={*refresh}
+                />
+              </Suspense>
+            </DrawerContentBody>
+          </DrawerContent>
+        </Drawer>
       </StackItem>
     </Stack>
   )

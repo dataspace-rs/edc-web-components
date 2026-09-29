@@ -1,9 +1,12 @@
 use crate::components::ListPolicies;
-use crate::contexts::use_edc_connector_context;
+use crate::contexts::{PolicyLibraryItem, use_edc_connector_context, use_policy_library_context};
 use crate::models::PolicyDefinitionItem;
 use edc_connector_client::EdcConnectorApiVersion;
+use edc_connector_client::types::policy::NewPolicyDefinition;
 use edc_connector_client::types::query::Query;
+use log::error;
 use patternfly_yew::prelude::*;
+use uuid::Uuid;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew::suspense::use_future_with;
@@ -16,6 +19,8 @@ pub struct PolicyPageProps {
   pub tag_line: Option<String>,
   #[prop_or("Create a Policy".to_string())]
   pub create_title: String,
+  #[prop_or("Import from Library".to_string())]
+  pub open_library_title: String,
   pub on_new_policy: Callback<()>,
   pub onshow: Callback<String>,
 }
@@ -45,7 +50,7 @@ pub fn PolicyPage(props: &PolicyPageProps) -> Html {
   let edc_connector_context = use_edc_connector_context();
 
   let ondelete = use_callback(
-    (refresh.clone(), edc_connector_context),
+    (refresh.clone(), edc_connector_context.clone()),
     |policy_id: String, (refresh, edc_connector_context)| {
       let refresh = refresh.clone();
       let edc_connector_context = edc_connector_context.clone();
@@ -64,15 +69,90 @@ pub fn PolicyPage(props: &PolicyPageProps) -> Html {
     },
   );
 
-  let onclick = use_callback(props.on_new_policy.clone(), |_, on_new_policy| {
-    on_new_policy.emit(());
-  });
-
   let tag_line = props
     .tag_line
     .as_ref()
     .map(|tag_line| html!(<p>{ tag_line }</p>))
     .unwrap_or_default();
+
+  let policy_library_context = use_policy_library_context();
+
+  let expanded = use_state_eq(|| false);
+  let onclick = use_callback(expanded.clone(), |_, expanded| {
+    expanded.set(!**expanded);
+  });
+
+  let open_policy_library = policy_library_context.as_ref().map(|_| {
+    html_nested!(
+      <SplitItem>
+        <Button icon={Icon::Catalog} {onclick} variant={ButtonVariant::Secondary}>
+          { &props.open_library_title }
+        </Button>
+      </SplitItem>
+    )
+  });
+
+  let import_policy = use_callback(
+    (edc_connector_context.clone(), refresh.clone()),
+    |policy_library_item: PolicyLibraryItem, (edc_connector_context, refresh)| {
+      let edc_connector_context = edc_connector_context.clone();
+      let refresh = refresh.clone();
+
+      let new_policy_definition = NewPolicyDefinition::builder()
+        .id(Uuid::new_v4().to_string())
+        .policy(policy_library_item.policy.clone())
+        .private_property("name", policy_library_item.name)
+        .build();
+
+      spawn_local(async move {
+        if let Some(client) = edc_connector_context.get_client() {
+          match client
+            .policies(EdcConnectorApiVersion::V4)
+            .create(&new_policy_definition)
+            .await
+          {
+            Ok(_) => {
+              refresh.set(*refresh + 1);
+            }
+            Err(error) => {
+              error!("Failed to import Policy: {}", error);
+            }
+          }
+        }
+      })
+    },
+  );
+
+  let panel_content = policy_library_context.clone().map(move |policy_library_context| {
+    let items =
+      policy_library_context.policy_library().iter().map(|item| {
+        let name = item.name.to_string();
+        let item = item.clone();
+
+        html!(
+          <StackItem>
+            <Button
+              variant={ButtonVariant::Control}
+              icon={Icon::Import}
+              onclick={import_policy.reform(move |_| item.clone())}
+            >
+              { name }
+            </Button>
+          </StackItem>
+        )
+      });
+
+    html!(
+      <Panel>
+        <PanelHeader>{ "Policy Library" }</PanelHeader>
+        <PanelMain>
+          <PanelMainBody>
+            <Stack gutter=true>{ for items }</Stack>
+          </PanelMainBody>
+        </PanelMain>
+      </Panel>
+    )
+  });
 
   html!(
     <Stack gutter=true>
@@ -82,25 +162,36 @@ pub fn PolicyPage(props: &PolicyPageProps) -> Html {
             <Title level={Level::H3} size={Size::XXLarge}>{ &props.title }</Title>
             { tag_line }
           </SplitItem>
+          { open_policy_library }
           <SplitItem>
-            <Button icon={Icon::Plus} {onclick} variant={ButtonVariant::Primary}>
+            <Button
+              icon={Icon::Plus}
+              onclick={props.on_new_policy.reform(|_| ())}
+              variant={ButtonVariant::Primary}
+            >
               { &props.create_title }
             </Button>
           </SplitItem>
         </Split>
       </StackItem>
       <StackItem>
-        <Suspense>
-          <PolicyPageInner
-            offset={*offset}
-            limit={*limit}
-            {onoffset}
-            {onlimit}
-            {ondelete}
-            onshow={props.onshow.clone()}
-            force_refresh={*refresh}
-          />
-        </Suspense>
+        <Drawer expanded={*expanded} inline=true>
+          <DrawerContent {panel_content}>
+            <DrawerContentBody>
+              <Suspense>
+                <PolicyPageInner
+                  offset={*offset}
+                  limit={*limit}
+                  {onoffset}
+                  {onlimit}
+                  {ondelete}
+                  onshow={props.onshow.clone()}
+                  force_refresh={*refresh}
+                />
+              </Suspense>
+            </DrawerContentBody>
+          </DrawerContent>
+        </Drawer>
       </StackItem>
     </Stack>
   )
