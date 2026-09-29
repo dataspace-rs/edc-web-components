@@ -98,8 +98,8 @@ impl TableEntryRenderer<Columns> for ListTransferProcessRenderer {
     match context.column {
       Columns::State => {
         let color = match self.0.state.as_str() {
-          "Started" => Color::Purple,
-          "Completed" => Color::Green,
+          "Started" => Color::Green,
+          "Completed" => Color::Purple,
           "Terminated" => Color::Red,
           _ => Color::Blue,
         };

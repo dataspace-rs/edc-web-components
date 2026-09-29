@@ -105,9 +105,9 @@ pub fn TransferProcessStatus(props: &TransferProcessStatusProps) -> Html {
   ) {
     (Some(message), Some(transfer_process)) => {
       let (title, r#type) = if transfer_process.state() == &TransferProcessState::Terminated {
-        ("Transfer Process failed", AlertType::Success)
+        ("Transfer Process failed", AlertType::Danger)
       } else {
-        ("Transfer Process suspended", AlertType::Danger)
+        ("Transfer Process suspended", AlertType::Warning)
       };
 
       html!(
