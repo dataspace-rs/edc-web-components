@@ -18,12 +18,17 @@ impl From<ContractDefinition> for ContractDefinitionItem {
       .unwrap_or_default();
     let access_policy_id = contract_definition.access_policy_id().to_string();
     let contract_policy_id = contract_definition.contract_policy_id().to_string();
+
     let asset_ids = contract_definition
       .assets_selector()
       .iter()
-      .map(|criterion| match &criterion.operand_right().0 {
-        serde_json::Value::String(s) => s.to_string(),
-        _ => String::from("Invalid asset id."),
+      .flat_map(|criterion| match &criterion.operand_right().0 {
+        serde_json::Value::String(identifier) => vec![identifier.to_string()],
+        serde_json::Value::Array(identifiers) => identifiers
+          .iter()
+          .map(|identifier| identifier.as_str().unwrap_or_default().to_string())
+          .collect(),
+        _ => vec![],
       })
       .collect::<Vec<_>>();
 

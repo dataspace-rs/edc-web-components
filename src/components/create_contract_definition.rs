@@ -66,11 +66,14 @@ pub fn CreateContractDefinition(props: &CreateContractDefinitionProps) -> Html {
               .unwrap_or_default(),
           );
 
-        for asset_item in &asset_items {
+        if !asset_items.is_empty() {
           new_contract_definition = new_contract_definition.asset_selector(Criterion::new(
             "https://w3id.org/edc/v0.0.1/ns/id",
-            "=",
-            asset_item.id.clone(),
+            "IN",
+            asset_items
+              .iter()
+              .map(|asset_item| asset_item.id.clone())
+              .collect::<Vec<_>>(),
           ));
         }
 
