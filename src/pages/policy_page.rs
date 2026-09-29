@@ -123,9 +123,10 @@ pub fn PolicyPage(props: &PolicyPageProps) -> Html {
     },
   );
 
-  let panel_content = policy_library_context.clone().map(move |policy_library_context| {
-    let items =
-      policy_library_context.policy_library().iter().map(|item| {
+  let panel_content = policy_library_context
+    .clone()
+    .map(move |policy_library_context| {
+      let items = policy_library_context.policy_library().iter().map(|item| {
         let name = item.name.to_string();
         let item = item.clone();
 
@@ -142,17 +143,17 @@ pub fn PolicyPage(props: &PolicyPageProps) -> Html {
         )
       });
 
-    html!(
-      <Panel>
-        <PanelHeader>{ "Policy Library" }</PanelHeader>
-        <PanelMain>
-          <PanelMainBody>
-            <Stack gutter=true>{ for items }</Stack>
-          </PanelMainBody>
-        </PanelMain>
-      </Panel>
-    )
-  });
+      html!(
+        <Panel>
+          <PanelHeader>{ "Policy Library" }</PanelHeader>
+          <PanelMain>
+            <PanelMainBody>
+              <Stack gutter=true>{ for items }</Stack>
+            </PanelMainBody>
+          </PanelMain>
+        </Panel>
+      )
+    });
 
   html!(
     <Stack gutter=true>

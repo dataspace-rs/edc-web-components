@@ -123,36 +123,40 @@ pub fn CommonExpressionLanguagePage(props: &CommonExpressionLanguagePageProps) -
     },
   );
 
-  let panel_content = cel_expression_library_context.clone().map(move |cel_expression_library| {
-    let items =
-      cel_expression_library.cel_expression_library().iter().map(|item| {
-        let name = item.name.to_string();
-        let item = item.clone();
+  let panel_content = cel_expression_library_context
+    .clone()
+    .map(move |cel_expression_library| {
+      let items = cel_expression_library
+        .cel_expression_library()
+        .iter()
+        .map(|item| {
+          let name = item.name.to_string();
+          let item = item.clone();
 
-        html!(
-          <StackItem>
-            <Button
-              variant={ButtonVariant::Control}
-              icon={Icon::Import}
-              onclick={import_cel_expression.reform(move |_| item.clone())}
-            >
-              { name }
-            </Button>
-          </StackItem>
-        )
-      });
+          html!(
+            <StackItem>
+              <Button
+                variant={ButtonVariant::Control}
+                icon={Icon::Import}
+                onclick={import_cel_expression.reform(move |_| item.clone())}
+              >
+                { name }
+              </Button>
+            </StackItem>
+          )
+        });
 
-    html!(
-      <Panel>
-        <PanelHeader>{ "CEL Expression Library" }</PanelHeader>
-        <PanelMain>
-          <PanelMainBody>
-            <Stack gutter=true>{ for items }</Stack>
-          </PanelMainBody>
-        </PanelMain>
-      </Panel>
-    )
-  });
+      html!(
+        <Panel>
+          <PanelHeader>{ "CEL Expression Library" }</PanelHeader>
+          <PanelMain>
+            <PanelMainBody>
+              <Stack gutter=true>{ for items }</Stack>
+            </PanelMainBody>
+          </PanelMain>
+        </Panel>
+      )
+    });
 
   html!(
     <Stack gutter=true>

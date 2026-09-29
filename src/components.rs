@@ -1,3 +1,4 @@
+mod asset_card;
 mod asset_reference;
 mod asset_selector;
 mod contract_agreement_reference;
@@ -42,6 +43,7 @@ mod simple_or_id_field;
 mod string_list_edit;
 mod transfer_process_status;
 
+pub use asset_card::*;
 pub use asset_reference::*;
 pub use asset_selector::*;
 pub use contract_agreement_reference::*;
