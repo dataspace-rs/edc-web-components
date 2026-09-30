@@ -2,7 +2,7 @@ use crate::components::{
   AssetReference, ContractAgreementReference, Identifier, TransferProcessStatus,
 };
 use crate::contexts::use_edc_connector_context;
-use edc_connector_client::types::transfer_process::TransferProcessState;
+use edc_connector_client::types::transfer_process::{TransferProcessKind, TransferProcessState};
 use patternfly_yew::prelude::*;
 use web_sys::wasm_bindgen::{JsCast, JsValue};
 use web_sys::{BlobPropertyBag, HtmlAnchorElement};
@@ -197,37 +197,67 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
     let endpoint_transfer_process_id = transfer_process.id().to_string();
     let complete_transfer_process_id = transfer_process.id().to_string();
 
-    let actions = if transfer_process.state() == &TransferProcessState::Started {
+    let data_access = if transfer_process.state() == &TransferProcessState::Started
+      && transfer_process.kind() == &TransferProcessKind::Consumer
+    {
       html!(
-        <Flex>
-          <FlexItem>
-            <Button
-              variant={ButtonVariant::Primary}
-              onclick={do_transfer.reform(move |_| transfer_process_id.clone())}
-              icon={Icon::Download}
-            >
-              { "Retrieve Dataset" }
-            </Button>
-          </FlexItem>
-          <FlexItem>
-            <Button
-              variant={ButtonVariant::Primary}
-              onclick={show_enpoint_information.reform(move |_| endpoint_transfer_process_id.clone())}
-              icon={Icon::Code}
-            >
-              { "Endpoint Information" }
-            </Button>
-          </FlexItem>
-          <FlexItem>
-            <Button
-              variant={ButtonVariant::Warning}
-              onclick={suspend_transfer.reform(move |_| complete_transfer_process_id.clone())}
-              icon={Icon::Pause}
-            >
-              { "Suspend Transfer" }
-            </Button>
-          </FlexItem>
-        </Flex>
+        <Card style="border: 1px solid var(--pf-global--active-color--100, #06c);">
+          <CardTitle>
+            <Title level={Level::H2}>{ "Data Access" }</Title>
+          </CardTitle>
+          <CardBody>
+            <Stack gutter=true>
+              <StackItem>
+                <Split gutter=true>
+                  <SplitItem>
+                    <yew_icons::Icon data={yew_icons::IconData::LUCIDE_CHECK} />
+                  </SplitItem>
+                  <SplitItem fill=true>
+                    { "Download it now, or get the endpoint and token to call it from your own system." }
+                  </SplitItem>
+                </Split>
+              </StackItem>
+              <StackItem>
+                <Flex>
+                  <FlexItem>
+                    <Button
+                      variant={ButtonVariant::Primary}
+                      onclick={do_transfer.reform(move |_| transfer_process_id.clone())}
+                      icon={Icon::Download}
+                    >
+                      { "Retrieve Dataset" }
+                    </Button>
+                  </FlexItem>
+                  <FlexItem>
+                    <Button
+                      variant={ButtonVariant::Primary}
+                      onclick={show_enpoint_information.reform(move |_| endpoint_transfer_process_id.clone())}
+                      icon={Icon::Code}
+                    >
+                      { "Endpoint Information" }
+                    </Button>
+                  </FlexItem>
+                </Flex>
+              </StackItem>
+            </Stack>
+          </CardBody>
+        </Card>
+      )
+    } else {
+      html!()
+    };
+
+    let suspend = if transfer_process.state() == &TransferProcessState::Started {
+      html!(
+        <FlexItem>
+          <Button
+            variant={ButtonVariant::Warning}
+            onclick={suspend_transfer.reform(move |_| complete_transfer_process_id.clone())}
+            icon={Icon::Pause}
+          >
+            { "Suspend Transfer" }
+          </Button>
+        </FlexItem>
       )
     } else {
       html!()
@@ -236,38 +266,150 @@ pub fn ShowTransferProcessPageInner(props: &ShowTransferProcessPageProps) -> Htm
     let correlation_id = transfer_process
       .correlation_id()
       .map(|correlation_id| html!(<Identifier id={correlation_id.to_string()} />))
-      .unwrap_or_default();
+      .unwrap_or(html!(
+        <HelperText>
+          <HelperTextItem variant={HelperTextItemVariant::Intermediate}>{ "None" }</HelperTextItem>
+        </HelperText>
+      ));
+
+    let kind = crate::models::TransferProcessKind::from(transfer_process.kind()).to_string();
+
+    let state_date = chrono::DateTime::from_timestamp_millis(transfer_process.state_timestamp())
+      .unwrap_or_default()
+      .to_string();
+
+    let state = Some(
+      crate::models::TransferProcessState::from(transfer_process.state()).to_string(),
+    )
+    .map(|value| {
+      let color = match value.as_str() {
+        "Started" => Color::Green,
+        "Terminated" => Color::Red,
+        _ => Color::Blue,
+      };
+      let text_help = match value.as_str() {
+        "Terminated" => "at".to_string(),
+        _ => "since".to_string(),
+      };
+
+      html!(
+        <DescriptionGroup term="State">
+          <Label label={value} {color} />
+          <HelperText>
+            <HelperTextItem variant={HelperTextItemVariant::Intermediate}>
+              { format!("{} {}", text_help, state_date) }
+            </HelperTextItem>
+          </HelperText>
+        </DescriptionGroup>
+      )
+    });
 
     Ok(html!(
       <Stack gutter=true>
         <StackItem>
-          <DescriptionList mode={[DescriptionListMode::Horizontal]}>
-            <DescriptionGroup term="Id">
-              <Identifier id={transfer_process.id().to_string()} />
-            </DescriptionGroup>
-            <DescriptionGroup term="Contract Agreement">
-              <ContractAgreementReference
-                contract_agreement_id={transfer_process.contract_id().to_string()}
-              />
-            </DescriptionGroup>
-            <DescriptionGroup term="Correlation Transfer ID">{ correlation_id }</DescriptionGroup>
-            <DescriptionGroup term="Asset">
-              <AssetReference asset_id={transfer_process.asset_id().to_string()} />
-            </DescriptionGroup>
-            <DescriptionGroup term="Transfer Type">
-              { transfer_process.transfer_type() }
-            </DescriptionGroup>
-          </DescriptionList>
+          <Flex modifiers={[FlexModifier::Justify(Justify::Start)]}>
+            <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Stretch)]}>
+              <Card full_height=true>
+                <CardTitle>
+                  <Title level={Level::H2}>{ "Transfer Properties" }</Title>
+                </CardTitle>
+                <CardBody>
+                  <DescriptionList mode={[DescriptionListMode::Horizontal]}>
+                    <DescriptionGroup term="Id">
+                      <Identifier id={transfer_process.id().to_string()} />
+                    </DescriptionGroup>
+                    { state }
+                    <DescriptionGroup term="Kind">{ kind }</DescriptionGroup>
+                    <DescriptionGroup term="Transfer Type">
+                      { transfer_process.transfer_type() }
+                    </DescriptionGroup>
+                    <DescriptionGroup term="Correlation Transfer ID">
+                      { correlation_id }
+                    </DescriptionGroup>
+                  </DescriptionList>
+                </CardBody>
+                <CardFooter>{ suspend }</CardFooter>
+              </Card>
+            </FlexItem>
+            <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Stretch)]}>
+              <Stack gutter=true>
+                <StackItem>
+                  <Card>
+                    <CardTitle>
+                      <Title level={Level::H2}>{ "Linked to" }</Title>
+                    </CardTitle>
+                    <CardBody>
+                      <Flex modifiers={[FlexModifier::Column.lg()]}>
+                        <FlexItem>
+                          <Card>
+                            <CardBody>
+                              <Split gutter=true>
+                                <SplitItem>
+                                  <yew_icons::Icon data={yew_icons::IconData::LUCIDE_BOX} />
+                                </SplitItem>
+                                <SplitItem fill=true>
+                                  <DescriptionGroup term="Asset">
+                                    <AssetReference
+                                      asset_id={transfer_process.asset_id().to_string()}
+                                    />
+                                    <Identifier id={transfer_process.asset_id().to_string()} />
+                                  </DescriptionGroup>
+                                </SplitItem>
+                              </Split>
+                            </CardBody>
+                          </Card>
+                        </FlexItem>
+                        <FlexItem>
+                          <Card>
+                            <CardBody>
+                              <Split gutter=true>
+                                <SplitItem>
+                                  <yew_icons::Icon
+                                    data={yew_icons::IconData::LUCIDE_HEART_HANDSHAKE}
+                                  />
+                                </SplitItem>
+                                <SplitItem fill=true>
+                                  <DescriptionGroup term="Contract Agreement">
+                                    <div class="pf-v6-u-font-weight-bold">{ "Agreement" }</div>
+                                    <Identifier id={transfer_process.contract_id().to_string()} />
+                                  </DescriptionGroup>
+                                </SplitItem>
+                                <SplitItem>
+                                  <ContractAgreementReference
+                                    contract_agreement_id={transfer_process.contract_id().to_string()}
+                                  />
+                                </SplitItem>
+                              </Split>
+                            </CardBody>
+                          </Card>
+                        </FlexItem>
+                      </Flex>
+                    </CardBody>
+                  </Card>
+                </StackItem>
+                <StackItem>{ data_access }</StackItem>
+              </Stack>
+            </FlexItem>
+          </Flex>
         </StackItem>
         <StackItem>
-          <TransferProcessStatus
-            transfer_process_id={props.transfer_process_id.clone()}
-            {on_started}
-            {on_finalized}
-          />
+          <Flex>
+            <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
+              <Card>
+                <CardTitle>
+                  <Title level={Level::H2}>{ "Transfer Process" }</Title>
+                </CardTitle>
+                <CardBody>
+                  <TransferProcessStatus
+                    transfer_process_id={props.transfer_process_id.clone()}
+                    {on_started}
+                    {on_finalized}
+                  />
+                </CardBody>
+              </Card>
+            </FlexItem>
+          </Flex>
         </StackItem>
-        <StackItem>{ actions }</StackItem>
-        <StackItem />
       </Stack>
     ))
   } else {
