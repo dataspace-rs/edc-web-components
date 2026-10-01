@@ -230,19 +230,24 @@ pub fn MyPublishedOfferPageInner(props: &MyPublishedOfferPageProps) -> HtmlResul
     );
 
     Ok(html!(
-      <Stack gutter=true>
-        <StackItem>
-          <DatasetCard {dataset} />
-        </StackItem>
-        <StackItem>
-          <Title level={Level::H4} size={Size::XLarge}>
-            { "Available Terms & Conditions for this Offer" }
-          </Title>
-          <Gallery gutter=true min_widths={AttrValue::from("400px").all()}>
-            { for contract_definitions }
-          </Gallery>
-        </StackItem>
-      </Stack>
+      <Flex modifiers={[FlexModifier::Justify(Justify::Start)]}>
+        <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
+          <DescriptionList>
+            <DescriptionGroup term="Selected Asset">
+              <DatasetCard dataset={dataset} />
+            </DescriptionGroup>
+          </DescriptionList>
+        </FlexItem>
+        <FlexItem modifiers={[FlexModifier::Flex3, FlexModifier::Align(Alignment::Start)]}>
+          <DescriptionList>
+            <DescriptionGroup term="Available Terms & Conditions for this Offer">
+              <Gallery gutter=true min_widths={AttrValue::from("400px").all()}>
+                { for contract_definitions }
+              </Gallery>
+            </DescriptionGroup>
+          </DescriptionList>
+        </FlexItem>
+      </Flex>
     ))
   } else {
     Ok(html!(<Bullseye>{ "Asset not found" }</Bullseye>))

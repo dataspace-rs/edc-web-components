@@ -88,11 +88,11 @@ pub fn ConstraintRenderer(props: &ConstraintRendererProps) -> Html {
     };
 
     html_nested!(
-      <StackItem>
+      <FlexItem>
         <Alert {title} r#type={AlertType::Info}>{ rendered_context }</Alert>
-      </StackItem>
+      </FlexItem>
     )
   });
 
-  html! { <Stack gutter=true>{ for constraints }</Stack> }
+  html! { <Flex modifiers={[FlexModifier::Column.lg()]}>{ for constraints }</Flex> }
 }
