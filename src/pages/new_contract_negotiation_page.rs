@@ -287,7 +287,7 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
           <Flex modifiers={[FlexModifier::Justify(Justify::Start)]}>
             <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
               <DescriptionList>
-                <DescriptionGroup term="Asset selected">
+                <DescriptionGroup term="Selected Asset">
                   <DatasetCard dataset={catalog_dataset} />
                 </DescriptionGroup>
               </DescriptionList>
