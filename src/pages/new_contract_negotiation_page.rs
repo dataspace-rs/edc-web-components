@@ -284,14 +284,22 @@ pub fn NewContractNegotiationPageInner(props: &NewContractNegotiationPageInnerPr
     Ok(html!(
       <Stack gutter=true>
         <StackItem>
-          <DatasetCard dataset={catalog_dataset} />
-        </StackItem>
-        <StackItem>
-          <DescriptionList>
-            <DescriptionGroup term="Offers">
-              <Gallery gutter=true>{ for offers }</Gallery>
-            </DescriptionGroup>
-          </DescriptionList>
+          <Flex modifiers={[FlexModifier::Justify(Justify::Start)]}>
+            <FlexItem modifiers={[FlexModifier::Flex1, FlexModifier::Align(Alignment::Start)]}>
+              <DescriptionList>
+                <DescriptionGroup term="Asset selected">
+                  <DatasetCard dataset={catalog_dataset} />
+                </DescriptionGroup>
+              </DescriptionList>
+            </FlexItem>
+            <FlexItem modifiers={[FlexModifier::Flex3, FlexModifier::Align(Alignment::Start)]}>
+              <DescriptionList>
+                <DescriptionGroup term="Select an offer">
+                  <Gallery gutter=true>{ for offers }</Gallery>
+                </DescriptionGroup>
+              </DescriptionList>
+            </FlexItem>
+          </Flex>
         </StackItem>
         <StackItem>
           <Split gutter=true>
