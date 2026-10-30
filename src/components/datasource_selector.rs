@@ -40,8 +40,8 @@ pub fn DatasourceSelectorInner(props: &DatasourceSelectorProps) -> HtmlResult {
           .flat_map(|dataplane| dataplane.allowed_source_types().to_vec())
           .collect::<Vec<String>>();
 
-        datasource_types.dedup();
         datasource_types.sort();
+        datasource_types.dedup();
 
         datasource_types
       } else {

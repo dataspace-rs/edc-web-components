@@ -1,3 +1,4 @@
+use crate::components::data_transfer_selector::DataTransferSelector;
 use crate::contexts::use_edc_connector_context;
 use edc_connector_client::EdcConnectorApiVersion;
 use edc_connector_client::types::Protocol;
@@ -100,40 +101,77 @@ pub fn CreateTransferProcess(props: &CreateTransferProcessProps) -> Html {
   let disabled = false;
 
   html!(
-    <Form {onsubmit}>
-      <FormGroup label="Contract ID" required=true>
-        <TextInput
-          required=true
-          value={(*contract_agreement_id).to_string()}
-          onchange={onchange_contract_agreement_id}
-        />
-      </FormGroup>
-      <FormGroup label="Counter Party Address" required=true>
-        <TextInput
-          required=true
-          value={(*counter_party_address).to_string()}
-          onchange={onchange_counter_party_address}
-        />
-      </FormGroup>
-      <FormGroup label="Protocol" required=true>
-        <TextInput required=true value={(*protocol).to_string()} onchange={onchange_protocol} />
-      </FormGroup>
-      <FormGroup label="Transfer Type" required=true>
-        <TextInput
-          required=true
-          value={(*transfer_type).to_string()}
-          onchange={onchange_transfer_type}
-        />
-      </FormGroup>
-      <ActionGroup>
-        <Button
-          variant={ButtonVariant::Primary}
-          label="Submit"
-          r#type={ButtonType::Submit}
-          {disabled}
-        />
-        <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset} />
-      </ActionGroup>
-    </Form>
+    <Card>
+      <CardBody>
+        <Form {onsubmit}>
+          <Flex modifiers={[FlexModifier::Column.lg()]}>
+            <FlexItem>
+              <FormGroup label="Contract ID" required=true>
+                <TextInput
+                  required=true
+                  value={(*contract_agreement_id).to_string()}
+                  onchange={onchange_contract_agreement_id}
+                />
+                <HelperText>
+                  <HelperTextItem variant={HelperTextItemVariant::Intermediate}>
+                    { "Id of the contract agreement. Find it on the agreement page." }
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            </FlexItem>
+            <FlexItem>
+              <FormGroup label="Counter Party Address" required=true>
+                <TextInput
+                  required=true
+                  value={(*counter_party_address).to_string()}
+                  onchange={onchange_counter_party_address}
+                />
+                <HelperText>
+                  <HelperTextItem variant={HelperTextItemVariant::Intermediate}>
+                    { "DSP endpoint of the provider's control plane." }
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            </FlexItem>
+            <FlexItem>
+              <Split gutter=true>
+                <SplitItem fill=true>
+                  <FormGroup label="Protocol" required=true>
+                    <TextInput
+                      required=true
+                      value={(*protocol).to_string()}
+                      onchange={onchange_protocol}
+                    />
+                  </FormGroup>
+                </SplitItem>
+                <SplitItem fill=true>
+                  <FormGroup label="Transfer Type" required=true>
+                    <DataTransferSelector
+                      selected_kind={(*transfer_type).clone()}
+                      on_selected_kind={onchange_transfer_type}
+                    />
+                  </FormGroup>
+                </SplitItem>
+              </Split>
+            </FlexItem>
+            <FlexItem>
+              <ActionGroup>
+                <Button
+                  variant={ButtonVariant::Primary}
+                  label="Submit"
+                  r#type={ButtonType::Submit}
+                  {disabled}
+                />
+                <Button
+                  variant={ButtonVariant::Secondary}
+                  label="Reset"
+                  r#type={ButtonType::Reset}
+                />
+              </ActionGroup>
+            </FlexItem>
+          </Flex>
+        </Form>
+      </CardBody>
+    </Card>
   )
 }

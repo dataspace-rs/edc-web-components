@@ -11,6 +11,7 @@ mod create_contract_negotiation;
 mod create_federated_catalog_participant;
 mod create_policy;
 mod create_transfer_process;
+mod data_transfer_selector;
 mod dataset_card;
 mod datasource_selector;
 mod did_label;

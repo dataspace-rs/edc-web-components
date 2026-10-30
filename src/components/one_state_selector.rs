@@ -40,5 +40,5 @@ pub fn OneStateSelector(props: &OneStateSelectorProps) -> Html {
     props.default_label.clone()
   };
 
-  html!(<Dropdown {text}>{ for actions }</Dropdown>)
+  html!(<Dropdown {text} full_width=true>{ for actions }</Dropdown>)
 }
