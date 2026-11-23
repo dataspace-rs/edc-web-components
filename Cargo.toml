@@ -14,11 +14,11 @@ contract-negotiation-review = ["edc-connector-client/contract-negotiation-review
 
 [dependencies]
 base64 = "0.23.0"
-cel = "0.14.0"
+cel = "0.16.0"
 chrono = "0.4"
 edc-connector-client = { version = "0.6.14", package = "edc-connector-client-next" }
 edc-federated-catalog-client = { version = "0.2.7", features = ["management"] }
-edc-identity-hub-client = "0.2.2"
+edc-identity-hub-client = "0.3.0"
 js-sys = "0.3.104"
 log = "0.4"
 mime2ext = "0.1.54"
@@ -33,5 +33,5 @@ stylist = { version = "0.15.1", features = ["yew_integration"] }
 uuid = { version = "1.24.0", features = ["v4"] }
 web-sys = { version = "0.3", features = ["HtmlAnchorElement"] }
 yew = "0.23"
-yew_icons = { version = "0.10.0", features = ["font_awesome_regular", "lucide"] }
+yew_icons = { version = "0.11.0", features = ["font_awesome_regular", "lucide"] }
 yew-oauth2 = { version = "0.14", features = ["yew-nested-router", "openid"] }
