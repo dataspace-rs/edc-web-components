@@ -8,6 +8,7 @@ pub struct EdcIdentityHubState {
   participant_id: String,
   participant_did: String,
   latest_access_token_context: LatestAccessToken,
+  identity_hub_client_version: IdentityHubClientVersion,
 }
 
 impl EdcIdentityHubState {
@@ -38,6 +39,8 @@ pub struct EdcIdentityHubContextProviderProps {
   pub children: Html,
   pub participant_id: String,
   pub participant_did: String,
+  #[prop_or(IdentityHubClientVersion::V1Alpha)]
+  pub identity_hub_client_version: IdentityHubClientVersion,
 }
 
 #[component]
@@ -51,6 +54,7 @@ pub fn EdcIdentityHubContextProvider(props: &EdcIdentityHubContextProviderProps)
       participant_id: props.participant_id.clone(),
       participant_did: props.participant_did.clone(),
       latest_access_token_context,
+      identity_hub_client_version: props.identity_hub_client_version.clone(),
     })
   };
 
@@ -58,12 +62,14 @@ pub fn EdcIdentityHubContextProvider(props: &EdcIdentityHubContextProviderProps)
     (
       props.participant_id.clone(),
       props.participant_did.clone(),
+      props.identity_hub_client_version.clone(),
       edc_identity_hub_context.setter(),
       latest_access_token_context.clone(),
     ),
     |(
       participant_id,
       participant_did,
+      identity_hub_client_version,
       edc_identity_hub_context_setter,
       latest_access_token_context,
     )| {
@@ -71,6 +77,7 @@ pub fn EdcIdentityHubContextProvider(props: &EdcIdentityHubContextProviderProps)
         participant_id: participant_id.clone(),
         participant_did: participant_did.clone(),
         latest_access_token_context: latest_access_token_context.clone(),
+        identity_hub_client_version: identity_hub_client_version.clone(),
       });
     },
   );
