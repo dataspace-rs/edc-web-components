@@ -21,7 +21,7 @@ impl EdcIdentityHubState {
       client,
       format!("{server_url}/identity-hub"),
       self.latest_access_token_context.access_token(),
-      IdentityHubClientVersion::V1Alpha,
+      self.identity_hub_client_version.clone(),
     )
   }
 
