@@ -1,5 +1,6 @@
 use super::Rule;
 use crate::components::create_policy::atomic_constraint_edit::ConstraintMode;
+use crate::contexts::RuleKind;
 use edc_connector_client::types::policy::{Action, Constraint};
 use patternfly_yew::prelude::*;
 use yew::prelude::*;
@@ -10,6 +11,7 @@ pub type UpdatedRules = Vec<(Action, Vec<(ConstraintMode, Constraint)>)>;
 pub struct Props {
   pub list: Vec<(Action, Vec<(ConstraintMode, Constraint)>)>,
   pub onchange: Callback<UpdatedRules>,
+  pub rule_kind: RuleKind,
 }
 
 #[component]
@@ -63,6 +65,7 @@ pub fn ListOfRules(props: &Props) -> Html {
                 {constraints}
                 onchange={onchange.clone()}
                 ondelete={ondelete.clone()}
+                rule_kind={props.rule_kind}
               />
             </CardBody>
           </Card>

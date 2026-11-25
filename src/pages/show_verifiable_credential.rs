@@ -88,9 +88,7 @@ pub fn ShowVerifiableCredentialPageInner(props: &ShowVerifiableCredentialPagePro
       });
 
     let name = if let Some(name) = verifiable_credential.verifiable_credential.credential.name {
-      html!(
-        <DidLabel did={name} />
-      )
+      html!(<DidLabel did={name} />)
     } else {
       html!("-")
     };
@@ -112,9 +110,7 @@ pub fn ShowVerifiableCredentialPageInner(props: &ShowVerifiableCredentialPagePro
         <DescriptionGroup term="Expiration Date">
           { verifiable_credential.verifiable_credential.credential.expiration_date.format("%Y-%m-%d %H:%M:%S").to_string() }
         </DescriptionGroup>
-        <DescriptionGroup term="Name">
-          { name }
-        </DescriptionGroup>
+        <DescriptionGroup term="Name">{ name }</DescriptionGroup>
         <DescriptionGroup term="Description">
           { verifiable_credential.verifiable_credential.credential.description.unwrap_or_default() }
         </DescriptionGroup>

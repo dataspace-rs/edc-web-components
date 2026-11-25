@@ -1,6 +1,8 @@
 mod asset_card;
 mod asset_reference;
 mod asset_selector;
+mod constraint_library_search;
+mod constraint_parameter_input;
 mod contract_agreement_reference;
 mod contract_negotiation_status;
 mod contraint_renderer;
@@ -46,6 +48,8 @@ mod transfer_process_status;
 pub use asset_card::*;
 pub use asset_reference::*;
 pub use asset_selector::*;
+pub use constraint_library_search::*;
+pub use constraint_parameter_input::*;
 pub use contract_agreement_reference::*;
 pub use contract_negotiation_status::*;
 pub use contraint_renderer::*;

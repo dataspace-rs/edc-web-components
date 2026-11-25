@@ -1,16 +1,18 @@
 mod atomic_constraint_edit;
+mod constraint_library_selection;
 mod list_of_rules;
 mod operator_selector;
 mod rule;
 
 pub use self::atomic_constraint_edit::AtomicConstraintEdit;
+pub use self::constraint_library_selection::ConstraintLibrarySelection;
 pub use self::list_of_rules::ListOfRules;
 pub use self::operator_selector::OperatorSelector;
 pub use self::rule::Rule;
 use crate::components::create_policy::atomic_constraint_edit::ConstraintMode;
 use crate::components::simple_or_id_field::SimpleOrIdField;
 use crate::components::{ExtensiblePropertiesEdit, StringListEdit};
-use crate::contexts::use_edc_connector_context;
+use crate::contexts::{RuleKind, use_constraint_library_context, use_edc_connector_context};
 use edc_connector_client::types::policy::{
   Action, Constraint, NewPolicyDefinition, Obligation, Permission, Policy, PolicyKind, Prohibition,
   Target,
@@ -269,6 +271,97 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
     },
   );
 
+  let onchange_library_selection = use_callback(
+    (
+      permissions.setter(),
+      prohibitions.setter(),
+      obligations.setter(),
+    ),
+    |(rule_kind, rules), (permissions_setter, prohibitions_setter, obligations_setter)| {
+      match rule_kind {
+        RuleKind::Permission => permissions_setter.set(rules),
+        RuleKind::Prohibition => prohibitions_setter.set(rules),
+        RuleKind::Obligation => obligations_setter.set(rules),
+      }
+    },
+  );
+
+  let has_constraint_library = use_constraint_library_context()
+    .map(|context| !context.constraint_library().is_empty())
+    .unwrap_or_default();
+
+  let selected_tab = use_state_eq(|| {
+    if has_constraint_library {
+      PolicyEditTab::Simplified
+    } else {
+      PolicyEditTab::Advanced
+    }
+  });
+
+  let onselect_tab = use_callback(selected_tab.setter(), |tab, selected_tab_setter| {
+    selected_tab_setter.set(tab);
+  });
+
+  // The tab bar sits outside the form: its buttons have no type and would submit it.
+  // Only the selected tab's fields are rendered, so the rule editors always start from the
+  // current state when switching tabs.
+  let tabs = has_constraint_library.then(|| {
+    html!(
+      <Tabs<PolicyEditTab> onselect={onselect_tab} selected={*selected_tab} r#box=true>
+        <Tab<PolicyEditTab> index={PolicyEditTab::Simplified} title="Simplified" />
+        <Tab<PolicyEditTab> index={PolicyEditTab::Advanced} title="Advanced" />
+      </Tabs<PolicyEditTab>>
+    )
+  });
+
+  let tab_content = if has_constraint_library && *selected_tab == PolicyEditTab::Simplified {
+    html!(
+      <FormGroup label="Constraints">
+        <ConstraintLibrarySelection
+          permissions={(*permissions).clone()}
+          prohibitions={(*prohibitions).clone()}
+          obligations={(*obligations).clone()}
+          onchange={onchange_library_selection}
+        />
+      </FormGroup>
+    )
+  } else {
+    html!(
+      <>
+        <FormGroup label="Permissions">
+          <ListOfRules
+            list={(*permissions).clone()}
+            onchange={onchange_permissions}
+            rule_kind={RuleKind::Permission}
+          />
+        </FormGroup>
+        <FormGroup label="Prohibitions">
+          <ListOfRules
+            list={(*prohibitions).clone()}
+            onchange={onchange_prohibitions}
+            rule_kind={RuleKind::Prohibition}
+          />
+        </FormGroup>
+        <FormGroup label="Obligations">
+          <ListOfRules
+            list={(*obligations).clone()}
+            onchange={onchange_obligations}
+            rule_kind={RuleKind::Obligation}
+          />
+        </FormGroup>
+        <FormGroup label="Profiles">
+          <StringListEdit values={(*profiles).clone()} onchange={onchange_profiles} />
+        </FormGroup>
+        <FormGroup label="Extensible Properties">
+          <ExtensiblePropertiesEdit
+            values={(*extensible_properties).clone()}
+            onchange={onchange_extensible_properties}
+          />
+        </FormGroup>
+      </>
+    )
+  };
+
   let (target_is_simple, target_value) = (*target).clone();
 
   let disabled = false;
@@ -282,51 +375,43 @@ pub fn CreatePolicy(props: &CreatePolicyProps) -> Html {
   };
 
   html!(
-    <Form {onsubmit}>
-      { errors }
-      <FormGroup label="Name" required=true>
-        <TextInput required=true value={(*name).to_string()} onchange={onchange_name} />
-      </FormGroup>
-      <FormGroup label="Permissions">
-        <ListOfRules list={(*permissions).clone()} onchange={onchange_permissions} />
-      </FormGroup>
-      <FormGroup label="Prohibitions">
-        <ListOfRules list={(*prohibitions).clone()} onchange={onchange_prohibitions} />
-      </FormGroup>
-      <FormGroup label="Obligations">
-        <ListOfRules list={(*obligations).clone()} onchange={onchange_obligations} />
-      </FormGroup>
-      <FormGroup label="Profiles">
-        <StringListEdit values={(*profiles).clone()} onchange={onchange_profiles} />
-      </FormGroup>
-      <FormGroup label="Extensible Properties">
-        <ExtensiblePropertiesEdit
-          values={(*extensible_properties).clone()}
-          onchange={onchange_extensible_properties}
-        />
-      </FormGroup>
-      <FormGroup label="Assignee">
-        <TextInput value={(*assignee).clone()} onchange={onchange_assignee} />
-      </FormGroup>
-      <FormGroup label="Assigner">
-        <TextInput value={(*assigner).clone()} onchange={onchange_assigner} />
-      </FormGroup>
-      <FormGroup label="Target">
-        <SimpleOrIdField
-          onchange={onchange_target}
-          is_simple={target_is_simple}
-          value={target_value}
-        />
-      </FormGroup>
-      <ActionGroup>
-        <Button
-          variant={ButtonVariant::Primary}
-          label="Submit"
-          r#type={ButtonType::Submit}
-          {disabled}
-        />
-        <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset} />
-      </ActionGroup>
-    </Form>
+    <>
+      { for tabs }
+      <Form {onsubmit}>
+        { errors }
+        <FormGroup label="Name" required=true>
+          <TextInput required=true value={(*name).to_string()} onchange={onchange_name} />
+        </FormGroup>
+        { tab_content }
+        <FormGroup label="Assignee">
+          <TextInput value={(*assignee).clone()} onchange={onchange_assignee} />
+        </FormGroup>
+        <FormGroup label="Assigner">
+          <TextInput value={(*assigner).clone()} onchange={onchange_assigner} />
+        </FormGroup>
+        <FormGroup label="Target">
+          <SimpleOrIdField
+            onchange={onchange_target}
+            is_simple={target_is_simple}
+            value={target_value}
+          />
+        </FormGroup>
+        <ActionGroup>
+          <Button
+            variant={ButtonVariant::Primary}
+            label="Submit"
+            r#type={ButtonType::Submit}
+            {disabled}
+          />
+          <Button variant={ButtonVariant::Secondary} label="Reset" r#type={ButtonType::Reset} />
+        </ActionGroup>
+      </Form>
+    </>
   )
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PolicyEditTab {
+  Simplified,
+  Advanced,
 }

@@ -16,6 +16,7 @@ contract-negotiation-review = ["edc-connector-client/contract-negotiation-review
 base64 = "0.23.0"
 cel = "0.16.0"
 chrono = "0.4"
+codes-iso-4217 = { version = "0.1.7", features = ["currency_name", "is_fund", "monetary_units"] }
 edc-connector-client = { version = "0.6.14", package = "edc-connector-client-next" }
 edc-federated-catalog-client = { version = "0.2.7", features = ["management"] }
 edc-identity-hub-client = "0.4.0"

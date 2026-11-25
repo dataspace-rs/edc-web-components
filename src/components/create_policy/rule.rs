@@ -1,7 +1,9 @@
+use crate::components::ConstraintLibrarySearch;
 use crate::components::create_policy::atomic_constraint_edit::{
   AtomicConstraintEdit, ConstraintMode,
 };
 use crate::components::simple_or_id_field::SimpleOrIdField;
+use crate::contexts::{ConstraintLibraryItem, RuleKind, use_constraint_library_context};
 use edc_connector_client::types::policy::{Action, AtomicConstraint, Constraint};
 use edc_connector_client::types::properties::PropertyValue;
 use patternfly_yew::prelude::*;
@@ -16,6 +18,7 @@ pub struct Props {
   pub constraints: Vec<(ConstraintMode, Constraint)>,
   pub onchange: Callback<UpdatedRule>,
   pub ondelete: Callback<usize>,
+  pub rule_kind: RuleKind,
 }
 
 #[component]
@@ -60,6 +63,56 @@ pub fn Rule(props: &Props) -> Html {
       onchange.emit((*index, (**action).clone(), list));
     },
   );
+
+  let add_library_constraint = use_callback(
+    (
+      action.clone(),
+      constraints.clone(),
+      props.index,
+      props.onchange.clone(),
+    ),
+    |item: ConstraintLibraryItem, (action, constraints, index, onchange)| {
+      let mut list = (**constraints).clone();
+
+      list.push((ConstraintMode::Default, item.new_constraint()));
+      constraints.set(list.clone());
+
+      onchange.emit((*index, (**action).clone(), list));
+    },
+  );
+
+  let constraint_library_context = use_constraint_library_context();
+
+  let rule_kind = props.rule_kind;
+
+  let library_items = constraint_library_context
+    .map(|constraint_library_context| {
+      constraint_library_context
+        .constraint_library()
+        .iter()
+        .filter(|item| item.rule_kind == rule_kind)
+        .cloned()
+        .collect::<Vec<_>>()
+    })
+    .filter(|items| !items.is_empty());
+
+  // Offer only the library constraints that are not already in this rule.
+  let add_from_library = library_items.map(|library_items| {
+    let items = library_items
+      .into_iter()
+      .filter(|item| {
+        !constraints
+          .iter()
+          .any(|(_, constraint)| item.matches(constraint))
+      })
+      .collect::<Vec<_>>();
+
+    html_nested!(
+      <FlexItem modifiers={[FlexModifier::Flex1]}>
+        <ConstraintLibrarySearch {items} onselect={add_library_constraint.clone()} />
+      </FlexItem>
+    )
+  });
 
   let delete_constraint = use_callback(
     (
@@ -146,9 +199,14 @@ pub fn Rule(props: &Props) -> Html {
     <Stack gutter=true>
       { for list_of_constraints }
       <StackItem>
-        <Button icon={Icon::Plus} variant={ButtonVariant::Primary} onclick={add_constraint}>
-          { "Add Constraint" }
-        </Button>
+        <Flex>
+          <FlexItem>
+            <Button icon={Icon::Plus} variant={ButtonVariant::Primary} onclick={add_constraint}>
+              { "Add Constraint" }
+            </Button>
+          </FlexItem>
+          { for add_from_library }
+        </Flex>
       </StackItem>
       <StackItem>
         <SimpleOrIdField
